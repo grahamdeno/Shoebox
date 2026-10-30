@@ -1,0 +1,47 @@
+name: Shoebox
+options:
+  bundleIdPrefix: com.grahamdeno
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "2.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: 7MHDTK68M2
+targets:
+  Shoebox:
+    type: application
+    platform: iOS
+    sources:
+      - App/Shoebox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Shoebox
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+  ShoeboxTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - App/ShoeboxTests
+    dependencies:
+      - target: Shoebox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Shoebox:
+    build:
+      targets:
+        Shoebox: all
+    test:
+      targets:
+        - ShoeboxTests
