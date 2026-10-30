@@ -1,0 +1,486 @@
+<title>Shoebox in Midnight Gold</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a storyboard of one day. Each moment is a frame: the time, the device it happens on, what you did, and how many taps it took. The devices carry the new brand; the board stays neutral. */
+:root {
+  --bg: #e9e8e4; --fg: #141826; --muted: #5d6276; --line: #d0d0d4; --panel: #f4f3ef; --mark: #9a7420;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  /* The new Shoebox: your reason in a serif, labels in a condensed grotesque, ink on paper, one ember accent. */
+  --s-serif: "DM Serif Display", Georgia, serif;
+  --s-label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --s-ink: #1c1612; --s-paper: #f5efe6; --s-ember: #e0702f; --s-muted: #7d6b5d;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; --mark: #d8b45a; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; --mark: #d8b45a; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+header h1 { font: 400 clamp(38px, 7vw, 68px)/0.98 var(--s-serif); margin: 0 0 14px; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 0 0 10px; max-width: 64ch; color: var(--muted); }
+header p b { color: var(--fg); font-weight: 600; }
+.rule { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.rule span { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 13.5px; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 28px; margin-top: 44px; }
+.frame { min-width: 0; display: grid; gap: 14px; align-content: start; padding: 22px 18px 20px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); }
+.frame .when { display: flex; justify-content: space-between; align-items: baseline; font: 600 12.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.frame .when b { color: var(--mark); font-weight: 600; }
+.stage { display: flex; justify-content: center; min-height: 0; }
+.frame h2 { font: 400 25px/1.1 var(--s-serif); margin: 2px 0 0; text-wrap: balance; }
+.frame p { margin: 0; font-size: 14.5px; color: var(--muted); }
+.frame p strong { color: var(--fg); font-weight: 600; }
+.taps { display: inline-flex; gap: 6px; align-items: center; font: 600 12.5px var(--sans); color: var(--fg); }
+.taps i { width: 8px; height: 8px; border-radius: 50%; background: var(--mark); display: inline-block; }
+.needs { font-size: 12.5px !important; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+h3.sec { font: 400 32px/1.1 var(--s-serif); margin: 64px 0 6px; }
+p.sec { margin: 0; color: var(--muted); max-width: 64ch; }
+
+/* ---------- Devices ---------- */
+.phone { width: 262px; height: 560px; max-width: 100%; border-radius: 42px; padding: 8px; background: #0b0b0d; box-shadow: 0 24px 50px -22px rgba(10, 10, 20, .55), inset 0 0 0 1.5px #2b2b30; flex: none; }
+.scr { position: relative; height: 100%; border-radius: 34px; overflow: hidden; color: #fff; font-family: var(--s-label); }
+.island { position: absolute; top: 9px; left: 50%; width: 82px; height: 23px; margin-left: -41px; border-radius: 14px; background: #000; z-index: 5; }
+.wall-a { background: radial-gradient(120% 70% at 30% 10%, #3b4d7a 0%, #1d2440 45%, #0e1120 100%); }
+.wall-b { background: radial-gradient(120% 80% at 70% 0%, #6a4a6e 0%, #2b2140 50%, #0f0c18 100%); }
+.wall-c { background: radial-gradient(110% 70% at 50% 0%, #2f5a55 0%, #173130 55%, #0b1716 100%); }
+.lock-time { position: absolute; top: 46px; left: 0; right: 0; text-align: center; }
+.lock-time small { display: block; font: 600 13px var(--s-label); opacity: .85; }
+.lock-time b { display: block; font: 600 72px/1 var(--s-label); font-stretch: 112%; letter-spacing: -0.02em; }
+.stack { position: absolute; left: 10px; right: 10px; bottom: 22px; display: grid; gap: 8px; }
+.note { border-radius: 22px; background: rgba(245, 239, 230, .94); color: var(--s-ink); padding: 11px 13px 12px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.6); }
+.note.faint { background: rgba(245, 239, 230, .5); padding: 8px 13px; font-size: 12px; color: #3c332c; }
+.app { display: flex; justify-content: space-between; align-items: center; font: 600 10.5px var(--s-label); letter-spacing: .08em; text-transform: uppercase; color: var(--s-muted); margin-bottom: 6px; }
+.app span { display: flex; align-items: center; gap: 6px; }
+.ico { width: 18px; height: 18px; border-radius: 5px; background: var(--s-ember); position: relative; flex: none; }
+.ico::after { content: ""; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 7px; border-radius: 1.5px; background: var(--s-paper); }
+.ico::before { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2.5px; border-radius: 1px; background: var(--s-ink); transform: rotate(-10deg); }
+.why { font: 400 23px/1.08 var(--s-serif); margin: 0 0 6px; }
+.why.sm { font-size: 19px; }
+.src { font: 500 11.5px/1.3 var(--s-label); color: var(--s-muted); }
+.src b { color: var(--s-ink); font-weight: 600; }
+.thumb { height: 74px; border-radius: 12px; overflow: hidden; margin: 8px 0; }
+.thumb svg { display: block; width: 100%; height: 100%; }
+.btns { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 10px; }
+.btns span { text-align: center; padding: 8px 0; border-radius: 12px; background: rgba(28, 22, 18, .08); font: 600 12px var(--s-label); }
+.btns span.go { background: var(--s-ink); color: var(--s-paper); }
+.cover { border-radius: 22px; overflow: hidden; background: var(--s-ink); color: var(--s-paper); box-shadow: 0 8px 22px -12px rgba(0,0,0,.6); }
+.cover .img { height: 92px; position: relative; }
+.cover .img svg { display: block; width: 100%; height: 100%; }
+.cover .mast { position: absolute; left: 12px; bottom: 6px; font: 400 32px/1 var(--s-serif); color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.cover .body { padding: 10px 13px 12px; }
+.cover .meta { font: 600 10px var(--s-label); font-stretch: 80%; letter-spacing: .14em; text-transform: uppercase; color: #c9b8a6; display: flex; justify-content: space-between; }
+.cover ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.cover li { display: grid; grid-template-columns: 16px 1fr; font: 400 16px/1.15 var(--s-serif); }
+.cover li b { font: 700 11px/1.6 var(--s-label); color: var(--s-ember); }
+.cover .btns span { background: rgba(245, 239, 230, .12); color: var(--s-paper); }
+.cover .btns span.go { background: var(--s-ember); color: var(--s-ink); }
+.la { border-radius: 22px; background: #121014; color: #f3eee8; padding: 12px 14px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.6); }
+.la .app { color: #a99c8f; }
+.la .why { color: #fff; }
+.la .bar { height: 5px; border-radius: 3px; background: #3a3438; margin: 10px 0 4px; position: relative; }
+.la .bar::after { content: ""; position: absolute; inset: 0 62% 0 0; border-radius: 3px; background: var(--s-ember); }
+.la .src { color: #b9ad9f; }
+.la .src b { color: #fff; }
+.la .btns span { background: rgba(255,255,255,.1); }
+.la .btns span.go { background: var(--s-ember); color: var(--s-ink); }
+
+/* Safari + capture */
+.safari { background: #fbfaf8; color: #1d1d1f; font-family: Georgia, serif; }
+.safari .url { position: absolute; left: 12px; right: 12px; bottom: 22px; height: 38px; border-radius: 14px; background: #ecebe8; font: 500 12px var(--s-label); color: #555; display: grid; place-items: center; }
+.safari .page { position: absolute; top: 44px; left: 18px; right: 18px; }
+.safari .page h4 { font: 400 26px/1.1 Georgia, serif; margin: 0 0 4px; }
+.safari .page .lede { font: 400 12px/1.5 Georgia, serif; color: #555; }
+.safari .page .art { height: 120px; border-radius: 8px; overflow: hidden; margin: 10px 0; }
+.dim { position: absolute; inset: 0; background: rgba(12, 10, 8, .45); }
+.capture { position: absolute; left: 10px; right: 10px; bottom: 70px; border-radius: 26px; background: var(--s-paper); color: var(--s-ink); padding: 14px; box-shadow: 0 20px 40px -14px rgba(0,0,0,.6); }
+.wave { display: flex; gap: 3px; align-items: center; height: 26px; margin: 4px 0 8px; }
+.wave i { width: 3px; border-radius: 2px; background: var(--s-ember); display: block; }
+.heard { font: italic 400 21px/1.1 var(--s-serif); }
+.inferred { margin-top: 10px; padding-top: 9px; border-top: 1px solid #e3d8c8; font: 500 11.5px/1.4 var(--s-label); color: var(--s-muted); }
+.inferred b { color: var(--s-ink); }
+.side { position: absolute; right: -4px; top: 120px; width: 6px; height: 46px; border-radius: 3px; background: var(--s-ember); box-shadow: 0 0 12px var(--s-ember); }
+
+/* Screenshot */
+.flyer { position: absolute; inset: 0; background: #fffef6; color: #1b3a6b; padding: 52px 18px; font-family: Georgia, serif; }
+.flyer h4 { margin: 0; font: 700 22px/1.1 var(--s-label); color: #c03a2b; text-transform: uppercase; letter-spacing: .02em; }
+.flyer p { margin: 8px 0 0; font: 400 12.5px/1.45 Georgia, serif; color: #333; }
+.flyer .box { margin-top: 12px; border: 2px dashed #1b3a6b; padding: 10px; font: 400 12px/1.5 Georgia, serif; color: #1b3a6b; }
+.shot { position: absolute; inset: 22px 34px 120px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 4px #fff, 0 20px 40px -10px rgba(0,0,0,.5); transform: scale(.94); }
+.shot .flyer { padding: 20px 14px; }
+.shot .flyer h4 { font-size: 17px; }
+.banner { position: absolute; left: 10px; right: 10px; bottom: 22px; }
+
+/* Watch */
+.watch { width: 176px; height: 214px; border-radius: 52px; padding: 10px; background: #1a1a1c; box-shadow: 0 20px 40px -16px rgba(0,0,0,.6), inset 0 0 0 2px #333; position: relative; margin-block: 140px; }
+.watch::before, .watch::after { content: ""; position: absolute; left: 34px; right: 34px; height: 150px; background: #2a2723; z-index: -1; }
+.watch::before { top: -140px; border-radius: 18px 18px 0 0; }
+.watch::after { bottom: -140px; border-radius: 0 0 18px 18px; }
+.crown { position: absolute; right: -7px; top: 50px; width: 9px; height: 30px; border-radius: 4px; background: #3a3a3e; }
+.wscr { height: 100%; border-radius: 42px; background: #000; color: #fff; padding: 22px 16px 14px; font-family: var(--s-label); display: grid; align-content: start; gap: 6px; }
+.wscr .app { color: #9b8e82; font-size: 9.5px; margin: 0; }
+.wscr .why { font-size: 20px; color: #fff; margin: 0; }
+.wscr .src { color: #b5a99c; font-size: 10.5px; }
+.wbtn { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 4px; }
+.wbtn span { text-align: center; padding: 7px 0; border-radius: 14px; background: #2a2a2d; font: 600 11.5px var(--s-label); }
+.wbtn span.go { background: var(--s-ember); color: #1c1612; }
+
+/* Car */
+.car { width: 330px; max-width: 100%; height: 196px; border-radius: 18px; padding: 8px; background: #0b0b0d; box-shadow: 0 24px 50px -22px rgba(10,10,20,.55), inset 0 0 0 1.5px #2b2b30; margin-block: 182px; }
+.cscr { height: 100%; border-radius: 11px; background: #141215; color: #f3eee8; display: grid; grid-template-columns: 40px 1fr; overflow: hidden; font-family: var(--s-label); }
+.dock { background: #0d0c0e; display: grid; align-content: start; justify-items: center; gap: 12px; padding-top: 12px; font: 600 10px var(--s-label); color: #888; }
+.dock i { width: 22px; height: 22px; border-radius: 6px; background: #2a2a2e; display: block; }
+.dock i.on { background: var(--s-ember); }
+.cmain { padding: 12px 14px; display: grid; grid-template-columns: 74px 1fr; gap: 12px; align-items: center; }
+.cart { width: 74px; height: 74px; border-radius: 10px; overflow: hidden; }
+.cart svg { display: block; width: 100%; height: 100%; }
+.cmain .app { color: #a99c8f; margin: 0 0 2px; font-size: 9.5px; }
+.cmain .why { font-size: 18px; color: #fff; margin: 0 0 4px; }
+.cmain .src { color: #b9ad9f; font-size: 10.5px; }
+.cbtns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cbtns span { text-align: center; padding: 7px 0; border-radius: 10px; background: #2a2629; font: 600 11px var(--s-label); }
+.cbtns span.go { background: var(--s-ember); color: #1c1612; }
+
+/* Siri */
+.siri { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,14,.2), rgba(10,8,14,.75)); }
+.glow { position: absolute; inset: 0; border-radius: 34px; box-shadow: inset 0 0 0 3px rgba(255,140,80,.9), inset 0 0 26px rgba(255,90,160,.7), inset 0 0 50px rgba(110,140,255,.5); }
+.ask { position: absolute; top: 160px; left: 22px; right: 22px; font: 500 15px/1.35 var(--s-label); color: rgba(255,255,255,.88); }
+.answer { position: absolute; left: 10px; right: 10px; bottom: 22px; }
+
+/* App */
+.appview { background: var(--s-paper); color: var(--s-ink); font-family: var(--s-label); }
+.appview .top { position: absolute; top: 40px; left: 16px; right: 16px; }
+.appview h5 { margin: 0; font: 400 34px/1 var(--s-serif); }
+.appview .search { margin-top: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(28,22,18,.07); font: 500 12.5px var(--s-label); color: var(--s-muted); }
+.appview .list { position: absolute; top: 132px; left: 16px; right: 16px; display: grid; gap: 12px; }
+.appview .day { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #e3d8c8; }
+.appview .day > b { font: 700 10px/1.3 var(--s-label); font-stretch: 80%; letter-spacing: .12em; text-transform: uppercase; color: var(--s-ember); padding-top: 4px; }
+.appview .day > b span { display: block; font: 400 22px/1 var(--s-serif); color: var(--s-ink); letter-spacing: 0; }
+.appview .day p { margin: 0 0 4px; font: 400 16px/1.15 var(--s-serif); }
+.appview .day small { display: block; font: 500 10.5px var(--s-label); color: var(--s-muted); margin-top: -2px; margin-bottom: 4px; }
+.appview .quiet { margin-top: 2px; padding: 9px 11px; border-radius: 12px; border: 1px dashed #cbbba6; font: 500 11.5px/1.4 var(--s-label); color: var(--s-muted); }
+.appview .quiet b { color: var(--s-ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .wave i { animation: w 1.1s ease-in-out infinite alternate; }
+  .wave i:nth-child(3n) { animation-delay: -.4s; } .wave i:nth-child(4n) { animation-delay: -.7s; }
+  @keyframes w { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+}
+
+/* ================= Midnight Gold =================
+   Night is the default; Day is its light twin. Gold appears once per screen, on the thing to tap. */
+:root {
+  --g-surface: #0f1630; --g-deep: #0b1129; --g-text: #f3ead7; --g-gold: #d8b45a; --g-gold-text: #e2c47a; --g-on-gold: #0f1630;
+  --g-quiet: #8f97b3; --g-done: #8fb3a0; --g-line: rgba(243,234,215,.13); --g-btn: rgba(243,234,215,.08); --g-edge: rgba(216,180,90,.22);
+}
+html.day {
+  --g-surface: #f7f1e3; --g-text: #0f1630; --g-gold-text: #8a6a1c; --g-quiet: #5d6584; --g-done: #5f8a74;
+  --g-line: rgba(15,22,48,.12); --g-btn: rgba(15,22,48,.06); --g-edge: rgba(15,22,48,.08);
+}
+.wall-a { background: radial-gradient(120% 75% at 30% 5%, #253568 0%, #0b1129 60%, #03050d 100%); }
+.wall-b { background: radial-gradient(120% 80% at 70% 0%, #33306a 0%, #0f1433 55%, #04050e 100%); }
+.wall-c { background: radial-gradient(110% 70% at 50% 0%, #1f4256 0%, #0b1a2c 58%, #03070d 100%); }
+.note, .cover, .la, .capture { background: var(--g-surface); color: var(--g-text); border-radius: 6px; box-shadow: 0 10px 24px -12px rgba(0,0,0,.65), inset 0 0 0 1px var(--g-edge); }
+.note.faint { background: color-mix(in srgb, var(--g-surface) 62%, transparent); color: var(--g-quiet); }
+.app { color: var(--g-quiet); }
+.ico { background: var(--g-gold); border-radius: 4px; }
+.ico::after { background: var(--g-deep); }
+.ico::before { background: var(--g-text); }
+html.day .ico::after { background: #0f1630; } html.day .ico::before { background: #f7f1e3; }
+.src { color: var(--g-quiet); } .src b { color: var(--g-text); }
+.thumb { border-radius: 3px; }
+.btns span { background: transparent; border: 1px solid var(--g-line); border-radius: 4px; color: var(--g-text); }
+.btns span.go { background: var(--g-gold); border-color: var(--g-gold); color: var(--g-on-gold); }
+.cover .meta { color: var(--g-quiet); }
+.cover li b { color: var(--g-quiet); }
+.cover .btns span { background: transparent; color: var(--g-text); }
+.cover .btns span.go { background: var(--g-gold); color: var(--g-on-gold); }
+.la .app, .la .src { color: var(--g-quiet); } .la .why, .la .src b { color: var(--g-text); }
+.la .bar { background: var(--g-line); } .la .bar::after { background: var(--g-text); opacity: .7; }
+.la .btns span { background: transparent; } .la .btns span.go { background: var(--g-gold); color: var(--g-on-gold); }
+.wave i, .side { background: var(--g-gold); } .side { box-shadow: 0 0 12px var(--g-gold); }
+.inferred { border-top-color: var(--g-line); color: var(--g-quiet); } .inferred b { color: var(--g-text); }
+.cscr { background: #0b1129; } .dock { background: #070b1d; } .dock i.on { background: var(--g-gold); }
+.cmain .app, .cmain .src { color: #8f97b3; } .cbtns span { background: rgba(243,234,215,.08); border-radius: 4px; } .cbtns span.go { background: #d8b45a; color: #0f1630; }
+.wscr { background: #0b1129; } .wscr .app, .wscr .src { color: #8f97b3; } .wbtn span { background: rgba(243,234,215,.1); border-radius: 6px; } .wbtn span.go { background: #d8b45a; color: #0f1630; }
+.appview { background: var(--g-surface); color: var(--g-text); }
+.appview .search { background: var(--g-btn); color: var(--g-quiet); border-radius: 4px; }
+.appview .day { border-bottom-color: var(--g-line); }
+.appview .day > b { color: var(--g-quiet); } .appview .day > b span { color: var(--g-text); }
+.appview .day small { color: var(--g-quiet); }
+.appview .quiet { border-color: var(--g-line); border-radius: 4px; color: var(--g-quiet); } .appview .quiet b { color: var(--g-text); }
+/* the toggle and the palette strip */
+.mode { display: inline-flex; margin-top: 22px; padding: 4px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); }
+.mode button { font: 600 14px var(--sans); padding: 7px 16px; border-radius: 999px; border: 0; background: transparent; color: var(--fg); cursor: pointer; }
+.mode button[aria-pressed="true"] { background: #0f1630; color: #f3ead7; }
+html.day .mode button[aria-pressed="true"] { background: #f7f1e3; color: #0f1630; box-shadow: inset 0 0 0 1px #0f1630; }
+.mode button:focus-visible { outline: 2px solid var(--mark); outline-offset: 2px; }
+.strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 18px; max-width: 760px; }
+.strip div { min-width: 0; }
+.strip i { display: block; height: 42px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.3); }
+.strip b { display: block; margin-top: 4px; font: 600 11.5px var(--sans); }
+.strip span { display: block; font: 400 10.5px var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .strip { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c7a1"/><stop offset=".55" stop-color="#f4a77a"/><stop offset="1" stop-color="#c98a8e"/></linearGradient>
+    <radialGradient id="neb" cx=".6" cy=".4" r=".6"><stop offset="0" stop-color="#c46aa0"/><stop offset=".5" stop-color="#4b3a8a"/><stop offset="1" stop-color="#0b0b1e"/></radialGradient>
+    <symbol id="ridge" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#sky)"/><circle cx="205" cy="92" r="20" fill="#fde3c4"/>
+      <path d="M0 110 L40 92 L80 104 L120 84 L165 100 L210 86 L255 98 L300 88 V200 H0Z" fill="#9b8fb3"/>
+      <path d="M0 128 L50 108 L95 122 L140 104 L190 120 L240 106 L300 118 V200 H0Z" fill="#6f6f9d"/>
+      <path d="M0 148 L45 130 L100 146 L150 128 L205 144 L260 130 L300 140 V200 H0Z" fill="#4c5683"/>
+      <path d="M0 172 L60 150 L120 168 L180 152 L240 170 L300 156 V200 H0Z" fill="#2e3a5e"/>
+    </symbol>
+    <symbol id="bowl" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#2a1f2c"/><ellipse cx="150" cy="168" rx="92" ry="10" fill="#1b141d"/>
+      <path d="M62 86 Q150 104 238 86 Q232 160 150 164 Q68 160 62 86Z" fill="#3e5a63"/><ellipse cx="150" cy="86" rx="88" ry="14" fill="#56767e"/><ellipse cx="150" cy="87" rx="78" ry="9" fill="#2c4148"/>
+      <path d="M108 96 L120 118 L112 134 L128 152 M120 118 L146 124 L160 146 L156 162 M146 124 L170 104 L188 100" fill="none" stroke="#e8b84a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="sky2" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#neb)"/>
+      <g fill="#fff"><circle cx="30" cy="30" r="1.2"/><circle cx="80" cy="140" r="1"/><circle cx="120" cy="50" r="1.6"/><circle cx="220" cy="30" r="1.1"/><circle cx="260" cy="150" r="1.4"/><circle cx="180" cy="170" r="1"/><circle cx="60" cy="90" r="1.3"/><circle cx="240" cy="90" r="1"/><circle cx="150" cy="20" r="1"/><circle cx="20" cy="170" r="1.2"/></g>
+      <circle cx="175" cy="85" r="5" fill="#fff" opacity=".9"/><circle cx="175" cy="85" r="14" fill="#fff" opacity=".15"/>
+    </symbol>
+    <symbol id="ferm" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#d9b991"/><ellipse cx="150" cy="120" rx="100" ry="58" fill="#a8693a"/><ellipse cx="150" cy="110" rx="96" ry="52" fill="#c4834b"/>
+      <path d="M90 100 Q150 70 210 100 M100 122 Q150 96 200 122" stroke="#e9c79a" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+<header>
+  <h1>Shoebox in Midnight Gold</h1>
+  <p>One day with the new Shoebox. You save once, with your reason, and you rarely open the app. Each save comes back on its own, at a moment it's useful, wherever you already are.</p>
+  <p><b>The rules behind every frame:</b></p>
+  <div class="rule"><span>Your reason decides when it comes back</span><span>One moment per save</span><span>Ignored twice, it goes quiet</span><span>Answer without unlocking</span><span>Shoebox prepares; you decide</span></div>
+  <div class="mode" role="group" aria-label="Look"><button type="button" data-mode="night" aria-pressed="true">Night</button><button type="button" data-mode="day" aria-pressed="false">Day</button></div>
+  <div class="strip" id="strip"></div>
+</header>
+
+<h3 class="sec">Thursday</h3>
+<p class="sec">A normal workday. Shoebox shows up seven times and asks for three taps in total.</p>
+
+<div class="board">
+
+<!-- 1 Morning issue -->
+<article class="frame">
+  <div class="when"><span>7:00 AM · Lock Screen</span><b>The one scheduled moment</b></div>
+  <div class="stage"><div class="phone"><div class="scr wall-a"><div class="island"></div>
+    <div class="lock-time"><small>Thursday, October 29</small><b>7:00</b></div>
+    <div class="stack">
+      <div class="cover">
+        <div class="img"><svg><use href="#ridge"/></svg><div class="mast">Shoebox</div></div>
+        <div class="body">
+          <div class="meta"><span>Today's issue</span><span>3 things · 25 min</span></div>
+          <ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol>
+          <div class="btns"><span>Read it to me</span><span class="go">Open</span></div>
+        </div>
+      </div>
+    </div>
+  </div></div></div>
+  <h2>The Daily Issue, as a notification</h2>
+  <p>A small cover with today's few, written as your own reasons. <strong>Readable in ten seconds</strong> without opening anything. Each line already knows when it will come back during the day.</p>
+  <span class="taps"><i></i>0 taps to know your day</span>
+</article>
+
+<!-- 2 Car -->
+<article class="frame">
+  <div class="when"><span>8:20 AM · CarPlay</span><b>Hands free</b></div>
+  <div class="stage"><div class="car"><div class="cscr">
+    <div class="dock"><i></i><i></i><i class="on"></i><i></i></div>
+    <div class="cmain">
+      <div class="cart"><svg><use href="#ridge"/></svg></div>
+      <div><div class="app"><span>Shoebox · your issue, 2 of 3</span></div><div class="why">"Drive it next fall."</div><div class="src">Tuesday you saved the Blue Ridge Parkway. Keep it for September?</div></div>
+      <div class="cbtns"><span class="go">September</span><span>Done</span><span>Skip</span></div>
+    </div>
+  </div></div></div>
+  <h2>Your issue, read aloud</h2>
+  <p>"Read it to me" plays a two-minute spoken version on the drive. Shoebox suggests a better time for the ones that don't fit today. <strong>Say "September"</strong> or tap once.</p>
+  <span class="taps"><i></i>0 to 1 tap, or your voice</span>
+  <p class="needs">Needs: CarPlay's audio category, which Apple grants by request. Plain Bluetooth audio with Siri works without it.</p>
+</article>
+
+<!-- 3 Calendar gap -->
+<article class="frame">
+  <div class="when"><span>9:48 AM · Lock Screen</span><b>Your reason found a time</b></div>
+  <div class="stage"><div class="phone"><div class="scr wall-b"><div class="island"></div>
+    <div class="lock-time"><small>Thursday, October 29</small><b>9:48</b></div>
+    <div class="stack">
+      <div class="note faint">Calendar · Quarterly planning at 10:00</div>
+      <div class="la">
+        <div class="app"><span><i class="ico"></i>Shoebox</span><span>12 min until planning</span></div>
+        <div class="why sm">Read before we plan next quarter.</div>
+        <div class="src"><b>Shape Up</b>, chapter 3 · 11 min</div>
+        <div class="bar"></div>
+        <div class="btns"><span>After planning</span><span class="go">Read now</span></div>
+      </div>
+    </div>
+  </div></div></div>
+  <h2>The reason is the trigger</h2>
+  <p>You wrote "before we plan next quarter." The on-device model matched it to your planning meeting and picked <strong>the gap right before it</strong>, and the one chapter that fits in it.</p>
+  <span class="taps"><i></i>1 tap</span>
+  <p class="needs">Needs: Calendar access (read only), Live Activities, Apple's on-device model. Nothing leaves the phone.</p>
+</article>
+
+<!-- 4 Capture -->
+<article class="frame">
+  <div class="when"><span>12:30 PM · Safari</span><b>Capture</b></div>
+  <div class="stage"><div class="phone"><div class="scr safari"><div class="island"></div>
+    <div class="page"><h4>Kintsugi</h4><div class="lede">From Wikipedia, the free encyclopedia</div><div class="art"><svg><use href="#bowl"/></svg></div><div class="lede">Kintsugi is the Japanese art of repairing broken pottery by mending the areas of breakage with lacquer dusted or mixed with powdered gold…</div></div>
+    <div class="url">en.wikipedia.org</div>
+    <div class="dim"></div>
+    <div class="side"></div>
+    <div class="capture">
+      <div class="app"><span><i class="ico"></i>Keeping this page</span><span>Listening</span></div>
+      <div class="wave"><i style="height:10px"></i><i style="height:18px"></i><i style="height:24px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:26px"></i><i style="height:12px"></i><i style="height:20px"></i><i style="height:16px"></i><i style="height:24px"></i><i style="height:10px"></i><i style="height:18px"></i><i style="height:14px"></i><i style="height:8px"></i></div>
+      <div class="heard">"For the bowl that broke at Thanksgiving."</div>
+      <div class="inferred">Comes back <b>Saturday morning, at home</b>. It sounds like a weekend project.</div>
+    </div>
+  </div></div></div>
+  <h2>Hold, say why, let go</h2>
+  <p>Hold the Action Button on any page, photo or message and <strong>say your reason</strong>. Shoebox keeps the page and your words, and tells you when it'll come back. No sheet, no typing.</p>
+  <span class="taps"><i></i>0 taps: one press and a sentence</span>
+  <p class="needs">Needs: an App Intent on the Action Button (iPhone 15 Pro and later). Older phones use the share sheet with the same voice step.</p>
+</article>
+
+<!-- 5 Screenshot -->
+<article class="frame">
+  <div class="when"><span>3:10 PM · Screenshot</span><b>No questions asked</b></div>
+  <div class="stage"><div class="phone"><div class="scr" style="background:#1d1b1f"><div class="island"></div>
+    <div class="shot"><div class="flyer"><h4>7th Grade Aquarium Trip</h4><p>Friday, November 6. Buses leave at 8:15.</p><div class="box">Permission form and $12 due <b>Friday, October 30</b>. Send in your student's folder.</div></div></div>
+    <div class="banner"><div class="note">
+      <div class="app"><span><i class="ico"></i>Shoebox kept the flyer</span><span>now</span></div>
+      <div class="why sm">Field trip form and $12, due Friday.</div>
+      <div class="src">Reminder <b>tonight at 7</b> · trip added to your calendar for Nov 6</div>
+      <div class="btns"><span>Change</span><span class="go">Good</span></div>
+    </div></div>
+  </div></div></div>
+  <h2>A screenshot is a save</h2>
+  <p>Screenshot the school flyer and you're done. Shoebox reads the date, the fee and what's due, <strong>writes the reason for you</strong>, and sets the reminder. You only touch it if it got something wrong.</p>
+  <span class="taps"><i></i>0 taps</span>
+  <p class="needs">Needs: permission to read new screenshots in Photos, or a Shortcut automation on screenshot. Calendar write access for the trip.</p>
+</article>
+
+<!-- 6 Dinner -->
+<article class="frame">
+  <div class="when"><span>6:10 PM · At home</span><b>The right place</b></div>
+  <div class="stage"><div class="phone"><div class="scr wall-c"><div class="island"></div>
+    <div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div>
+    <div class="stack">
+      <div class="note">
+        <div class="app"><span><i class="ico"></i>Shoebox</span><span>now</span></div>
+        <div class="why">Show the kids at dinner.</div>
+        <div class="thumb"><svg><use href="#sky2"/></svg></div>
+        <div class="src"><b>Astronomy Picture of the Day</b> · tonight's picture</div>
+        <div class="btns"><span>Tomorrow</span><span>Drop</span><span class="go">Show it</span></div>
+      </div>
+    </div>
+  </div></div></div>
+  <h2>"At dinner" means dinner</h2>
+  <p>Your words said when. Shoebox waits for your <strong>evening at home</strong>, not a 7 a.m. list. "Show it" opens tonight's picture full screen, ready to hand across the table.</p>
+  <span class="taps"><i></i>1 tap</span>
+  <p class="needs">Needs: a sense of "home." Either your Home and Personal Focus (no location access), or location if you allow it. Focus is the default.</p>
+</article>
+
+<!-- 7 Siri -->
+<article class="frame">
+  <div class="when"><span>9:30 PM · Siri</span><b>Find it by asking</b></div>
+  <div class="stage"><div class="phone"><div class="scr wall-a"><div class="island"></div>
+    <div class="siri"></div><div class="glow"></div>
+    <div class="ask">"What was that bowl repair thing I saved?"</div>
+    <div class="answer"><div class="note">
+      <div class="app"><span><i class="ico"></i>Shoebox</span><span>saved at 12:30</span></div>
+      <div class="why sm">Kintsugi.</div>
+      <div class="thumb"><svg><use href="#bowl"/></svg></div>
+      <div class="src">You said: <b>for the bowl that broke at Thanksgiving.</b> It's coming back Saturday morning.</div>
+      <div class="btns"><span>Saturday is fine</span><span class="go">Open</span></div>
+    </div></div>
+  </div></div></div>
+  <h2>Search is a question</h2>
+  <p>Ask the way you'd ask a person: vague, half-remembered. Shoebox answers <strong>with your own words</strong> and when it's coming back. All saves are still there to scroll, but you'll rarely need to.</p>
+  <span class="taps"><i></i>0 taps</span>
+  <p class="needs">Needs: App Intents and Apple's personal context for Siri.</p>
+</article>
+
+</div>
+
+<h3 class="sec">The rest of the week</h3>
+<p class="sec">Some saves are really tasks, and some only make sense on a certain day.</p>
+
+<div class="board">
+
+<!-- 8 Agentic -->
+<article class="frame">
+  <div class="when"><span>Friday 12:15 PM · Lock Screen</span><b>Half done</b></div>
+  <div class="stage"><div class="phone"><div class="scr wall-c"><div class="island"></div>
+    <div class="lock-time"><small>Friday, October 30</small><b>12:15</b></div>
+    <div class="stack">
+      <div class="note">
+        <div class="app"><span><i class="ico"></i>Shoebox looked into it</span><span>now</span></div>
+        <div class="why sm">Book the campsite at Carolina Beach for the long weekend.</div>
+        <div class="src" style="margin-top:6px">Two waterfront sites are open <b>Nov 14 to 16</b>. Example: $38 a night. Shoebox filled in your dates.</div>
+        <div class="btns"><span>Not now</span><span>Drop</span><span class="go">Book it</span></div>
+      </div>
+    </div>
+  </div></div></div>
+  <h2>A task comes back with the work done</h2>
+  <p>A note that says "book" or "order" or "sign" is work in disguise. Shoebox checks availability and fills in what it can. <strong>Book it</strong> opens the booking page with your dates in it. Paying is always your tap.</p>
+  <span class="taps"><i></i>1 tap, then the site's own checkout</span>
+  <p class="needs">Needs: the relay's web lookup (AI), and a site that takes dates in its link. Shoebox never books or pays on its own.</p>
+</article>
+
+<!-- 9 Watch -->
+<article class="frame">
+  <div class="when"><span>Saturday 8:05 AM · Watch</span><b>On your wrist</b></div>
+  <div class="stage"><div class="watch"><div class="crown"></div><div class="wscr">
+    <div class="app"><span>SHOEBOX</span></div>
+    <div class="why">Try the long cold ferment this weekend.</div>
+    <div class="src">Sourdough · start it today for Sunday bread</div>
+    <div class="wbtn"><span>Later</span><span class="go">Started</span></div>
+  </div></div></div>
+  <h2>A weekend save, on the weekend</h2>
+  <p>"This weekend" came back Saturday morning, early enough to matter: <strong>a cold ferment starts a day ahead</strong>. Shoebox read the recipe to know that.</p>
+  <span class="taps"><i></i>1 tap</span>
+  <p class="needs">Needs: a small watchOS app, or just notifications mirrored to the Watch for version one.</p>
+</article>
+
+<!-- 10 The app -->
+<article class="frame">
+  <div class="when"><span>Sunday · The app</span><b>Once a week, if that</b></div>
+  <div class="stage"><div class="phone"><div class="scr appview"><div class="island"></div>
+    <div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div>
+    <div class="list">
+      <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi · moved from Saturday</small></div></div>
+      <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review · Martin Fowler</small></div></div>
+      <div class="day"><b>Nov<span>14</span></b><div><p>Book the campsite at Carolina Beach.</p><small>Waiting on you: Book it or Not now</small></div></div>
+      <div class="day"><b>Sep<span>'27</span></b><div><p>Drive it next fall.</p><small>Blue Ridge Parkway · first weekend of peak color</small></div></div>
+      <div class="quiet"><b>2 saves went quiet</b> after you passed on them twice. They're kept, and they won't come back unless you ask.</div>
+    </div>
+  </div></div></div>
+  <h2>The app is the calendar of your saves</h2>
+  <p>When you do open Shoebox, it shows <strong>what's coming back and when</strong>, in your words, and lets you move anything. Everything you've kept is one question away.</p>
+  <span class="taps"><i></i>Optional</span>
+</article>
+
+</div>
+</div>
+
+<script>
+const SW = {
+  night: [["Surface","#0F1630"],["Deep","#0B1129"],["Text","#F3EAD7"],["Gold","#D8B45A"],["Gold text","#E2C47A"],["Quiet","#8F97B3"],["Done","#8FB3A0"]],
+  day: [["Surface","#F7F1E3"],["Deep","#0B1129"],["Text","#0F1630"],["Gold","#D8B45A"],["Gold text","#8A6A1C"],["Quiet","#5D6584"],["Done","#5F8A74"]],
+};
+function setMode(m) {
+  document.documentElement.classList.toggle("day", m === "day");
+  document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  document.getElementById("strip").innerHTML = SW[m].map(([n, h]) => `<div><i style="background:${h}"></i><b>${n}</b><span>${h}</span></div>`).join("");
+  try { localStorage.setItem("sbMode", m); } catch (e) {}
+}
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+let start = "night"; try { start = localStorage.getItem("sbMode") || "night"; } catch (e) {}
+setMode(start);
+</script>

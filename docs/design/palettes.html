@@ -1,0 +1,193 @@
+<title>Shoebox Color Range</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: eight cards, two per row, so neighbors can be compared. Each card: what kind of palette it is, its colors, and the same two phones (an evening notification and Coming back). */
+:root {
+  --bg: #e9e7e3; --fg: #19171a; --muted: #625d63; --line: #d2cec8; --panel: #f4f2ee;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif; --serif: "DM Serif Display", Georgia, serif; --label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --wall: radial-gradient(120% 75% at 30% 5%, #4a2347 0%, #1f1320 62%, #050506 100%); --time: #fff;
+  --card-bg: #f8f1e7; --card-fg: #2b1428; --app-bg: #f8f1e7; --app-fg: #2b1428;
+  --act: #7a2e6e; --on-act: #fff; --act-text: #7a2e6e; --muted-c: #8c5f72; --done: #7fa8a6; --new: #f2b39b; --on-new: #2b1428;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+h1 { font: 400 clamp(38px, 7vw, 66px)/0.98 var(--serif); margin: 0 0 14px; }
+.intro { margin: 0; max-width: 66ch; color: var(--muted); }
+.map { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.map a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-size: 13.5px; }
+.map a:hover, .map a:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 590px), 1fr)); gap: 24px; margin-top: 34px; }
+.pal { min-width: 0; padding: 20px 18px 22px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 14px; align-content: start; }
+.pal header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pal h2 { margin: 0; font: 400 30px/1 var(--serif); }
+.kind { display: flex; gap: 6px; flex-wrap: wrap; }
+.kind span { padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--fg) 8%, transparent); font: 600 11.5px var(--sans); }
+.pal > p { margin: 0; color: var(--muted); font-size: 14px; }
+.sw { display: flex; gap: 0; height: 30px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(127,127,127,.25); }
+.sw i { flex: 1; }
+.sw i.big { flex: 3; }
+.phones { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* Devices */
+.phone { width: 262px; height: 540px; max-width: 100%; border-radius: 42px; padding: 8px; background: #0b0b0d; box-shadow: 0 24px 50px -22px rgba(10,10,20,.55), inset 0 0 0 1.5px #2b2b30; flex: none; }
+.scr { position: relative; height: 100%; border-radius: 34px; overflow: hidden; font-family: var(--label); }
+.island { position: absolute; top: 9px; left: 50%; width: 82px; height: 23px; margin-left: -41px; border-radius: 14px; background: #000; z-index: 5; }
+.lock { background: var(--wall); color: var(--time); }
+.lock-time { position: absolute; top: 46px; left: 0; right: 0; text-align: center; }
+.lock-time small { display: block; font: 600 13px var(--label); opacity: .85; }
+.lock-time b { display: block; font: 600 70px/1 var(--label); font-stretch: 112%; letter-spacing: -0.02em; }
+.stack { position: absolute; left: 10px; right: 10px; bottom: 22px; }
+.note { border-radius: 6px; background: var(--card-bg); color: var(--card-fg); padding: 12px 13px 13px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.55); }
+.ar { display: flex; justify-content: space-between; align-items: center; font: 600 10.5px var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted-c); margin-bottom: 6px; }
+.ar span { display: flex; align-items: center; gap: 6px; }
+.ico { width: 18px; height: 18px; border-radius: 4px; background: var(--act); position: relative; flex: none; }
+.ico::after { content: ""; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 7px; border-radius: 1px; background: var(--on-act); }
+.why { font: 400 23px/1.08 var(--serif); margin: 0 0 6px; }
+.src { font: 500 11.5px/1.3 var(--label); color: var(--muted-c); }
+.thumb { height: 76px; border-radius: 3px; overflow: hidden; margin: 8px 0; }
+.thumb svg { display: block; width: 100%; height: 100%; }
+.btns { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 10px; }
+.btns span { text-align: center; padding: 8px 0; border-radius: 4px; border: 1px solid color-mix(in srgb, currentColor 28%, transparent); font: 600 12px var(--label); }
+.btns span.go { background: var(--act); color: var(--on-act); border-color: var(--act); }
+.app { background: var(--app-bg); color: var(--app-fg); }
+.app .top { position: absolute; top: 44px; left: 16px; right: 16px; }
+.app h5 { margin: 0; font: 400 34px/1 var(--serif); }
+.app .search { margin-top: 10px; padding: 8px 12px; border-radius: 4px; background: color-mix(in srgb, currentColor 8%, transparent); font: 500 12.5px var(--label); color: var(--muted-c); }
+.app .list { position: absolute; top: 134px; left: 12px; right: 12px; display: grid; gap: 6px; }
+.day { display: grid; grid-template-columns: 42px 1fr; gap: 8px; padding: 9px 6px 10px; border-radius: 4px; border-bottom: 1px solid color-mix(in srgb, currentColor 13%, transparent); background: var(--row, transparent); }
+.day > b { font: 700 10px/1.3 var(--label); font-stretch: 80%; letter-spacing: .12em; text-transform: uppercase; color: var(--act-text); padding-top: 3px; }
+.day > b span { display: block; font: 400 22px/1 var(--serif); color: var(--app-fg); letter-spacing: 0; }
+.day p { margin: 0; font: 400 16px/1.15 var(--serif); }
+.day small { display: block; font: 500 10.5px var(--label); color: var(--muted-c); margin-top: 3px; }
+.tag { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; background: var(--new); color: var(--on-new); font: 700 9px var(--label); letter-spacing: .08em; text-transform: uppercase; vertical-align: 2px; }
+.day.done p { opacity: .55; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.tick { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--done); }
+.tick svg { width: 12px; height: 12px; stroke: var(--app-fg); }
+
+/* Family-specific touches */
+.glass .note, .glass .day { background: rgba(255,255,255,.5); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(255,255,255,.6), 0 10px 24px -14px rgba(40,20,80,.45); border-bottom: 0; }
+.glass .app { background: var(--wall); }
+.glass .app .search { background: rgba(255,255,255,.45); }
+.sorbet .day:nth-child(1) { --row: #ffd9e4; } .sorbet .day:nth-child(2) { --row: #e8dcff; } .sorbet .day:nth-child(3) { --row: #d6f2e3; }
+.sorbet .day { border-bottom: 0; }
+.sorbet .note { box-shadow: 0 0 0 1.5px #2b2340, 4px 4px 0 #2b2340; }
+.tomato .note { box-shadow: 0 0 0 2px #1a0f0a; }
+.graphite .why, .graphite h5, .graphite .day p { font-family: var(--serif); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="neb" cx=".6" cy=".4" r=".6"><stop offset="0" stop-color="#c46aa0"/><stop offset=".5" stop-color="#4b3a8a"/><stop offset="1" stop-color="#0b0b1e"/></radialGradient>
+    <symbol id="sky2" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#neb)"/>
+      <g fill="#fff"><circle cx="30" cy="30" r="1.2"/><circle cx="80" cy="140" r="1"/><circle cx="120" cy="50" r="1.6"/><circle cx="220" cy="30" r="1.1"/><circle cx="260" cy="150" r="1.4"/><circle cx="60" cy="90" r="1.3"/></g>
+      <circle cx="175" cy="85" r="5" fill="#fff" opacity=".9"/><circle cx="175" cy="85" r="14" fill="#fff" opacity=".15"/>
+    </symbol>
+    <filter id="gray"><feColorMatrix type="saturate" values="0"/></filter>
+  </defs>
+  <!-- One phone pair, cloned into each card by the script below so all eight stay identical apart from color. -->
+</svg>
+
+<template id="pair">
+  <div class="phones">
+    <div class="phone"><div class="scr lock"><div class="island"></div>
+      <div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div>
+      <div class="stack"><div class="note">
+        <div class="ar"><span><i class="ico"></i>Shoebox</span><span>now</span></div>
+        <div class="why">Show the kids at dinner.</div>
+        <div class="thumb"><svg><use href="#sky2"/></svg></div>
+        <div class="src">Astronomy Picture of the Day · tonight</div>
+        <div class="btns"><span>Tomorrow</span><span class="go">Show it</span></div>
+      </div></div>
+    </div></div>
+    <div class="phone"><div class="scr app"><div class="island"></div>
+      <div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div>
+      <div class="list">
+        <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving. <span class="tag">New</span></p><small>Kintsugi · kept today</small></div></div>
+        <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review</small></div></div>
+        <div class="day done"><b><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><div><p>Show the kids at dinner.</p><small>Done Thursday</small></div></div>
+        <div class="day"><b>Sep<span>'27</span></b><div><p>Drive it next fall.</p><small>Blue Ridge Parkway</small></div></div>
+      </div>
+    </div></div>
+  </div>
+</template>
+
+<div class="wrap">
+<h1>Shoebox color range</h1>
+<p class="intro">Eight palettes that differ in kind, not only in hue: light or dark, one color or many, quiet or loud, flat or glassy. Every card shows the same two moments, so the only thing changing is color.</p>
+<nav class="map" aria-label="Palettes">
+  <a href="#faded">Faded Print · light, warm</a><a href="#velvet">Velvet · dark, rich</a><a href="#graphite">Graphite · no color</a><a href="#tomato">Tomato · one loud color</a><a href="#sorbet">Sorbet · many soft colors</a><a href="#glass">Glass · gradient and frosted</a><a href="#forest">Forest · dark, earthy</a><a href="#gold">Midnight Gold · dark, classic</a>
+</nav>
+
+<div class="grid">
+
+<article class="pal" id="faded" style="--wall:radial-gradient(120% 75% at 30% 5%, #4a2347 0%, #1f1320 62%, #050506 100%);--card-bg:#f8f1e7;--card-fg:#2b1428;--app-bg:#f8f1e7;--app-fg:#2b1428;--act:#7a2e6e;--on-act:#fff;--act-text:#7a2e6e;--muted-c:#8c5f72;--done:#7fa8a6;--new:#f2b39b;--on-new:#2b1428">
+  <header><h2>Faded Print</h2><div class="kind"><span>Light</span><span>Warm</span><span>Muted</span></div></header>
+  <p>Cream paper, plum to act, peach for new, faded cyan for done. Calm, personal, a little nostalgic. The baseline from last round.</p>
+  <div class="sw"><i class="big" style="background:#f8f1e7"></i><i style="background:#2b1428"></i><i style="background:#7a2e6e"></i><i style="background:#f2b39b"></i><i style="background:#7fa8a6"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal" id="velvet" style="--wall:radial-gradient(120% 75% at 30% 5%, #3b1730 0%, #140a13 60%, #050305 100%);--card-bg:#2a1830;--card-fg:#f6e4d8;--app-bg:#160d17;--app-fg:#f6e4d8;--act:#ff7a59;--on-act:#160d17;--act-text:#ff9a7e;--muted-c:#b597ae;--done:#c9a3e0;--new:#ff7a59;--on-new:#160d17">
+  <header><h2>Velvet</h2><div class="kind"><span>Dark</span><span>Warm</span><span>Rich</span></div></header>
+  <p>Plum-black everywhere, coral to act, lilac for done. Feels like evening. The app and the Lock Screen look like one thing.</p>
+  <div class="sw"><i class="big" style="background:#160d17"></i><i style="background:#2a1830"></i><i style="background:#f6e4d8"></i><i style="background:#ff7a59"></i><i style="background:#c9a3e0"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal graphite" id="graphite" style="--wall:radial-gradient(120% 75% at 30% 5%, #4a4a4a 0%, #161616 60%, #000 100%);--card-bg:#ffffff;--card-fg:#0a0a0a;--app-bg:#ffffff;--app-fg:#0a0a0a;--act:#0a0a0a;--on-act:#fff;--act-text:#0a0a0a;--muted-c:#6e6e6e;--done:#e2e2e2;--new:#0a0a0a;--on-new:#fff">
+  <header><h2>Graphite</h2><div class="kind"><span>Light</span><span>No color</span><span>Editorial</span></div></header>
+  <p>Black, white and grey only. All the character comes from type. Your photos become the only color on the screen.</p>
+  <div class="sw"><i class="big" style="background:#ffffff"></i><i style="background:#0a0a0a"></i><i style="background:#6e6e6e"></i><i style="background:#e2e2e2"></i><i style="background:#2a2a2a"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal tomato" id="tomato" style="--wall:radial-gradient(120% 75% at 30% 5%, #ff7a52 0%, #c2300f 55%, #4a0f04 100%);--card-bg:#ff5a36;--card-fg:#1a0f0a;--app-bg:#ff5a36;--app-fg:#1a0f0a;--act:#1a0f0a;--on-act:#ff5a36;--act-text:#1a0f0a;--muted-c:#5e2416;--done:#ffd7c9;--new:#fff3ec;--on-new:#1a0f0a">
+  <header><h2>Tomato</h2><div class="kind"><span>Saturated</span><span>One color</span><span>Loud</span></div></header>
+  <p>One bold color, used everywhere, with black type and black buttons. Impossible to miss on a Lock Screen. Confident, poster-like.</p>
+  <div class="sw"><i class="big" style="background:#ff5a36"></i><i style="background:#1a0f0a"></i><i style="background:#5e2416"></i><i style="background:#ffd7c9"></i><i style="background:#fff3ec"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal sorbet" id="sorbet" style="--wall:linear-gradient(170deg, #ffd9e4 0%, #e8dcff 55%, #d6f2e3 100%);--time:#2b2340;--card-bg:#fff8e1;--card-fg:#2b2340;--app-bg:#fffdf8;--app-fg:#2b2340;--act:#2b2340;--on-act:#fff;--act-text:#2b2340;--muted-c:#6d6580;--done:#bfe8d1;--new:#2b2340;--on-new:#fff">
+  <header><h2>Sorbet</h2><div class="kind"><span>Light</span><span>Many colors</span><span>Playful</span></div></header>
+  <p>Each save gets its own soft color: pink, lavender, mint, butter. Deep ink, black outlines with a small offset shadow. Friendly and lively.</p>
+  <div class="sw"><i style="background:#ffd9e4"></i><i style="background:#e8dcff"></i><i style="background:#d6f2e3"></i><i style="background:#fff0b8"></i><i style="background:#2b2340"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal glass" id="glass" style="--wall:linear-gradient(160deg, #ff9a8b 0%, #c56cd6 52%, #6b7cff 100%);--card-bg:rgba(255,255,255,.55);--card-fg:#1c1830;--app-bg:transparent;--app-fg:#1c1830;--act:#1c1830;--on-act:#fff;--act-text:#1c1830;--muted-c:#3f3a58;--done:rgba(255,255,255,.85);--new:#1c1830;--on-new:#fff">
+  <header><h2>Glass</h2><div class="kind"><span>Gradient</span><span>Frosted</span><span>Very iOS</span></div></header>
+  <p>A warm gradient behind frosted glass cards, the way iPhone's own system looks now. Modern and native, less personal.</p>
+  <div class="sw"><i style="background:#ff9a8b"></i><i style="background:#c56cd6"></i><i style="background:#6b7cff"></i><i class="big" style="background:rgba(255,255,255,.7)"></i><i style="background:#1c1830"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal" id="forest" style="--wall:radial-gradient(120% 75% at 30% 5%, #2c5a46 0%, #0f2219 60%, #040a07 100%);--card-bg:#12291f;--card-fg:#efe7d6;--app-bg:#12291f;--app-fg:#efe7d6;--act:#e8743b;--on-act:#12291f;--act-text:#f08d58;--muted-c:#9bb0a3;--done:#7fae8f;--new:#e8743b;--on-new:#12291f">
+  <header><h2>Forest</h2><div class="kind"><span>Dark</span><span>Earthy</span><span>Grounded</span></div></header>
+  <p>Deep green, bone type and persimmon to act. Outdoorsy and steady, like a field journal.</p>
+  <div class="sw"><i class="big" style="background:#12291f"></i><i style="background:#efe7d6"></i><i style="background:#e8743b"></i><i style="background:#7fae8f"></i><i style="background:#9bb0a3"></i></div>
+  <div data-pair></div>
+</article>
+
+<article class="pal" id="gold" style="--wall:radial-gradient(120% 75% at 30% 5%, #253568 0%, #0b1129 60%, #03050d 100%);--card-bg:#0f1630;--card-fg:#f3ead7;--app-bg:#0f1630;--app-fg:#f3ead7;--act:#d8b45a;--on-act:#0f1630;--act-text:#e2c47a;--muted-c:#8f97b3;--done:#8fb3a0;--new:#d8b45a;--on-new:#0f1630">
+  <header><h2>Midnight Gold</h2><div class="kind"><span>Dark</span><span>Classic</span><span>Formal</span></div></header>
+  <p>Navy, cream type and a soft gold. Feels like a well-made leather notebook or an old library.</p>
+  <div class="sw"><i class="big" style="background:#0f1630"></i><i style="background:#f3ead7"></i><i style="background:#d8b45a"></i><i style="background:#8fb3a0"></i><i style="background:#8f97b3"></i></div>
+  <div data-pair></div>
+</article>
+
+</div>
+</div>
+
+<script>
+// Put the same two phones into every card.
+const tpl = document.getElementById("pair");
+document.querySelectorAll("[data-pair]").forEach((slot) => slot.replaceWith(tpl.content.cloneNode(true)));
+</script>
