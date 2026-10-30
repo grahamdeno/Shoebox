@@ -15,6 +15,20 @@ struct OpenedView: View {
 
     private var image: UIImage? { save.imageData.flatMap(UIImage.init(data:)) }
 
+    /// The full text with links made tappable: the email, the note, or the page's text.
+    private var reading: AttributedString {
+        let text = save.body.isEmpty ? save.snippet : save.body
+        var out = AttributedString(text)
+        if let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) {
+            for m in detector.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                guard let url = m.url, let r = Range(m.range, in: text), let ar = Range(r, in: out) else { continue }
+                out[ar].link = url
+                out[ar].underlineStyle = .single
+            }
+        }
+        return out
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Theme.ground.ignoresSafeArea()
@@ -24,10 +38,14 @@ struct OpenedView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         hero
                         VStack(alignment: .leading, spacing: 14) {
-                            Text(save.title)
+                            Text(save.byline())
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.quiet)
+                            Text(save.headline)
                                 .font(.system(size: 28, weight: .semibold))
                                 .tracking(-0.5)
                                 .foregroundStyle(Theme.ink)
+                                .textSelection(.enabled)
                             if !save.note.isEmpty {
                                 Text(save.note)
                                     .font(.system(size: 16))
@@ -35,19 +53,20 @@ struct OpenedView: View {
                                     .padding(.horizontal, 6).padding(.vertical, 2)
                                     .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
                             }
-                            if !save.snippet.isEmpty {
-                                Text(save.snippet)
-                                    .font(.system(size: 17))
-                                    .lineSpacing(5)
-                                    .foregroundStyle(Theme.ink)
+                            if let url = save.url {
+                                Link(destination: url) {
+                                    Text("Open the page on \(save.host ?? "the web")")
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .underline()
+                                        .frame(minHeight: Metrics.touchMin, alignment: .leading)
+                                }
+                                .foregroundStyle(Theme.ink)
                             }
-                            if let link = save.urlString, let url = URL(string: link) {
-                                Link(link, destination: url)
-                                    .font(.system(size: 17))
-                                    .foregroundStyle(Theme.ink)
-                                    .underline()
-                                    .lineLimit(2)
-                            }
+                            Text(reading)
+                                .font(.system(size: 17))
+                                .lineSpacing(5)
+                                .foregroundStyle(Theme.ink)
+                                .textSelection(.enabled)
                         }
                         .padding(.horizontal, 24)
                         .padding(.top, 22)
@@ -74,6 +93,7 @@ struct OpenedView: View {
                 .transition(.move(edge: .bottom))
             }
         }
+        .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
     }
 
     private var hero: some View {

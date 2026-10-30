@@ -17,16 +17,17 @@ struct PostView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 300)
                     .frame(maxWidth: .infinity)
+                    .frame(height: 300)
                     .clipShape(RoundedRectangle(cornerRadius: Metrics.photoRadius, style: .continuous))
+                    .padding(.top, 20)
                     .padding(.bottom, 26)
                     .accessibilityHidden(true)
-                details(titleSize: 30)
+                details(titleSize: 30, snippetLines: 3)
                 Spacer(minLength: 0)
             } else {
                 Spacer(minLength: 0)
-                details(titleSize: 38)
+                details(titleSize: 38, snippetLines: 6)
                 Spacer(minLength: 0)
                 Spacer(minLength: 0)
             }
@@ -36,14 +37,13 @@ struct PostView: View {
         .contentShape(Rectangle())
     }
 
-    private func details(titleSize: CGFloat) -> some View {
+    private func details(titleSize: CGFloat, snippetLines: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !save.source.isEmpty {
-                Text(save.source)
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.quiet)
-                    .padding(.bottom, 12)
-            }
+            Text(save.byline(now: now))
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.quiet)
+                .lineLimit(1)
+                .padding(.bottom, 12)
             if !save.note.isEmpty {
                 Text(save.note)
                     .font(.system(size: 16))
@@ -53,10 +53,12 @@ struct PostView: View {
                     .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
                     .padding(.bottom, 16)
             }
-            Text(save.title)
+            Text(save.headline)
                 .font(.system(size: titleSize, weight: .semibold))
                 .tracking(-0.7)
                 .foregroundStyle(Theme.ink)
+                .lineLimit(5)
+                .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 10)
             if !save.snippet.isEmpty {
@@ -64,14 +66,24 @@ struct PostView: View {
                     .font(.system(size: 17))
                     .foregroundStyle(Theme.quiet)
                     .lineSpacing(3)
-                    .lineLimit(4)
+                    .lineLimit(snippetLines)
+                    .padding(.trailing, 40)
             }
             if let event = save.eventDate {
-                Text("It comes back on its own before \(planner.label(for: event, now: now))")
+                Text(comesBack(event))
                     .font(.system(size: 15))
                     .foregroundStyle(Theme.ink)
                     .padding(.top, 20)
             }
         }
+    }
+
+    /// "Comes back Nov 7, Nov 11 and Nov 12 on its own"
+    private func comesBack(_ event: Date) -> String {
+        let days = SaveActions().reminders(for: event).filter { $0 > now }
+        guard !days.isEmpty else { return "The day is here." }
+        let labels = days.map { $0.formatted(.dateTime.month(.abbreviated).day()) }
+        let list = labels.count == 1 ? labels[0] : labels.dropLast().joined(separator: ", ") + " and " + labels[labels.count - 1]
+        return "Comes back \(list) on its own"
     }
 }

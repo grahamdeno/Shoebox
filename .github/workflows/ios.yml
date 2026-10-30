@@ -18,6 +18,11 @@ jobs:
           sudo xcode-select -s "$XC"
           xcodebuild -version
 
+      - name: Core rules tests
+        run: |
+          set -o pipefail
+          swift test --package-path Core 2>&1 | tail -n 40
+
       - name: Install XcodeGen
         run: brew install xcodegen
 

@@ -1,16 +1,20 @@
+import PhotosUI
 import SwiftData
 import SwiftUI
 
-/// Keep something by hand. Most saves will come from the share sheet or email.
+/// Keep something by hand. Most saves come from the share sheet or email.
 struct AddSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    let planner: LaterPlanner
-
     @State private var text = ""
     @State private var why = ""
     @State private var error = ""
+    @State private var photo: PhotosPickerItem?
+    @State private var photoData: Data?
+    @FocusState private var focus: Field?
+
+    enum Field { case text, why }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -19,20 +23,62 @@ struct AddSheet: View {
                 .foregroundStyle(Theme.ink)
                 .padding(.top, 26)
 
-            field("Link or note", prompt: "Paste a link or write a note", text: $text)
-                .onChange(of: text) { _, _ in error = "" }
-            field("Why are you keeping it? (optional)", prompt: "Before the trip", text: $why)
-
-            if !error.isEmpty {
-                Text(error)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.red)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Link or note").font(.system(size: 13)).foregroundStyle(Theme.quiet)
+                if let photoData, let img = UIImage(data: photoData) {
+                    HStack(spacing: 12) {
+                        Image(uiImage: img).resizable().scaledToFill()
+                            .frame(width: 64, height: 64)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        Text("A photo").font(.system(size: 17)).foregroundStyle(Theme.ink)
+                        Spacer()
+                        Button("Remove") { self.photoData = nil; photo = nil }
+                            .font(.system(size: 15)).foregroundStyle(Theme.quiet)
+                            .frame(minHeight: Metrics.touchMin)
+                    }
+                } else {
+                    TextField("Paste a link or write a note", text: $text, axis: .vertical)
+                        .font(.system(size: 17))
+                        .lineLimit(1...5)
+                        .focused($focus, equals: .text)
+                        .padding(14)
+                        .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+                        .onChange(of: text) { _, _ in error = "" }
+                }
             }
 
-            Text("Your why decides when it comes back. Most saves come in from the share sheet or your Shoebox email.")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Why are you keeping it? (optional)").font(.system(size: 13)).foregroundStyle(Theme.quiet)
+                TextField("Before the trip", text: $why)
+                    .font(.system(size: 17))
+                    .focused($focus, equals: .why)
+                    .submitLabel(.done)
+                    .padding(14)
+                    .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+            }
+
+            if !error.isEmpty {
+                Text(error).font(.system(size: 14)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
+            }
+
+            Text("Your why decides when it comes back. Say nothing and it comes back tomorrow.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.quiet)
                 .lineSpacing(2)
+
+            if photoData == nil {
+                PhotosPicker(selection: $photo, matching: .images) {
+                    Text("Keep a photo instead")
+                        .font(.system(size: 16, weight: .semibold))
+                        .underline()
+                        .foregroundStyle(Theme.ink)
+                        .frame(minHeight: Metrics.touchMin)
+                }
+            }
 
             HStack {
                 Button("Cancel") { dismiss() }
@@ -40,66 +86,48 @@ struct AddSheet: View {
                     .font(.system(size: 17))
                     .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .leading)
                 Spacer()
-                Button(action: keep) {
-                    VStack(spacing: 0) {
-                        Theme.lidLip.frame(height: 8)
-                        Text("Keep")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Theme.lidInk)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    .frame(width: 128, height: 64)
-                    .background(Theme.lid)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
+                LidButton(title: "Keep", action: keep)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
         .background(Theme.sheet.ignoresSafeArea())
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationCornerRadius(Metrics.sheetRadius)
-    }
-
-    private func field(_ title: String, prompt: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 13)).foregroundStyle(Theme.quiet)
-            TextField(prompt, text: text)
-                .font(.system(size: 17))
-                .padding(14)
-                .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+        .onAppear { focus = .text }
+        .onChange(of: photo) { _, item in
+            Task { photoData = try? await item?.loadTransferable(type: Data.self) }
         }
     }
 
     private func keep() {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            error = "Add a link or a note first"
-            return
-        }
         let note = why.trimmingCharacters(in: .whitespacesAndNewlines)
         let now = Date()
-        let isLink = trimmed.lowercased().hasPrefix("http") && URL(string: trimmed) != nil
-        let save: Save
-        if isLink, let url = URL(string: trimmed) {
-            save = Save(
-                title: url.host ?? trimmed,
-                note: note,
-                source: "You, just now",
-                kind: .link,
-                urlString: trimmed
-            )
+        var saves: [Save] = []
+        if let photoData {
+            saves = [Capture.save(photo: photoData, note: note, origin: "your photos", now: now)]
         } else {
-            let first = trimmed.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true)
-            let title = String(first.first ?? "").prefix(80)
-            let rest = first.count > 1 ? String(first[1]) : ""
-            save = Save(title: String(title), snippet: rest, note: note, source: "You, just now", kind: .note)
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                error = "Add a link or a note first."
+                return
+            }
+            saves = Capture.saves(fromText: trimmed, note: note, origin: "", now: now)
+            for s in saves where s.kind == .note || s.kind == .quote { s.origin = "a note" }
         }
-        save.status = .away
-        save.returnDate = planner.firstReturn(note: note, now: now)
-        context.insert(save)
+        var added: [Save] = []
+        for s in saves where !Capture.isDuplicate(s, in: context) {
+            context.insert(s)
+            added.append(s)
+        }
+        if added.isEmpty && !saves.isEmpty {
+            error = "That's already in your Shoebox."
+            return
+        }
+        try? context.save()
+        for s in added where s.url != nil {
+            Task { await Relay.enrich(s); try? context.save() }
+        }
         dismiss()
     }
 }

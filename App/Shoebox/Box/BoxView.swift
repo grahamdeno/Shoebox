@@ -6,6 +6,7 @@ struct BoxView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Save.createdAt) private var all: [Save]
     @State private var search = ""
+    @State private var showSettings = false
 
     let planner: LaterPlanner
     var onBringBack: (Save) -> Void
@@ -17,6 +18,8 @@ struct BoxView: View {
         search.isEmpty || s.title.localizedCaseInsensitiveContains(search)
             || s.note.localizedCaseInsensitiveContains(search)
             || s.snippet.localizedCaseInsensitiveContains(search)
+            || s.body.localizedCaseInsensitiveContains(search)
+            || (s.urlString ?? "").localizedCaseInsensitiveContains(search)
     }
 
     private var groups: [(label: String, items: [Save])] {
@@ -40,8 +43,13 @@ struct BoxView: View {
                     .foregroundStyle(Theme.ink)
                     .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
                 Spacer()
+                Button("Settings") { showSettings = true }
+                    .font(.system(size: 17))
+                    .foregroundStyle(Theme.ink)
+                    .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
             }
             .padding(.horizontal, 24)
+            .padding(.top, 12)
 
             Text("Box")
                 .font(.system(size: 34, weight: .semibold))
@@ -86,6 +94,12 @@ struct BoxView: View {
             }
         }
         .background(Theme.ground.ignoresSafeArea())
+        .sheet(isPresented: $showSettings) { SettingsView() }
+        .onAppear {
+            #if DEBUG
+            if UserDefaults.standard.string(forKey: "screen") == "settings" { showSettings = true }
+            #endif
+        }
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -98,9 +112,12 @@ struct BoxView: View {
 
     private func row(_ s: Save, dim: Bool) -> some View {
         Button { onBringBack(s) } label: {
-            Text(s.title)
+            Text(s.headline)
                 .font(.system(size: 17))
                 .foregroundStyle(dim ? Theme.quiet : Theme.ink)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: Metrics.touchMin, alignment: .leading)
                 .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
         }

@@ -43,6 +43,14 @@ jobs:
             CURRENT_PROJECT_VERSION=$((1000 + ${{ github.run_number }})) \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 | tee "$RUNNER_TEMP/archive.log" \
             || { grep -E "error:|Error|No profiles|No Accounts|certificate|provisioning" "$RUNNER_TEMP/archive.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+      - name: Stamp entitlements
+        run: |
+          # The archive is unsigned, so each part gets its entitlements (the App Group, iCloud) here;
+          # the export signs for the App Store and keeps them.
+          APP="$RUNNER_TEMP/Shoebox.xcarchive/Products/Applications/Shoebox.app"
+          codesign -f -s - --entitlements Share/Share.entitlements "$APP/PlugIns/ShoeboxShare.appex"
+          codesign -f -s - --entitlements App/Shoebox.entitlements "$APP"
+          codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q group.com.grahamdeno.shoebox && echo "::notice::Archive carries the App Group"
       - name: Export and upload
         env:
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
