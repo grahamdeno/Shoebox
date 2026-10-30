@@ -1,0 +1,60 @@
+# Temporary. Read-only check that the App Store Connect credentials work.
+# Prints only HTTP status and counts, never a key. Deleted after use.
+name: asc-check
+on:
+  pull_request:
+    paths: ['.github/workflows/asc-check.yml']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test the App Store Connect credentials
+        env:
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          OLD_ID: ${{ secrets.ASC_KEY_ID }}
+          OLD_P8: ${{ secrets.ASC_KEY_P8 }}
+          NEW_P8_B64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          pip install -q pyjwt cryptography requests
+          python3 - <<'PY'
+          import base64, os, time
+          import jwt, requests
+
+          def pem(raw):
+              raw = (raw or "").strip()
+              if "BEGIN" in raw:
+                  return raw.replace("\\n", "\n")
+              try:
+                  return base64.b64decode(raw).decode()
+              except Exception:
+                  return ""
+
+          def say(msg):
+              print("::notice::" + msg)
+
+          def check(label, key_id, p8):
+              issuer = os.environ.get("ISSUER", "")
+              if not (key_id and p8 and issuer):
+                  say(label + ": a value is missing")
+                  return
+              now = int(time.time())
+              try:
+                  token = jwt.encode(
+                      {"iss": issuer, "iat": now, "exp": now + 600, "aud": "appstoreconnect-v1"},
+                      pem(p8), algorithm="ES256", headers={"kid": key_id})
+              except Exception as e:
+                  say(label + ": could not sign (" + type(e).__name__ + ")")
+                  return
+              r = requests.get(
+                  "https://api.appstoreconnect.apple.com/v1/apps",
+                  params={"filter[bundleId]": "com.grahamdeno.shoebox"},
+                  headers={"Authorization": "Bearer " + token}, timeout=30)
+              if r.ok:
+                  say(label + ": HTTP " + str(r.status_code) + ", apps found for com.grahamdeno.shoebox: " + str(len(r.json().get("data", []))))
+              else:
+                  codes = [e.get("code") for e in r.json().get("errors", [])]
+                  say(label + ": HTTP " + str(r.status_code) + " " + str(codes))
+
+          check("EXISTING secrets (ASC_KEY_ID + ASC_KEY_P8)", os.environ.get("OLD_ID"), os.environ.get("OLD_P8"))
+          check("NEW Shoebox CI key (VL623ZQVC7 + ASC_KEY_P8_BASE64)", "VL623ZQVC7", os.environ.get("NEW_P8_B64"))
+          PY
