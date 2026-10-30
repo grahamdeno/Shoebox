@@ -2,7 +2,7 @@
 
 Native iPhone app (SwiftUI). "Keep it. It comes back to you."
 
-**Read `docs/PLAN.md` before any work.** It holds the product rules, the decisions made, the architecture and the build phases. `docs/SPEC.md` (written in phase 0) holds the detailed behavior. `docs/design/storyboard.html` shows the target experience in the Midnight Gold palette.
+**Read `docs/PLAN.md` before any work.** It holds the product rules, the decisions made, the architecture and the build phases. `docs/SPEC.md` holds the detailed design and behavior, with the agreed screens in `docs/design/screens/`. Where PLAN.md and SPEC.md disagree, SPEC.md wins.
 
 The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and edge cases; don't copy its structure.
 

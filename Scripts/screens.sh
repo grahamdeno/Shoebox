@@ -8,7 +8,7 @@ xcrun simctl bootstatus "$SIM" -b
 xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged --batteryLevel 100 || true
 xcrun simctl install "$SIM" "$APP"
 mkdir -p screens
-SCREENS="${SCREENS:-today lid opened box add clear welcome learn settings}"
+SCREENS="${SCREENS:-today lid opened box add clear welcome share time learn settings}"
 for look in light dark; do
   xcrun simctl ui "$SIM" appearance $look
   for screen in $SCREENS; do

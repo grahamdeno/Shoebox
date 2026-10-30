@@ -2,6 +2,8 @@
 
 Written October 30, 2026. This is the brief for every build step. Read it before doing anything in this repo. When a decision here changes, change it here first.
 
+**The detailed design and behavior are in `docs/SPEC.md`, with the agreed screens in `docs/design/screens/`. Where this file and SPEC.md disagree, SPEC.md wins.**
+
 ## 1. What Shoebox is
 
 **Keep it. It comes back to you.**
@@ -109,7 +111,7 @@ Each color has one job: slate is the ground and text, peach is your words and no
 ## 6. Architecture
 
 **App targets**
-- `Shoebox` (SwiftUI app): Coming back, everything kept, settings, onboarding.
+- `Shoebox` (SwiftUI app): Today, Box, settings, onboarding.
 - `Share` extension: save from any app; type or speak the reason.
 - `Widgets`: Home Screen and Lock Screen widgets, plus the Live Activity.
 - App Intents (in the app target): Action Button capture, Siri questions, Shortcuts, Spotlight.
@@ -126,7 +128,7 @@ Each color has one job: slate is the ground and text, peach is your words and no
 - Output: one `nextMoment` (a time window, a place or Focus condition, and the surface to use), or "quiet".
 - First pass is on device: Foundation Models with structured output turns the reason into a when (date words, weekday words, "before X", "at dinner", "this weekend", "next fall"). Plain rules cover common phrases without AI. The relay's AI is the fallback.
 - Delivery is local. Local notifications and Live Activities are scheduled on the phone. The relay is not needed for reminders, so the old web-push routes go away.
-- Each save is offered once at its moment. Ignoring it (no answer within the window) counts as a pass. After two passes it goes quiet.
+- Each save is offered once at its moment. Ignoring it counts as a pass. There is no quiet rule: a passed save keeps coming back (decided October 30).
 
 **Outcomes:** swipe up (back tomorrow), Later from the box top (suggested date, Pick a date, or Let go), Done once opened. See section 5.2.
 
@@ -178,7 +180,7 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 | 2 | AI for the return planner: on device first, or relay first? | On device first, relay fallback. More private and free per call. |
 | 3 | "At home": Focus only, or location too? | Focus only in v1. No location permission. |
 | 4 | Reading new screenshots: Photos access, or a Shortcut automation? | Ask for Photos access limited to screenshots; offer the Shortcut as the no-permission path. |
-| 5 | Shoebox Me (Graham's private variant): keep? | Drop it. One app; Graham uses the real one. |
+| 5 | ~~Shoebox Me~~ | Decided October 30: dropped. One app, Shoebox: Your Own Feed. |
 | 6 | Beta sign-up page and `/beta`: keep for 2.0 TestFlight? | Keep until launch, then remove. |
 | 7 | Submit old 1.0, or wait for 2.0? | Wait for 2.0. |
 | 8 | ~~Primary palette~~ | Decided October 30: Peach and slate. |
