@@ -18,7 +18,7 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 
 ## Design rules (short form)
 
-- Midnight Gold: navy `#0F1630`, cream `#F3EAD7`, gold `#D8B45A`. Day twin in `docs/PLAN.md` section 5.
-- Your reason is the largest text, in DM Serif Display. Labels in Archivo.
-- One gold element per screen: the thing to tap.
-- Corners 4 to 6 px. Thin outlines. No pill buttons.
+- One full-screen feed, Today, one post per screen. Swipe up = back tomorrow. Only two words on a post: Later and Done. Box holds what's put away.
+- Peach and slate: surface `#FFF8F3`, text `#1E2A3D`, slate `#33415C`, peach `#FFC4A3`; dark is slate `#36445E`, never black. Full table in `docs/PLAN.md` section 5.4.
+- SF Pro throughout. Actions are words, never pills or icon-only buttons.
+- One accent element per screen: Done.

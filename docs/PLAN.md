@@ -16,11 +16,12 @@ The old app (repo `grahamdeno/edition`, a web app in an iPhone wrapper) proved t
 
 These decide every design and engineering question. If a feature breaks one, the feature changes.
 
-1. **Your reason decides when it comes back.** "Before we plan next quarter" means the gap before that meeting. "This weekend" means Saturday morning. "At dinner" means the evening at home.
-2. **One moment per save.** A save comes back once, at one well-chosen time. Not a list to work through.
-3. **Ignored twice, it goes quiet.** If you pass on a save twice, it stops coming back. It's kept, and it returns only if you ask.
-4. **Answer without unlocking.** Every moment has its actions on it: the main one, Later, Drop.
-5. **Shoebox prepares; you decide.** It can look things up, fill in dates and draft a reminder. It never books, pays, sends or deletes on its own.
+1. **Your reason decides when it comes back.** "Before we plan next quarter" means the gap before that meeting. "This weekend" means Saturday morning. "At dinner" means the evening at home. Dated saves (school emails, events) come back on their own: 5 days before, 1 day before, and on the day.
+2. **One post at a time.** The app is one full-screen feed called Today, one post per screen, like Scales. No second "sort" screen.
+3. **Moving on is a decision.** Swiping up past a post is the soft pass: it comes back tomorrow. Nothing to tap.
+4. **Two words, nothing more.** Each post offers only Done and Later. Later accepts a suggested date in one tap; Pick a date and Let go live inside Later. Every action is instant with Undo; nothing asks to confirm.
+5. **Answer without unlocking.** Notifications carry the same two words: Done and Later.
+6. **Shoebox prepares; you decide.** It can look things up, fill in dates and draft a reminder. It never books, pays, sends or deletes on its own.
 
 ## 3. Version 1: the ten moments
 
@@ -28,7 +29,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 
 | # | Moment | When | iOS feature | Phase |
 |---|---|---|---|---|
-| 1 | The Daily Issue: a small cover with today's few, as your reasons | 7:00 AM | Rich notification | 3 |
+| 1 | Today: one notification at your chosen time ("5 came out of the box") opens straight into the feed | Your time | Notification | 3 |
 | 2 | The issue read aloud in the car | Commute | Audio, Siri | Later |
 | 3 | The reason finds a time: the gap before a matching calendar event | 9:48 AM | Live Activity, EventKit (read) | 4 |
 | 4 | Capture: hold the Action Button on any page, say why | Any time | App Intent, speech | 4 (share sheet with voice in 2) |
@@ -37,7 +38,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | 7 | Search by asking Siri, answered in your own words | Any time | App Intents, Spotlight | 4 |
 | 8 | A task comes back with the work done ("Book the campsite": open dates, a prefilled link) | Friday | Relay web lookup | 5 |
 | 9 | A weekend save on the weekend, on the wrist | Saturday | Notifications mirrored to Watch (a Watch app is later) | 3 |
-| 10 | The app: Coming back by date, everything kept one question away | Sunday | The app itself | 3 |
+| 10 | The app: Today (the feed) and Box (put away by date, plus Kept and search) | Any time | The app itself | 3 |
 
 ## 4. Decisions made
 
@@ -50,50 +51,52 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
-| Palette | Midnight Gold, dark first, with a Day twin; Plum and Peach kept as the alternate | Chosen October 29. Sections 5 and 5a. |
-| Type | DM Serif Display for your reasons; Archivo for labels and UI | Both open-licensed (OFL), bundled in the app. |
-| Shape | 4 to 6 px corners; thin outlines; no pill buttons | Reads as paper and print, not bubbles. |
-| Gold | One gold element per screen: the thing to tap | Gold means "act". Decoration in gold is not allowed. |
+| Palette | Peach and slate, light by default, dark follows the system | Chosen October 30, replacing Midnight Gold and Plum and Peach. Section 5. |
+| Type | SF Pro (system) throughout | Chosen October 30. Native, nothing to bundle. |
+| Names | Today (the feed) and Box (put away, kept, search) | Chosen October 30. |
+| Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |
+| Accent | One accent element per screen: Done | The accent means "act". No decorative accent. |
 
-## 5. Design: Midnight Gold
+## 5. Design: Today, Box, Peach and slate
 
-Reference: `docs/design/storyboard.html` (Night/Day switch at the top). The full design system (tokens, components) is phase 1.
+Decided October 30 after an interview with Graham. The Daily Issue, Midnight Gold and Plum and Peach directions are retired; their files in `docs/design/` are history only.
 
-| Job | Night | Day |
+### 5.1 Today (the whole app, almost)
+
+- Full screen, one post per screen. Swipe up for the next post.
+- A post shows: a photo when it has a good one, the headline, a short snippet, and your note as a peach highlight. Lots of white space. No avatar, no badges.
+- Text posts (emails, notes, dates) are type only: a large headline, a snippet, and "Comes back Nov 7 on its own" when dated.
+- Tap the post to open it in an in-app reader. Closing the reader returns to the same post.
+- Bottom of the screen: **Later** on the left, **Done** on the right (accent). Nothing else.
+- Top of the screen, all words: **Box** (left), "3 left today" (plain information, not a button), **+** (right).
+- When Today is empty: a short finish moment, then the screen rests.
+
+### 5.2 The four outcomes
+
+| You | What happens |
+|---|---|
+| Swipe up | Soft pass. Back tomorrow. |
+| Done | Kept in the archive, searchable. Leaves Today. |
+| Later | Sheet: one suggested date (tap to accept), Pick a date, Let go. |
+| Let go (inside Later) | Removed, with Undo. |
+
+### 5.3 Box
+
+Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), then Kept, then search.
+
+### 5.4 Peach and slate
+
+| Job | Light | Dark |
 |---|---|---|
-| Surface | `#0F1630` | `#F7F1E3` |
-| Deep (Lock Screen, wallpaper) | `#0B1129` | `#0B1129` |
-| Text (your words) | `#F3EAD7` | `#0F1630` |
-| Gold (the one action) | `#D8B45A`, text on it `#0F1630` | `#D8B45A`, text on it `#0F1630` |
-| Gold as text | `#E2C47A` | `#8A6A1C` |
-| Quiet (dates, sources) | `#8F97B3` | `#5D6584` |
-| Done | `#8FB3A0` | `#5F8A74` |
-| Lines | cream at 13% | navy at 12% |
+| Surface | `#FFF8F3` | slate `#36445E` |
+| Sheet | `#FFFFFF` | `#43526E` |
+| Text | `#1E2A3D` | `#F6EEE8` |
+| Quiet (dates, sources) | `#7A8292` | `#B7C0CF` |
+| Lines | `#EEDFD5` | `#4A5975` |
+| The one action (Done) | slate `#33415C` | peach `#FFB38A` |
+| Your note highlight | peach `#FFC4A3`, text `#1E2A3D` | peach at 30%, text `#FFE0CC` |
 
-Your reason is always the largest text on a moment, in the serif. Sources and times are small, in Archivo. Pictures sit in plain frames with 3 px corners.
-
-### 5a. Alternate palette: Plum and Peach
-
-Graham's favorite from the first round, kept in the spec as the alternate. Midnight Gold stays the primary unless Graham changes it (open decision 8). Reference: `docs/design/plum-and-peach.html`.
-
-**Base colors**
-
-| Job | Day (Sharpened) | Night (Plum night) |
-|---|---|---|
-| Surface | Blush `#F7EFE9` | `#22142A`, cards `#2E1B36` |
-| Text (your words) | Plum ink `#2A1830` | `#F7E3D8` |
-| The one action | Plum `#7A2E6E`, white text | Peach `#F4B49A`, text `#22142A` |
-| Quiet (dates, sources) | Mauve `#806A7C` | `#B597AE` |
-| Deep (Lock Screen) | `#1D1222` | `#1D1222` |
-
-The same rules apply: one action color per screen, 4 px corners, thin outlines, no pills.
-
-**Four ideas that come with it** (each optional, decided when the design system is built):
-
-1. **Sharpened.** The base above: small corners, outlined secondary buttons, plum only on the main action.
-2. **Dusk to dawn.** The notification's color follows the time of day: morning `#FDE3D2` with `#B2456F`, midday `#F6F1EF` with plum, evening `#4A2148` with peach type and a peach action. More to keep consistent; strong sense of time.
-3. **Ripening.** The date on a Coming back row shows how long you've kept the save: today `#F4B49A`, a week `#E5939A`, a month `#C06B91`, three months `#8E3A7D`, a year `#4A1D45`. The age is always written too, since color can't be the only signal.
-4. **Two-ink print.** For the Daily Issue cover only: peach `#FF9E7A` and plum `#9D3C8F` as overlapping inks on `#F3EDE4`, type in `#5A1E52`, a fine grain and square corners.
+Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
 
 ## 6. Architecture
 
@@ -117,7 +120,7 @@ The same rules apply: one action color per screen, 4 px corners, thin outlines, 
 - Delivery is local. Local notifications and Live Activities are scheduled on the phone. The relay is not needed for reminders, so the old web-push routes go away.
 - Each save is offered once at its moment. Ignoring it (no answer within the window) counts as a pass. After two passes it goes quiet.
 
-**Verdicts:** Done (or the kind's own word: Read, Watched, Booked), Later (pick a time or let Shoebox choose), Drop.
+**Outcomes:** swipe up (back tomorrow), Done, Later (suggested date, Pick a date, or Let go). See section 5.2.
 
 **Relay routes** (from `edition/relay/perplexity-relay.js`):
 
@@ -170,7 +173,8 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 | 5 | Shoebox Me (Graham's private variant): keep? | Drop it. One app; Graham uses the real one. |
 | 6 | Beta sign-up page and `/beta`: keep for 2.0 TestFlight? | Keep until launch, then remove. |
 | 7 | Submit old 1.0, or wait for 2.0? | Wait for 2.0. |
-| 8 | Primary palette: Midnight Gold, Plum and Peach, or offer both as a theme choice? | Pick one as the primary for 2.0; a second theme can come later without a redesign, since colors are tokens. |
+| 8 | ~~Primary palette~~ | Decided October 30: Peach and slate. |
+| 9 | Quiet rule: a post swiped past every day comes back every day. Should it go quiet after some number of passes? | Ask Graham. A cap (for example 5 passes, then it waits in Box) keeps Today from filling with things he keeps skipping. |
 
 ## 10. Build phases
 
