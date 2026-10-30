@@ -18,8 +18,8 @@ These decide every design and engineering question. If a feature breaks one, the
 
 1. **Your reason decides when it comes back.** "Before we plan next quarter" means the gap before that meeting. "This weekend" means Saturday morning. "At dinner" means the evening at home. Dated saves (school emails, events) come back on their own: 5 days before, 1 day before, and on the day.
 2. **One post at a time.** The app is one full-screen feed called Today, one post per screen, like Scales. No second "sort" screen.
-3. **Moving on is a decision.** Swiping up past a post is the soft pass: it comes back tomorrow. Nothing to tap.
-4. **Two words, nothing more.** Each post offers only Done and Later. Later accepts a suggested date in one tap; Pick a date and Let go live inside Later. Every action is instant with Undo; nothing asks to confirm.
+3. **Moving on is a decision.** Swiping up past a post is the soft pass: once seen, it's gone until tomorrow. Nothing to tap. A post you keep passing keeps coming back; there is no quiet rule.
+4. **One button at rest.** The resting post has only the box top, which says Later. Done appears once you open a post, because opening it means you dealt with it. Later accepts a suggested date in one tap; Pick a date and Let go live inside Later. Every action is instant with Undo; nothing asks to confirm.
 5. **Answer without unlocking.** Notifications carry the same two words: Done and Later.
 6. **Shoebox prepares; you decide.** It can look things up, fill in dates and draft a reminder. It never books, pays, sends or deletes on its own.
 
@@ -55,7 +55,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Type | SF Pro (system) throughout | Chosen October 30. Native, nothing to bundle. |
 | Names | Today (the feed) and Box (put away, kept, search) | Chosen October 30. |
 | Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |
-| Accent | One accent element per screen: Done | The accent means "act". No decorative accent. |
+| Box top | Sunflower lid with slate lip, in the corner at rest and as the bottom strip when opened | Chosen October 30. The one colored control on screen. |
 
 ## 5. Design: Today, Box, Peach and slate
 
@@ -66,19 +66,25 @@ Decided October 30 after an interview with Graham. The Daily Issue, Midnight Gol
 - Full screen, one post per screen. Swipe up for the next post.
 - A post shows: a photo when it has a good one, the headline, a short snippet, and your note as a peach highlight. Lots of white space. No avatar, no badges.
 - Text posts (emails, notes, dates) are type only: a large headline, a snippet, and "Comes back Nov 7 on its own" when dated.
-- Tap the post to open it in an in-app reader. Closing the reader returns to the same post.
-- Bottom of the screen: **Later** on the left, **Done** on the right (accent). Nothing else.
 - Top of the screen, all words: **Box** (left), "3 left today" (plain information, not a button), **+** (right).
-- When Today is empty: a short finish moment, then the screen rests.
+- When Today is empty: "Today's clear," then the screen rests.
 
-### 5.2 The four outcomes
+### 5.2 The box top
+
+The box top is the brand made into a control. It is sunflower yellow with a slate lip (a 9 px band along its top edge), the same lid as on the app icon.
+
+- **At rest:** a square lid in the bottom-right thumb corner, about 128 x 92 pt, with one word: **Later**. About 75% of its open size.
+- **Tap the lid:** it grows up from the corner into a short list: the suggested time (highlighted, with its reason), This weekend, Next week, Pick a date, and Let go set apart at the bottom.
+- **Flick out of the lid:** the post opens full screen. The photo runs edge to edge at the top, the page reads in the app, and Close sits top left.
+- **Opened post:** the lid comes with it and becomes a full-width yellow strip along the bottom with **Later** and **Done**. Later raises the same list from the strip.
 
 | You | What happens |
 |---|---|
-| Swipe up | Soft pass. Back tomorrow. |
-| Done | Kept in the archive, searchable. Leaves Today. |
-| Later | Sheet: one suggested date (tap to accept), Pick a date, Let go. |
-| Let go (inside Later) | Removed, with Undo. |
+| Swipe up | Gone until tomorrow. |
+| Tap the lid | Later list; one tap on the suggestion puts it away. |
+| Flick out of the lid | Opens the post full screen. |
+| Done (opened post) | Kept in the archive, searchable. |
+| Let go (in the Later list) | Removed, with Undo. |
 
 ### 5.3 Box
 
@@ -93,10 +99,12 @@ Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), 
 | Text | `#1E2A3D` | `#F6EEE8` |
 | Quiet (dates, sources) | `#7A8292` | `#B7C0CF` |
 | Lines | `#EEDFD5` | `#4A5975` |
-| The one action (Done) | slate `#33415C` | peach `#FFB38A` |
+| Box top (lid and opened strip) | sunflower `#F2C94C`, text `#1E2A3D`, suggested row `#FFE6A3` | same |
+| Box top lip | slate `#33415C` | deep slate `#1E2A3D` |
+| Icon | peach box, sunflower lid ajar with slate lip, on slate | light variant on `#FFF8F3` |
 | Your note highlight | peach `#FFC4A3`, text `#1E2A3D` | peach at 30%, text `#FFE0CC` |
 
-Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
+Each color has one job: slate is the ground and text, peach is your words, sunflower is the box top (put away, open, done). Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
 
 ## 6. Architecture
 
@@ -120,7 +128,7 @@ Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px 
 - Delivery is local. Local notifications and Live Activities are scheduled on the phone. The relay is not needed for reminders, so the old web-push routes go away.
 - Each save is offered once at its moment. Ignoring it (no answer within the window) counts as a pass. After two passes it goes quiet.
 
-**Outcomes:** swipe up (back tomorrow), Done, Later (suggested date, Pick a date, or Let go). See section 5.2.
+**Outcomes:** swipe up (back tomorrow), Later from the box top (suggested date, Pick a date, or Let go), Done once opened. See section 5.2.
 
 **Relay routes** (from `edition/relay/perplexity-relay.js`):
 
@@ -174,7 +182,7 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 | 6 | Beta sign-up page and `/beta`: keep for 2.0 TestFlight? | Keep until launch, then remove. |
 | 7 | Submit old 1.0, or wait for 2.0? | Wait for 2.0. |
 | 8 | ~~Primary palette~~ | Decided October 30: Peach and slate. |
-| 9 | Quiet rule: a post swiped past every day comes back every day. Should it go quiet after some number of passes? | Ask Graham. A cap (for example 5 passes, then it waits in Box) keeps Today from filling with things he keeps skipping. |
+| 9 | ~~Quiet rule~~ | Decided October 30: no quiet rule. A passed post keeps coming back. |
 
 ## 10. Build phases
 

@@ -18,7 +18,7 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 
 ## Design rules (short form)
 
-- One full-screen feed, Today, one post per screen. Swipe up = back tomorrow. Only two words on a post: Later and Done. Box holds what's put away.
-- Peach and slate: surface `#FFF8F3`, text `#1E2A3D`, slate `#33415C`, peach `#FFC4A3`; dark is slate `#36445E`, never black. Full table in `docs/PLAN.md` section 5.4.
+- One full-screen feed, Today, one post per screen. Swipe up = gone until tomorrow (no quiet rule). Box holds what's put away.
+- The box top: a sunflower `#F2C94C` lid with a slate lip in the bottom-right corner, one word, Later. Tap it for the Later list; flick out of it to open the post. Opened posts get a full-width yellow strip with Later and Done.
+- Peach and slate: surface `#FFF8F3`, text `#1E2A3D`, slate `#33415C`, peach `#FFC4A3` for your notes; dark is slate `#36445E`, never black. Full table in `docs/PLAN.md` section 5.4.
 - SF Pro throughout. Actions are words, never pills or icon-only buttons.
-- One accent element per screen: Done.
