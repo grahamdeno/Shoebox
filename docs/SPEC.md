@@ -35,7 +35,7 @@ The pictures are in `docs/design/screens/` and on the "Shoebox 2.0 screens" desi
 The whole app, almost. Full screen, one post per screen, like Scales. No stack of cards, no list, no second sort screen.
 
 - **Top bar, all words:** Box (left), "5 left today" (plain information, not a button), + (right).
-- **A post:** a byline ("You, 2 weeks ago, from Safari"), your reason as a peach highlight, the headline, and a short snippet. A photo sits above when the post has a good one, 300 pt tall with 18 pt corners. Text posts (emails, notes) are type only, with a larger headline set lower on the screen.
+- **A post:** a byline ("You, 2 weeks ago, from Safari"), your reason as a Nectarine-tint highlight, the headline, and a short snippet. A photo sits above when the post has a good one, 300 pt tall with 18 pt corners. Text posts (emails, notes) are type only, with a larger headline set lower on the screen.
 - **Dated posts** add one line: "Comes back Nov 7, Nov 11 and Nov 12 on its own".
 - **Bottom left:** "Swipe up for the next one", in quiet text.
 - **Bottom right:** the box top (section 2.2).
@@ -43,12 +43,12 @@ The whole app, almost. Full screen, one post per screen, like Scales. No stack o
 
 ### 2.2 The box top
 
-The brand made into a control: a sunflower lid (`#F2C94C`) with a slate lip (a 9 pt band along its top edge), the same lid as the app icon. It is the one colored control on screen.
+The brand made into a control: a Nectarine lid (`#FFBD76`) with an Oceanic lip (a 9 pt band along its top edge), the same lid as the app icon. It is the one colored control on screen.
 
 - **At rest:** about 128 by 92 pt, in the bottom-right thumb corner, 20 pt from the edge, with one word: **Later**. It is only slightly smaller than its open size.
 - **Tap it:** it grows up from the corner into the Later list:
   - "Bring it back" heading
-  - the suggestion, highlighted `#FFE6A3`, with its reason ("Suggested, it's a weekend trip")
+  - the suggestion, highlighted `#FFDBB4`, with its reason ("Suggested, it's a weekend trip")
   - This weekend
   - Next week
   - Pick a date
@@ -59,7 +59,7 @@ The brand made into a control: a sunflower lid (`#F2C94C`) with a slate lip (a 9
 
 - The photo runs edge to edge at the top, with Close top left.
 - Then the byline, headline, your reason, "Open the page on example.com", and the full text with links tappable.
-- **The strip:** the lid comes with the post and becomes a full-width yellow strip along the bottom, with **Later** on the left and **Done** on the right. Later raises the same list from the strip.
+- **The strip:** the lid comes with the post and becomes a full-width Nectarine strip along the bottom, with **Later** on the left and **Done** on the right. Later raises the same list from the strip.
 - Done appears only here. Opening a post is dealing with it.
 
 ### 2.4 Box
@@ -80,7 +80,7 @@ The brand made into a control: a sunflower lid (`#F2C94C`) with a slate lip (a 9
 
 ### 2.6 Today's clear
 
-The box mark (a blue box, the sunflower lid ajar), then "Today's clear." and "6 things are waiting in the Box. The next ones come out tomorrow."
+The box mark (an Oceanic box, the Nectarine lid ajar), then "Today's clear." and "6 things are waiting in the Box. The next ones come out tomorrow."
 
 With nothing kept yet, it says "Nothing kept yet." and how to start: share a page from Safari or any app, or tap +.
 
@@ -88,7 +88,7 @@ With nothing kept yet, it says "Nothing kept yet." and how to start: share a pag
 
 One idea per screen, one clear choice, the lid as the button in the thumb corner. Graham loved the old onboarding because it was seamless: easy choices, clear actions and clear results. Keep it that way.
 
-1. **Welcome.** The box mark, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in peach ("214 saves and your email address came over from Shoebox 1."). Lid: Start.
+1. **Welcome.** The box mark, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint ("214 saves and your email address came over from Shoebox 1."). Lid: Start.
 2. **Save from anywhere.** Three numbered steps (Tap Share, Tap Shoebox, Say why and tap Keep), then "Or forward email". It shows your Shoebox address, or a first-name field and "Get my address". Skip on the left, lid: Next.
 3. **When should they come out?** A time wheel and one line about the single daily notification. Not now on the left, lid: Turn on (asks for notification permission).
 4. **Three moves. That's the whole app.** Swipe up; Tap the lid; Flick out of the lid. The lid pulses where it will be, labeled "Try it", and it lands on Today.
@@ -156,25 +156,25 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 
 ## 5. Look
 
-### 5.1 Peach and slate
+### 5.1 Onyx, Wheat, Oceanic, Nectarine
 
 | Job | Light | Dark |
 |---|---|---|
-| Surface | `#FFF8F3` | slate `#36445E` (never black) |
-| Sheet | `#FFFFFF` | `#43526E` |
-| Text | `#1E2A3D` | `#F6EEE8` |
-| Quiet (dates, sources) | `#6B7385` | `#C3CBD8` |
-| Lines | `#EEDFD5` | `#4A5975` |
-| Your reason | peach `#FFC4A3`, text `#1E2A3D` | peach at 30%, text `#FFE0CC` |
-| Box top | sunflower `#F2C94C`, text `#1E2A3D`, suggestion `#FFE6A3` | same |
-| Box top lip | slate `#33415C` | `#1E2A3D` |
-| Logo box | slate blue `#33415C`, never peach | same |
+| Surface | Wheat `#FFF6E9` | Oceanic `#003F47` (never black) |
+| Sheet | `#FFFCF7` | `#144E54` |
+| Text | Onyx `#0A171D` | Wheat `#FFF6E9` |
+| Quiet (dates, sources) | `#5A6B6E` | `#B8C4BF` |
+| Lines | `#EADFCC` | `#295C61` |
+| Your reason | pale Nectarine `#FFD7AA`, text Onyx | Nectarine at 30%, text `#FFE2BD` |
+| Box top | Nectarine `#FFBD76`, text Onyx, suggestion `#FFDBB4` | same |
+| Box top lip | Oceanic `#003F47` | Onyx `#0A171D` |
+| Logo box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
 
 Each color has one job:
-- Slate is the ground and the text.
-- Peach is your own words, and nothing else.
-- Blue is the box in the logo.
-- Sunflower is the box top: put away, open, done.
+- Wheat is the ground, Onyx is the text.
+- The pale Nectarine tint is your own words, and nothing else.
+- Oceanic is the box in the logo, the lid lip, and the dark ground.
+- Nectarine is the box top: put away, open, done.
 
 ### 5.2 Type and shape
 
@@ -191,10 +191,10 @@ Shoebox 1's layered Liquid Glass icon (`App/Shoebox/AppIcon.icon`: lid, box and 
 
 | Layer | Light | Dark |
 |---|---|---|
-| Ground | `#FFF8F3` | `#36445E` |
-| Box | slate blue `#33415C` | lighter blue `#5B6E94` |
-| Cards | `#6B7385` | `#6B7385` |
-| Lid | sunflower `#F2C94C` | sunflower `#F2C94C` |
+| Ground | Wheat `#FFF6E9` | Oceanic `#003F47` |
+| Box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
+| Cards | `#5A6B6E` | `#B8C4BF` |
+| Lid | Nectarine `#FFBD76` | Nectarine `#FFBD76` |
 
 Fine-tune it in Icon Composer on a Mac.
 

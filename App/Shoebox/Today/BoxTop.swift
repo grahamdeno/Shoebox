@@ -107,7 +107,7 @@ struct LaterList: View {
     }
 }
 
-/// The box from the logo, drawn: a blue box with the sunflower lid ajar.
+/// The box from the logo, drawn: an Oceanic box with the Nectarine lid ajar.
 struct BoxMark: View {
     var size: CGFloat = 112
 

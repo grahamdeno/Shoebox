@@ -26,7 +26,7 @@ final class Save {
     var snippet: String = ""
     /// The full text shown when the post is opened (an email, a note, the page's text).
     var body: String = ""
-    /// The user's own words: why they kept it. Shown as a peach highlight.
+    /// The user's own words: why they kept it. Shown as a Nectarine-tint highlight.
     var note: String = ""
     /// Legacy display line. New saves leave it empty and the line is built from `origin` and `createdAt`.
     var source: String = ""

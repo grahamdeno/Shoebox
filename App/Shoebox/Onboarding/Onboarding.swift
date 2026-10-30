@@ -184,7 +184,7 @@ struct NumberedStep: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Theme.lidInk)
                 .frame(width: 36, height: 36)
-                .background(Circle().fill(Color(UIColor(hex: 0xFFC4A3))))
+                .background(Circle().fill(Theme.noteSolid))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(head).font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)

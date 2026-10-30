@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The box top as a button: sunflower with a slate lip, one word. The one colored control on screen.
+/// The box top as a button: Nectarine with an Oceanic lip, one word. The one colored control on screen.
 struct LidButton: View {
     let title: String
     var width: CGFloat = 128

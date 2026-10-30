@@ -53,32 +53,32 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
-| Palette | Peach and slate, light by default, dark follows the system | Chosen October 30, replacing Midnight Gold and Plum and Peach. Section 5. |
+| Palette | Onyx, Wheat, Oceanic and Nectarine, light by default, dark follows the system | Peach and slate chosen October 30, replaced by this palette the same evening. Section 5. |
 | Type | SF Pro (system) throughout | Chosen October 30. Native, nothing to bundle. |
 | Names | Today (the feed) and Box (put away, kept, search) | Chosen October 30. |
 | Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |
-| Box top | Sunflower lid with slate lip, in the corner at rest and as the bottom strip when opened | Chosen October 30. The one colored control on screen. |
+| Box top | Nectarine lid with Oceanic lip, in the corner at rest and as the bottom strip when opened | Chosen October 30. The one colored control on screen. |
 
-## 5. Design: Today, Box, Peach and slate
+## 5. Design: Today, Box, Onyx and Wheat
 
 Decided October 30 after an interview with Graham. Screens and the design system board: the "Shoebox 2.0 screens" design canvas (https://claude.ai/artifact/3NW2ZEMrxsbH1UeQsaQn95). Tokens: `design/tokens.json`. The Daily Issue, Midnight Gold and Plum and Peach directions are retired; their files in `docs/design/` are history only.
 
 ### 5.1 Today (the whole app, almost)
 
 - Full screen, one post per screen. Swipe up for the next post.
-- A post shows: a photo when it has a good one, the headline, a short snippet, and your note as a peach highlight. Lots of white space. No avatar, no badges.
+- A post shows: a photo when it has a good one, the headline, a short snippet, and your note as a Nectarine-tint highlight. Lots of white space. No avatar, no badges.
 - Text posts (emails, notes, dates) are type only: a large headline, a snippet, and "Comes back Nov 7 on its own" when dated.
 - Top of the screen, all words: **Box** (left), "3 left today" (plain information, not a button), **+** (right).
 - When Today is empty: "Today's clear," then the screen rests.
 
 ### 5.2 The box top
 
-The box top is the brand made into a control. It is sunflower yellow with a slate lip (a 9 px band along its top edge), the same lid as on the app icon.
+The box top is the brand made into a control. It is Nectarine with an Oceanic lip (a 9 px band along its top edge), the same lid as on the app icon.
 
 - **At rest:** a square lid in the bottom-right thumb corner, about 128 x 92 pt, with one word: **Later**. About 75% of its open size.
 - **Tap the lid:** it grows up from the corner into a short list: the suggested time (highlighted, with its reason), This weekend, Next week, Pick a date, and Let go set apart at the bottom.
 - **Flick out of the lid:** the post opens full screen. The photo runs edge to edge at the top, the page reads in the app, and Close sits top left.
-- **Opened post:** the lid comes with it and becomes a full-width yellow strip along the bottom with **Later** and **Done**. Later raises the same list from the strip.
+- **Opened post:** the lid comes with it and becomes a full-width Nectarine strip along the bottom with **Later** and **Done**. Later raises the same list from the strip.
 
 | You | What happens |
 |---|---|
@@ -92,21 +92,21 @@ The box top is the brand made into a control. It is sunflower yellow with a slat
 
 Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), then Kept, then search.
 
-### 5.4 Peach and slate
+### 5.4 Onyx, Wheat, Oceanic, Nectarine
 
 | Job | Light | Dark |
 |---|---|---|
-| Surface | `#FFF8F3` | slate `#36445E` |
-| Sheet | `#FFFFFF` | `#43526E` |
-| Text | `#1E2A3D` | `#F6EEE8` |
-| Quiet (dates, sources) | `#6B7385` | `#C3CBD8` |
-| Lines | `#EEDFD5` | `#4A5975` |
-| Box top (lid and opened strip) | sunflower `#F2C94C`, text `#1E2A3D`, suggested row `#FFE6A3` | same |
-| Box top lip | slate `#33415C` | deep slate `#1E2A3D` |
-| Icon | slate blue box (never peach), sunflower lid ajar with an ink lip, on `#FFF8F3` | same |
-| Your note highlight | peach `#FFC4A3`, text `#1E2A3D` | peach at 30%, text `#FFE0CC` |
+| Surface | Wheat `#FFF6E9` | Oceanic `#003F47` (never black) |
+| Sheet | `#FFFCF7` | `#144E54` |
+| Text | Onyx `#0A171D` | Wheat `#FFF6E9` |
+| Quiet (dates, sources) | `#5A6B6E` | `#B8C4BF` |
+| Lines | `#EADFCC` | `#295C61` |
+| Box top (lid and opened strip) | Nectarine `#FFBD76`, text Onyx, suggested row `#FFDBB4` | same |
+| Box top lip | Oceanic `#003F47` | Onyx `#0A171D` |
+| Icon | Oceanic box, Nectarine lid ajar, on Wheat | lighter Oceanic `#2F7E88` box on Oceanic |
+| Your note highlight | pale Nectarine `#FFD7AA`, text Onyx | Nectarine at 30%, text `#FFE2BD` |
 
-Each color has one job: slate is the ground and text, peach is your words and nothing else (never the logo), blue is the box in the logo, sunflower is the box top (put away, open, done). Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
+Each color has one job: Onyx is the text, Wheat is the ground, Oceanic is the box in the logo and the dark ground, Nectarine is the box top (put away, open, done). Your words are a pale tint of Nectarine and nothing else. Dark mode is Oceanic, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
 
 ## 6. Architecture
 
