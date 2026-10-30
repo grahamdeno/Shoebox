@@ -2,13 +2,13 @@
   "fill-specializations": [
     {
       "value": {
-        "solid": "srgb:0.48235,0.24706,0.94902,1.00000"
+        "solid": "srgb:1.00000,0.97255,0.95294,1.00000"
       }
     },
     {
       "appearance": "dark",
       "value": {
-        "solid": "srgb:0.10588,0.06275,0.20000,1.00000"
+        "solid": "srgb:0.21176,0.26667,0.36863,1.00000"
       }
     }
   ],
@@ -56,7 +56,20 @@
               0,
               0
             ]
-          }
+          },
+          "fill-specializations": [
+            {
+              "value": {
+                "solid": "srgb:0.20000,0.25490,0.36078,1.00000"
+              }
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:0.35686,0.43137,0.58039,1.00000"
+              }
+            }
+          ]
         }
       ],
       "lighting": "individual",
