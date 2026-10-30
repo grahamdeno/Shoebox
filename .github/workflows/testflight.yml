@@ -1,0 +1,66 @@
+name: testflight
+# Uploads a build to TestFlight. Runs only when the `testflight` branch is pushed.
+# Does not submit for review. That stays manual.
+on:
+  push:
+    branches: [testflight]
+
+jobs:
+  upload:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Write API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/keys/AuthKey.p8"
+      - name: Archive
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project Shoebox.xcodeproj -scheme Shoebox \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }}
+      - name: Export and upload
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/export.plist" <<'P'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>7MHDTK68M2</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          P
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER"
+          echo "::notice::Uploaded build ${{ github.run_number }} to App Store Connect"
+      - name: Remove key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
