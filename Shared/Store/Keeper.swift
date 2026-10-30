@@ -18,7 +18,9 @@ enum StoreBox {
         let schema = Schema(ShoeboxSchema.models)
         // In the App Group when it exists (every signed build); otherwise in this app's own folder, so an
         // unsigned test build never crashes. SwiftData's groupContainer option is fatal without the entitlement.
-        let config = ModelConfiguration("Shoebox", schema: schema, url: AppGroup.container.appending(path: "Shoebox.store"))
+        // cloudKitDatabase: .none. The default (.automatic) turns on CloudKit sync in a signed build that has an iCloud
+        // container, and CloudKit stores cannot have unique constraints. Unsigned CI never showed it. Shoebox stays on the phone.
+        let config = ModelConfiguration("Shoebox", schema: schema, url: AppGroup.container.appending(path: "Shoebox.store"), cloudKitDatabase: .none)
         if let c = try? ModelContainer(for: schema, configurations: config) { return (c, false) }
         return (memory(), true)
     }
