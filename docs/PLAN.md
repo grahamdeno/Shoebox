@@ -56,14 +56,20 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Beta page and `/beta` | Kept until 2.0 launches, then removed | |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
-| Palette | Midnight Gold, dark first, with a Day twin; Plum and Peach kept as the alternate | Chosen October 29. Sections 5 and 5a. |
+| Palette | **Plum and Peach is primary** (Sharpened), Day and Night. Midnight Gold stays in the design system as the alternate, Night and Day. | Changed October 30 (decision 8). Sections 5 and 5a. Colors are role tokens (`act`, `text`, `quiet`...), so either palette fits every component. |
 | Type | DM Serif Display for your reasons; Archivo for labels and UI | Both open-licensed (OFL), bundled in the app. |
 | Shape | 4 to 6 px corners; thin outlines; no pill buttons | Reads as paper and print, not bubbles. |
-| Gold | One gold element per screen: the thing to tap | Gold means "act". Decoration in gold is not allowed. |
+| The act color | One act-colored element per screen: the thing to tap. Plum by day, peach at night (gold in Midnight Gold). | The act color means "act". Decoration in it is not allowed. |
 
-## 5. Design: Midnight Gold
+## 5. Design
 
-Reference: `docs/design/storyboard.html` (Night/Day switch at the top). The full design system (tokens, components) is phase 1.
+**The design system** (phase 1) is published as the Design System artifact "Shoebox" and kept in this repo as `design/tokens.json`, the single source of every color, type style, spacing, corner and shadow. Four themes, in order: Plum and Peach Day, Plum and Peach Night, Midnight Gold Night, Midnight Gold Day. Six components: Button, Notification, Live Activity, Issue cover, Coming back row, Capture sheet.
+
+Phase 1 changed four values so every text color passes 4.5:1 (the tables below show the new values, with the old ones struck through).
+
+### 5.1 Midnight Gold (the alternate)
+
+Reference: `docs/design/storyboard.html` (Night/Day switch at the top).
 
 | Job | Night | Day |
 |---|---|---|
@@ -71,16 +77,16 @@ Reference: `docs/design/storyboard.html` (Night/Day switch at the top). The full
 | Deep (Lock Screen, wallpaper) | `#0B1129` | `#0B1129` |
 | Text (your words) | `#F3EAD7` | `#0F1630` |
 | Gold (the one action) | `#D8B45A`, text on it `#0F1630` | `#D8B45A`, text on it `#0F1630` |
-| Gold as text | `#E2C47A` | `#8A6A1C` |
+| Gold as text | `#E2C47A` | `#86671B` (~~`#8A6A1C`~~) |
 | Quiet (dates, sources) | `#8F97B3` | `#5D6584` |
-| Done | `#8FB3A0` | `#5F8A74` |
+| Done | `#8FB3A0` | `#4A725E` (~~`#5F8A74`~~) |
 | Lines | cream at 13% | navy at 12% |
 
 Your reason is always the largest text on a moment, in the serif. Sources and times are small, in Archivo. Pictures sit in plain frames with 3 px corners.
 
-### 5a. Alternate palette: Plum and Peach
+### 5a. Plum and Peach (the primary)
 
-Graham's favorite from the first round, kept in the spec as the alternate. Midnight Gold stays the primary unless Graham changes it (open decision 8). Reference: `docs/design/plum-and-peach.html`.
+Graham's favorite from the first round, made the primary on October 30 (decision 8). Reference: `docs/design/plum-and-peach.html`.
 
 **Base colors**
 
@@ -89,12 +95,14 @@ Graham's favorite from the first round, kept in the spec as the alternate. Midni
 | Surface | Blush `#F7EFE9` | `#22142A`, cards `#2E1B36` |
 | Text (your words) | Plum ink `#2A1830` | `#F7E3D8` |
 | The one action | Plum `#7A2E6E`, white text | Peach `#F4B49A`, text `#22142A` |
-| Quiet (dates, sources) | Mauve `#806A7C` | `#B597AE` |
+| Quiet (dates, sources) | Mauve `#776174` (~~`#806A7C`~~) | `#B597AE` |
+| Done | Faded cyan `#3F6E6C` (~~`#7FA8A6`~~) | `#8FB9B7` |
+| Mark (app mark only) | Peach `#F4B49A` | Peach `#F4B49A` |
 | Deep (Lock Screen) | `#1D1222` | `#1D1222` |
 
 The same rules apply: one action color per screen, 4 px corners, thin outlines, no pills.
 
-**Four ideas that come with it** (each optional, decided when the design system is built):
+**Four ideas that came with it.** Decided October 30: **only Sharpened.** The other three are not in v1.
 
 1. **Sharpened.** The base above: small corners, outlined secondary buttons, plum only on the main action.
 2. **Dusk to dawn.** The notification's color follows the time of day: morning `#FDE3D2` with `#B2456F`, midday `#F6F1EF` with plum, evening `#4A2148` with peach type and a peach action. More to keep consistent; strong sense of time.
@@ -104,6 +112,7 @@ The same rules apply: one action color per screen, 4 px corners, thin outlines, 
 ## 6. Architecture
 
 **App targets**
+- `IssueContent` (Notification Content extension): the Daily Issue's opened view, with answers per line, and the expanded single-moment view. Added in phase 1 (`docs/SPEC.md` section 6).
 - `Shoebox` (SwiftUI app): Coming back, everything kept, settings, onboarding.
 - `Share` extension: save from any app; type or speak the reason.
 - `Widgets`: Home Screen and Lock Screen widgets, plus the Live Activity.
@@ -167,7 +176,7 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 
 ## 9. Decisions made October 30 (were open)
 
-Seven are settled; decision 8 is still open. The results are also in section 4.
+All eight are settled. The results are also in section 4.
 
 | # | Decision | Answer |
 |---|---|---|
@@ -178,7 +187,7 @@ Seven are settled; decision 8 is still open. The results are also in section 4.
 | 5 | Shoebox Me: keep? | **Drop it.** |
 | 6 | Beta page and `/beta`: keep for 2.0 TestFlight? | **Keep until launch, then remove.** |
 | 7 | Submit old 1.0, or wait for 2.0? | **Submit 1.0.** Graham presses Submit. This adds two requirements, in section 11. |
-| 8 | Primary palette: Midnight Gold, Plum and Peach, or both as a theme choice? | **Still open.** Graham is leaning toward Plum and Peach as the primary (October 30). The design system in phase 1 carries both as themes, so the choice is the order of themes, not a redesign. |
+| 8 | Primary palette: Midnight Gold, Plum and Peach, or both as a theme choice? | **Plum and Peach is primary,** with only the Sharpened idea. Midnight Gold stays in the design system as the alternate. |
 
 New questions raised by the spec are listed at the end of `docs/SPEC.md` ("For Graham to check").
 
