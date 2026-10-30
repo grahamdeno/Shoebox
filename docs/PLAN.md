@@ -101,10 +101,10 @@ Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), 
 | Lines | `#EEDFD5` | `#4A5975` |
 | Box top (lid and opened strip) | sunflower `#F2C94C`, text `#1E2A3D`, suggested row `#FFE6A3` | same |
 | Box top lip | slate `#33415C` | deep slate `#1E2A3D` |
-| Icon | peach box, sunflower lid ajar with slate lip, on slate | light variant on `#FFF8F3` |
+| Icon | slate blue box (never peach), sunflower lid ajar with an ink lip, on `#FFF8F3` | same |
 | Your note highlight | peach `#FFC4A3`, text `#1E2A3D` | peach at 30%, text `#FFE0CC` |
 
-Each color has one job: slate is the ground and text, peach is your words, sunflower is the box top (put away, open, done). Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
+Each color has one job: slate is the ground and text, peach is your words and nothing else (never the logo), blue is the box in the logo, sunflower is the box top (put away, open, done). Dark mode is a clear slate blue, never black. Type is SF Pro. Photos have 14 px corners; sheets 20 px top corners.
 
 ## 6. Architecture
 
