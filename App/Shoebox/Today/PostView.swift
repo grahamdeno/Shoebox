@@ -14,11 +14,15 @@ struct PostView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+                // The picture sits in an overlay so its size never changes the width of the screen.
+                Color.clear
                     .frame(maxWidth: .infinity)
                     .frame(height: 300)
+                    .overlay {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                    }
                     .clipShape(RoundedRectangle(cornerRadius: Metrics.photoRadius, style: .continuous))
                     .padding(.top, 20)
                     .padding(.bottom, 26)

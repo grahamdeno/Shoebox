@@ -99,9 +99,10 @@ struct OpenedView: View {
     private var hero: some View {
         ZStack(alignment: .topLeading) {
             if let image {
-                Image(uiImage: image)
-                    .resizable().scaledToFill()
-                    .frame(height: 330).frame(maxWidth: .infinity)
+                Color.clear
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 330)
+                    .overlay { Image(uiImage: image).resizable().scaledToFill() }
                     .clipped()
                     .accessibilityHidden(true)
             } else {
