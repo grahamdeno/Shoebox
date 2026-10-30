@@ -8,6 +8,7 @@ Native iPhone app, version 2.0 of Shoebox on the App Store. Rebuilt from the web
 
 - `docs/PLAN.md`: product rules, decisions, architecture, build phases
 - `docs/design/storyboard.html`: the target experience (open in a browser; Night/Day switch at the top)
-- `docs/design/palettes.html`: the palettes considered; Midnight Gold was chosen
+- `docs/design/palettes.html`: the palettes considered (Plum and Peach is primary, Midnight Gold the alternate)
+- `design/tokens.json`: every design value, the source for Swift and any later client
 - `docs/design/plum-and-peach.html`: the alternate palette
 - `docs/design/explorations/`: earlier design rounds and the audit summary

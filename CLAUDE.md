@@ -18,7 +18,7 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 
 ## Design rules (short form)
 
-- Midnight Gold: navy `#0F1630`, cream `#F3EAD7`, gold `#D8B45A`. Day twin in `docs/PLAN.md` section 5.
+- Plum and Peach is primary: blush `#F7EFE9`, plum ink `#2A1830`, plum `#7A2E6E` to act by day; deep plum `#22142A` with peach `#F4B49A` at night. Midnight Gold is the alternate. Every value lives in `design/tokens.json`; use the role names (`act`, `text`, `quiet`), never raw hex.
 - Your reason is the largest text, in DM Serif Display. Labels in Archivo.
-- One gold element per screen: the thing to tap.
+- One act-colored element per screen: the thing to tap.
 - Corners 4 to 6 px. Thin outlines. No pill buttons.
