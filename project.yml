@@ -1,0 +1,187 @@
+# Shoebox 2.0, native. `xcodegen generate` makes Shoebox.xcodeproj (not checked in).
+# Same bundle ids as 1.0, so 2.0 is an update and can read 1.0's backups.
+name: Shoebox
+options:
+  bundleIdPrefix: com.grahamdeno
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  ShoeboxCore:
+    path: Core
+settings:
+  base:
+    DEVELOPMENT_TEAM: 7MHDTK68M2
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "2.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_STRICT_CONCURRENCY: complete
+    GENERATE_INFOPLIST_FILE: NO
+targets:
+  Shoebox:
+    type: application
+    platform: iOS
+    sources:
+      - App/Sources
+      - Shared
+      - App/Resources
+      - path: App/PrivacyInfo.xcprivacy
+        type: file
+        buildPhase: resources
+    dependencies:
+      - package: ShoeboxCore
+      - target: ShoeboxShare
+      - target: ShoeboxWidget
+      - target: IssueContent
+    entitlements:
+      path: App/Shoebox.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.grahamdeno.shoebox]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.grahamdeno.shoebox]
+        com.apple.developer.ubiquity-container-identifiers: [iCloud.com.grahamdeno.shoebox]
+        com.apple.developer.icloud-services: [CloudDocuments]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Shoebox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+        UIAppFonts: [DMSerifDisplay-Regular.ttf, Archivo.ttf]
+        NSSupportsLiveActivities: true
+        UIBackgroundModes: [fetch, processing, remote-notification]
+        BGTaskSchedulerPermittedIdentifiers: [com.grahamdeno.shoebox.plan]
+        NSMicrophoneUsageDescription: Say why you're keeping something. Your voice is turned into words on your iPhone.
+        NSSpeechRecognitionUsageDescription: Your spoken reason is turned into words on your iPhone. Nothing is sent.
+        NSCalendarsFullAccessUsageDescription: Shoebox reads your calendar on your iPhone to bring a save back before the event it's for. Your calendar never leaves your iPhone.
+        NSPhotoLibraryUsageDescription: Shoebox can read new screenshots on your iPhone and offer to keep the ones with a date or a form.
+        NSUbiquitousContainers:
+          iCloud.com.grahamdeno.shoebox:
+            NSUbiquitousContainerIsDocumentScopePublic: true
+            NSUbiquitousContainerName: Shoebox
+            NSUbiquitousContainerSupportedFolderLevels: Any
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.grahamdeno.shoebox
+            CFBundleURLSchemes: [shoebox]
+        UTImportedTypeDeclarations: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  ShoeboxShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Share
+      - Shared
+    dependencies:
+      - package: ShoeboxCore
+    entitlements:
+      path: Share/Share.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.grahamdeno.shoebox]
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: Shoebox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSerifDisplay-Regular.ttf, Archivo.ttf]
+        NSMicrophoneUsageDescription: Say why you're keeping something. Your voice is turned into words on your iPhone.
+        NSSpeechRecognitionUsageDescription: Your spoken reason is turned into words on your iPhone. Nothing is sent.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsImageWithMaxCount: 10
+              NSExtensionActivationSupportsFileWithMaxCount: 5
+              NSExtensionActivationSupportsMovieWithMaxCount: 1
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.share
+  ShoeboxWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widgets
+      - Shared
+    dependencies:
+      - package: ShoeboxCore
+    entitlements:
+      path: Widgets/Widget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.grahamdeno.shoebox]
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Shoebox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSerifDisplay-Regular.ttf, Archivo.ttf]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.widget
+  IssueContent:
+    type: app-extension
+    platform: iOS
+    sources:
+      - IssueContent
+      - Shared
+    dependencies:
+      - package: ShoeboxCore
+    entitlements:
+      path: IssueContent/IssueContent.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.grahamdeno.shoebox]
+    info:
+      path: IssueContent/Info.plist
+      properties:
+        CFBundleDisplayName: Shoebox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSerifDisplay-Regular.ttf, Archivo.ttf]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.content-extension
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationViewController
+          NSExtensionAttributes:
+            UNNotificationExtensionCategory: [ISSUE, MOMENT]
+            UNNotificationExtensionInitialContentSizeRatio: 0.9
+            UNNotificationExtensionDefaultContentHidden: true
+            UNNotificationExtensionUserInteractionEnabled: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.issue
+  ShoeboxTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [AppTests]
+    dependencies:
+      - target: Shoebox
+      - package: ShoeboxCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Shoebox:
+    build:
+      targets:
+        Shoebox: all
+    test:
+      targets: [ShoeboxTests]
+    archive:
+      config: Release

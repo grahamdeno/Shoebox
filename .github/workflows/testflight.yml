@@ -1,0 +1,75 @@
+# Signs Shoebox 2.0 and sends it to TestFlight. Runs for a pushed commit whose message contains [testflight]
+# (so it works from a branch, before anything is merged to main), or by hand once this file is on main,
+# and only with the App Store Connect key in this repo's secrets: ASC_KEY_P8, ASC_KEY_ID, ASC_ISSUER_ID.
+# It never submits for review; Graham does that in App Store Connect.
+name: TestFlight
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+jobs:
+  upload:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[testflight]')
+    runs-on: macos-26
+    env:
+      HAS_KEY: ${{ secrets.ASC_KEY_P8 != '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Key present
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then echo "::error title=testflight::Add ASC_KEY_P8, ASC_KEY_ID and ASC_ISSUER_ID to this repo's Actions secrets (the same values as grahamdeno/edition)."; exit 1; fi
+      - name: Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | grep -vi beta | sort -V | tail -1)"
+      - name: Signing key
+        run: |
+          printf '%s\n' "${{ secrets.ASC_KEY_P8 }}" | sed 's/\r$//' > "$RUNNER_TEMP/asc.p8"
+          chmod 600 "$RUNNER_TEMP/asc.p8"
+          mkdir -p ~/.appstoreconnect/private_keys && cp "$RUNNER_TEMP/asc.p8" ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          ASC_KEY_ID=${{ secrets.ASC_KEY_ID }} ASC_ISSUER_ID=${{ secrets.ASC_ISSUER_ID }} ASC_KEY_PATH=$RUNNER_TEMP/asc.p8 ruby Scripts/register-device.rb
+      - name: Fonts and project
+        run: |
+          Scripts/fetch_fonts.sh
+          # [Check] The Issue view extension needs an App Store profile this API key can't create (the team's
+          # distribution certificate is cloud-managed). Until one exists, TestFlight builds go without it:
+          # the Issue still arrives, and tapping it opens the app.
+          if [ "$HAS_ISSUE_PROFILE" != "1" ]; then
+            python3 - <<'PY'
+          import re
+          p = "project.yml"; s = open(p).read()
+          s = s.replace("      - target: IssueContent\n", "")
+          open(p, "w").write(s)
+          PY
+            echo "::notice title=testflight::Built without the Issue view extension (no App Store profile for com.grahamdeno.shoebox.issue yet)."
+          fi
+          brew install xcodegen && xcodegen generate
+      - name: Archive, sign, upload
+        run: |
+          set +e
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $RUNNER_TEMP/asc.p8 -authenticationKeyID ${{ secrets.ASC_KEY_ID }} -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}"
+          report() { echo "::error title=testflight::$(grep -E "error:|Error|failed|rovisioning|ertificate|denied" "$1" | sort -u | head -25 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"; }
+          xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" CURRENT_PROJECT_VERSION=$((1000 + ${{ github.run_number }})) CODE_SIGNING_ALLOWED=NO archive > archive.log 2>&1
+          [ $? -ne 0 ] && { report archive.log; exit 1; }
+          APP="$RUNNER_TEMP/Shoebox.xcarchive/Products/Applications/Shoebox.app"
+          for x in ShoeboxShare:Share/Share.entitlements ShoeboxWidget:Widgets/Widget.entitlements IssueContent:IssueContent/IssueContent.entitlements; do
+            [ -d "$APP/PlugIns/${x%%:*}.appex" ] || continue
+            codesign -f -s - --entitlements "${x#*:}" "$APP/PlugIns/${x%%:*}.appex" || exit 1
+          done
+          codesign -f -s - --entitlements App/Shoebox.entitlements "$APP" || exit 1
+          # Xcode 26.6 can't create a new App Store profile with an API key ("Authentication failed").
+          # Try the newest Xcode first, then older ones, until one exports.
+          echo "::notice title=testflight::Xcodes here: $(ls -d /Applications/Xcode_26*.app | xargs -n1 basename | tr '\n' ' ')"
+          ok=0
+          for X in $(ls -d /Applications/Xcode_26*.app | grep -vi beta | sort -Vr); do
+            DEVELOPER_DIR="$X/Contents/Developer" xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" \
+              -exportOptionsPlist ExportOptions.plist -exportPath "$RUNNER_TEMP/out" $AUTH > export.log 2>&1 && { ok=1; echo "::notice title=testflight::Exported with $(basename $X)"; break; }
+            echo "::warning title=testflight::Export with $(basename $X) failed: $(grep -E 'error:' export.log | head -2 | tr '\n' ' ')"
+          done
+          [ $ok -eq 1 ] || { report export.log; exit 1; }
+          cd "$RUNNER_TEMP/out"
+          xcrun altool --upload-app -f *.ipa -t ios --apiKey ${{ secrets.ASC_KEY_ID }} --apiIssuer ${{ secrets.ASC_ISSUER_ID }} > upload.log 2>&1
+          [ $? -ne 0 ] && { report upload.log; exit 1; }
+          echo "::notice title=testflight::Uploaded build $((1000 + ${{ github.run_number }})) to TestFlight. Not submitted for review."

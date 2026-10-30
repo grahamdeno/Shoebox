@@ -206,6 +206,26 @@ Each phase ends with something Graham can try on his phone. The model named is t
 | 6 | **Ship 2.0.** Accessibility pass, App Store text and screenshots, privacy labels, review notes, TestFlight. | Opus reviews; Sonnet ships | Ready for Graham to press Submit for Review. |
 | Later | Watch app, the issue read aloud (CarPlay audio), web or Android. | | |
 
+### 10a. Where v1 stands (October 30, built on branch `phase-2-foundation`)
+
+Built, compiled and tested on a GitHub macOS runner (Xcode 26) on every push. CI also takes screenshots of each screen and publishes them to the `ci-screens` branch.
+
+| Phase | State |
+|---|---|
+| 2 Foundation | Done in code: XcodeGen project (same bundle ids as 1.0), CI, relay copied to `relay/` (not deployed from here), SwiftData store in the App Group, old-backup import (files, iCloud copy, then 1.0's web storage), share sheet with typed or spoken reason, Everything kept. TestFlight workflow is ready but needs the App Store Connect key in this repo's secrets. |
+| 3 It comes back | Done in code: planner rules R1 to R22 (all 45 spec examples pass), on-device model hints, daily budget, quiet rule, Daily Issue with per-line answers, notifications with Done, Later, Drop, home evening that learns. Watch mirrors notifications on its own. |
+| 4 Everywhere | Done in code: Live Activity before calendar events, Action Button and Siri (Keep, Find, Bring back), Spotlight, Home and Lock Screen widgets. |
+| 5 Smart saves | Screenshots read on the phone; email in; school newsletters into posts (masked on the phone, relay AI with the carried-over sign-up). **Not done:** task lookups (moment 8) need a new relay route and a deploy; link filing (titles, summaries) by AI. |
+| 6 Ship | Not started: accessibility pass, App Store text and screenshots, privacy labels, review notes. |
+
+**TestFlight:** build 1004 (2.0) is Ready to Test in group "Me". A commit whose message contains `[testflight]` on this branch uploads a new build. The Issue view extension (`com.grahamdeno.shoebox.issue`) is left out until it has an App Store profile: Apple won't let an API key make one while the team's distribution certificate is cloud-managed. It joins builds on its own once the profile exists.
+
+**Needs Graham, in this order:**
+1. **Add `ASC_KEY_P8`, `ASC_KEY_ID`, `ASC_ISSUER_ID` to this repo's Actions secrets** (the same values as `grahamdeno/edition`), then run Actions › TestFlight. It never submits for review.
+2. Install the TestFlight build over 1.0 on his phone and check that his saves came over (phase 2 is done when they have).
+3. Decide when the relay moves: one deploy from `relay/` and the old repo's relay workflow turned off. Moment 8 waits on this.
+4. Submit for Review, when he says ship.
+
 ## 11. Loose ends in the old repo (`grahamdeno/edition`)
 
 - **PR #166** (removes Quote of the day) is open and unmerged. Recommendation: close it without merging; the old app is frozen.

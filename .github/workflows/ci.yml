@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Design tokens are current and readable
+        run: |
+          python3 design/check_contrast.py
+          python3 design/generate_swift.py --check
+      - name: Relay syntax
+        run: node --check relay/perplexity-relay.js
+
+  core:
+    # Mac minutes cost 10 times Linux minutes, so Core tests run inside the app job unless asked for alone.
+    if: contains(github.event.head_commit.message, '[core]')
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Xcode
+        run: |
+          ls /Applications | grep -i xcode
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          xcodebuild -version
+      - name: Core tests
+        working-directory: Core
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee ../core-tests.log
+      - name: Report
+        if: always()
+        run: Scripts/ci_report.sh core-tests.log core
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: core-tests, path: core-tests.log }
+
+  app:
+    if: "!contains(github.event.head_commit.message, '[testflight]') && !contains(github.event.head_commit.message, '[skip mac]')"
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: Fonts
+        run: Scripts/fetch_fonts.sh
+      - name: Project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Core tests
+        working-directory: Core
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee ../core-tests.log
+      - name: Core report
+        if: always()
+        run: Scripts/ci_report.sh core-tests.log core
+      - name: Build and test for the simulator
+        run: |
+          set -o pipefail
+          SIM=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS-26' in k for x in v if 'iPhone' in x['name']))")
+          xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -destination "id=$SIM" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO test 2>&1 | tee app-build.log | grep -E "error:|warning: .*Shoebox|\*\* (BUILD|TEST)|Test Case.*(passed|failed)|Executed" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" app-build.log
+      - name: Report
+        if: always()
+        run: Scripts/ci_report.sh app-build.log app
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: app-build, path: app-build.log }
+
+  screens:
+    # Screenshots only when a commit asks for them with [screens].
+    needs: app
+    if: contains(github.event.head_commit.message, '[screens]')
+    runs-on: macos-26
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: Build for the simulator
+        run: |
+          Scripts/fetch_fonts.sh
+          brew install xcodegen && xcodegen generate
+          SIM=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS-26' in k for x in v if x['name'].startswith('iPhone 17') or 'iPhone' in x['name']))")
+          echo "SIM=$SIM" >> $GITHUB_ENV
+          xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -destination "id=$SIM" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -30 build.log; exit 1; }
+      - name: Screenshots
+        run: Scripts/screens.sh "$SIM"
+      - name: Publish to the ci-screens branch
+        run: |
+          cd screens
+          git init -q && git checkout -q -b ci-screens
+          git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "Screens for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screens

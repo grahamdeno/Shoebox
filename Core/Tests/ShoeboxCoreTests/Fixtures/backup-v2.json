@@ -1,0 +1,160 @@
+{
+ "app": "edition",
+ "version": 2,
+ "exported": "2026-11-04T19:00:00.000Z",
+ "items": [
+  {
+   "id": "a1",
+   "kind": "link",
+   "title": "Sourdough guide",
+   "url": "https://example.com/bread",
+   "why": "try this weekend",
+   "status": "inbox",
+   "created": 1793646000000,
+   "tags": [
+    "Baking"
+   ],
+   "history": []
+  },
+  {
+   "id": "a2",
+   "kind": "note",
+   "title": "Gift idea",
+   "text": "Lego for Max",
+   "why": "",
+   "status": "queued",
+   "created": 1793559600000,
+   "queuedAt": 1793559600000
+  },
+  {
+   "id": "a3",
+   "kind": "link",
+   "title": "Old article",
+   "status": "queued",
+   "created": 1790362800000,
+   "queuedAt": 1790362800000
+  },
+  {
+   "id": "a4",
+   "kind": "photo",
+   "title": "Flyer",
+   "status": "aside",
+   "until": 1793991600000,
+   "created": 1793732400000,
+   "blobId": "b1",
+   "thumbId": "b2",
+   "mime": "image/png",
+   "fileName": "flyer.png"
+  },
+  {
+   "id": "a5",
+   "kind": "video",
+   "title": "Talk",
+   "videoId": "dQw4w9WgXcQ",
+   "status": "done",
+   "doneAt": 1793732400000,
+   "created": 1793041200000,
+   "history": [
+    {
+     "v": "read-now",
+     "at": 1793732400000
+    }
+   ]
+  },
+  {
+   "id": "a6",
+   "kind": "link",
+   "title": "Let go",
+   "status": "archived",
+   "archivedAt": 1793386800000,
+   "created": 1792954800000,
+   "history": [
+    {
+     "v": "let-go",
+     "at": 1793386800000
+    }
+   ]
+  },
+  {
+   "id": "a7",
+   "kind": "link",
+   "title": "Washed",
+   "status": "archived",
+   "washedOut": true,
+   "archivedAt": 1793386800000,
+   "created": 1791226800000
+  },
+  {
+   "id": "a8",
+   "kind": "text",
+   "title": "Pasted text",
+   "status": "inbox",
+   "created": 1793732400000,
+   "titleMine": true
+  },
+  {
+   "id": "a9",
+   "kind": "link",
+   "title": "Suggested story",
+   "suggested": true,
+   "status": "queued",
+   "created": 1793732400000,
+   "queuedAt": 1793732400000
+  },
+  {
+   "id": "a10",
+   "kind": "note",
+   "title": "Sample",
+   "sample": true,
+   "status": "inbox",
+   "created": 1793818800000
+  },
+  {
+   "id": "a11",
+   "kind": "note",
+   "title": "Picture day",
+   "status": "inbox",
+   "created": 1793300400000,
+   "school": {
+    "date": "2026-10-30",
+    "title": "Picture day"
+   }
+  },
+  {
+   "id": "a12",
+   "kind": "photo",
+   "title": "Missing file",
+   "status": "inbox",
+   "created": 1793732400000,
+   "blobId": "gone"
+  },
+  {
+   "id": "a13",
+   "kind": "photo",
+   "title": "Aside past",
+   "status": "aside",
+   "until": 1793646000000,
+   "created": 1793473200000
+  }
+ ],
+ "meta": [],
+ "files": [
+  {
+   "id": "b1",
+   "type": "image/png",
+   "data": "iVBORw0KGgpmYWtl"
+  },
+  {
+   "id": "b2",
+   "type": "image/png",
+   "data": "iVBORw0KGgpmYWtl"
+  }
+ ],
+ "settings": {
+  "edition.inboxKey": "k123",
+  "edition.inboxAddress": "graham.x@inbox.inmyshoebox.com",
+  "edition.aiToken": "t",
+  "edition.statsOff": "1",
+  "edition.school": "{\"on\": true, \"child\": \"Alex\", \"school\": \"Noble\", \"about\": \"\", \"words\": [], \"days\": [1, 5]}"
+ }
+}
