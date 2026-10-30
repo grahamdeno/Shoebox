@@ -59,7 +59,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 
 ## 5. Design: Today, Box, Peach and slate
 
-Decided October 30 after an interview with Graham. The Daily Issue, Midnight Gold and Plum and Peach directions are retired; their files in `docs/design/` are history only.
+Decided October 30 after an interview with Graham. Screens and the design system board: the "Shoebox 2.0 screens" design canvas (https://claude.ai/artifact/3NW2ZEMrxsbH1UeQsaQn95). Tokens: `design/tokens.json`. The Daily Issue, Midnight Gold and Plum and Peach directions are retired; their files in `docs/design/` are history only.
 
 ### 5.1 Today (the whole app, almost)
 
@@ -97,7 +97,7 @@ Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), 
 | Surface | `#FFF8F3` | slate `#36445E` |
 | Sheet | `#FFFFFF` | `#43526E` |
 | Text | `#1E2A3D` | `#F6EEE8` |
-| Quiet (dates, sources) | `#7A8292` | `#B7C0CF` |
+| Quiet (dates, sources) | `#6B7385` | `#C3CBD8` |
 | Lines | `#EEDFD5` | `#4A5975` |
 | Box top (lid and opened strip) | sunflower `#F2C94C`, text `#1E2A3D`, suggested row `#FFE6A3` | same |
 | Box top lip | slate `#33415C` | deep slate `#1E2A3D` |
