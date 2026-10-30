@@ -69,6 +69,7 @@ struct TodayView: View {
                 toastView(toast)
             }
         }
+        .onAppear(perform: showScreenForScreenshots)
         .fullScreenCover(item: $opened) { item in
             let save = item.save
             OpenedView(
@@ -226,6 +227,19 @@ struct TodayView: View {
         .padding(.horizontal, 24)
         .presentationDetents([.large])
         .background(Theme.sheet)
+    }
+
+    /// Debug only: `-screen <name>` opens a screen for CI screenshots.
+    private func showScreenForScreenshots() {
+        #if DEBUG
+        switch UserDefaults.standard.string(forKey: "screen") {
+        case "lid": lidOpen = true
+        case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
+        case "box": showBox = true
+        case "add": showAdd = true
+        default: break
+        }
+        #endif
     }
 
     // MARK: Gestures and actions
