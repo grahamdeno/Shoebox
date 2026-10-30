@@ -1,0 +1,5 @@
+Shoebox.xcodeproj/
+build/
+Shared/Resources/Fonts/*.ttf
+*.log
+.DS_Store

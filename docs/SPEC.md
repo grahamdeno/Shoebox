@@ -428,17 +428,41 @@ Model: Haiku, through the relay, max 3,500 tokens out, up to 30,000 characters o
 
 Each post is a save: `kind = note`, `source = school`, `reason` = the headline (with the name put back), `text` = the body, `school = {name, type, date, body, sourceFile, fromURL}`.
 
-Its moment **[Check]**:
-- **action or decision with a date:** the Issue 2 days before (or the day before, if sooner). Due today or tomorrow when it arrives: the next Issue.
-- **info with a date:** that day's Issue.
-- **info without a date:** the next Issue only. One pass and it goes quiet, since it's news.
-- A post whose date passes without a verdict goes quiet, not done.
+Its moments (decided by Graham, October 30): see section 7.6. A post without a date comes back at the next Issue only; one pass and it goes quiet, since it's news.
 
 Done words: Done, Decided, Got it (section 3). The old "Not needed" / "Not for us" become Drop.
 
 Pictures for school posts (Openverse photos plus an overlay line about the child) are left out of v1 **[Check]**.
 
 ---
+
+### 7.6 The email inbox and dated steps (decided October 30)
+
+**The inbox.** Saves that arrive by email (school posts and other forwards) wait in an Inbox at the top of Coming back, to Keep or Drop with one swipe. Your own saves skip it.
+- The inbox never blocks a reminder: an unsorted post with a date still comes back on schedule.
+- An unsorted post with no date leaves the inbox after 7 days and goes quiet. One with a date leaves the inbox after 7 days and keeps its steps.
+
+**Dated steps.** A post with a date comes back more than once, by what it is:
+
+| Post | Steps |
+|---|---|
+| Something to do or decide (sign, pay, bring, register) | 5 days before (a line in that morning's Issue), the evening before (a notification during home evening), the day itself (a line in the Issue) |
+| Something that happens (no school, picture day, a game) | The evening before only (a notification during home evening) |
+
+- Under 5 days away: the first step is the next Issue, then the rest as above. Steps already past are skipped.
+- Done at any step ends it.
+- Later fills in the next step: at 5 days it says "Evening before", at the evening before it says "Day of".
+- Steps don't count toward going quiet. Only ignoring the last step is a pass.
+- Posts with the same date share one Issue line: "Nov 3: no school, report cards".
+
+**No ads.** Before any AI sees an email:
+1. It is sorted by sender and wording: school, personal, or promotional. A promotional email with no note of yours above it makes no post (USPS Informed Delivery included).
+2. Ad blocks are cut: sponsored sections, coupons, "shop now" footers, unsubscribe footers.
+3. The AI is told never to make posts from ads, promotions, sponsors or fundraising pitches.
+4. Each post must quote the line it came from; a post whose line isn't in the email is dropped. A post that reads like a promotion is dropped.
+5. A post's date must be one found in the email by plain rules (a written date, or a weekday within the coming two weeks); otherwise it's kept without a date.
+
+**Links.** Every web address in a post is tappable and opens inside Shoebox, unwrapped from Safe Links and redirects. An email that is only a short note and a link (a Smore newsletter) is read from the linked page.
 
 ## 8. Other email (not school) **[Old]** `emailPost`
 
