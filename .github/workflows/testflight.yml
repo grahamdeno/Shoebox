@@ -40,7 +40,7 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER" \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CURRENT_PROJECT_VERSION=$((1000 + ${{ github.run_number }})) \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 | tee "$RUNNER_TEMP/archive.log" \
             || { grep -E "error:|Error|No profiles|No Accounts|certificate|provisioning" "$RUNNER_TEMP/archive.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - name: Export and upload
@@ -68,7 +68,7 @@ jobs:
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER" 2>&1 | tee "$RUNNER_TEMP/export.log" \
             || { grep -E "error:|Error|failed|certificate|provisioning" "$RUNNER_TEMP/export.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
-          echo "::notice::Uploaded build ${{ github.run_number }} to App Store Connect"
+          echo "::notice::Uploaded build $((1000 + ${{ github.run_number }})) to App Store Connect"
       - name: Remove key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"
