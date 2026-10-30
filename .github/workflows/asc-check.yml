@@ -51,6 +51,9 @@ jobs:
                   headers={"Authorization": "Bearer " + token}, timeout=30)
               if r.ok:
                   say(label + ": HTTP " + str(r.status_code) + ", apps found for com.grahamdeno.shoebox: " + str(len(r.json().get("data", []))))
+                  for app in r.json().get("data", []):
+                      at = app.get("attributes", {})
+                      say("  app id " + str(app.get("id")) + " | name " + str(at.get("name")) + " | bundleId " + str(at.get("bundleId")) + " | sku " + str(at.get("sku")))
               else:
                   codes = [e.get("code") for e in r.json().get("errors", [])]
                   say(label + ": HTTP " + str(r.status_code) + " " + str(codes))
