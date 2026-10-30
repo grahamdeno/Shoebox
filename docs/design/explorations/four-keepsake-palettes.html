@@ -1,0 +1,234 @@
+<title>Shoebox Colors</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the storyboard's board, one band per palette. Each band: the object the colors come from, the colors by job, then three moments from the day painted with them. */
+:root {
+  --bg: #e9e7e3; --fg: #19171a; --muted: #625d63; --line: #d2cec8; --panel: #f4f2ee;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --serif: "DM Serif Display", Georgia, serif; --label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  /* defaults; each palette band overrides these */
+  --paper: #f8f1e7; --ink: #2b1428; --act: #7a2e6e; --on-act: #fff; --act-text: #7a2e6e; --muted-c: #8c5f72; --fresh: #f2b39b; --done: #7fa8a6; --night: #1f1320; --wall: #4a2347;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #151416; --fg: #eeebe7; --muted: #a49ea4; --line: #2c2a2e; --panel: #1d1c1f; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+header h1 { font: 400 clamp(38px, 7vw, 68px)/0.98 var(--serif); margin: 0 0 14px; letter-spacing: -0.01em; }
+header p { margin: 0; max-width: 64ch; color: var(--muted); }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+nav.jump a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-size: 14px; }
+nav.jump a:hover, nav.jump a:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+
+section.pal { padding-block: 52px; border-top: 1px solid var(--line); }
+section.pal:first-of-type { margin-top: 40px; }
+.head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px 40px; align-items: end; margin-bottom: 26px; }
+.head .n { font: 600 12.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.head h2 { font: 400 40px/1 var(--serif); margin: 6px 0 10px; }
+.head p { margin: 0; max-width: 52ch; }
+.head .ref { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+.sw { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.sw div { min-width: 0; }
+.sw i { display: block; height: 52px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.25); }
+.sw b { display: block; margin-top: 5px; font: 600 11.5px var(--sans); }
+.sw span { display: block; font: 400 10.5px/1.3 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .head { grid-template-columns: minmax(0, 1fr); } .sw { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; }
+.frame { min-width: 0; display: grid; gap: 12px; align-content: start; padding: 18px 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); }
+.frame .when { display: flex; justify-content: space-between; font: 600 12px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.frame .stage { display: flex; justify-content: center; }
+.frame p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+/* Devices, as in the storyboard */
+.phone { width: 262px; height: 560px; max-width: 100%; border-radius: 42px; padding: 8px; background: #0b0b0d; box-shadow: 0 24px 50px -22px rgba(10,10,20,.55), inset 0 0 0 1.5px #2b2b30; flex: none; }
+.scr { position: relative; height: 100%; border-radius: 34px; overflow: hidden; color: #fff; font-family: var(--label); }
+.island { position: absolute; top: 9px; left: 50%; width: 82px; height: 23px; margin-left: -41px; border-radius: 14px; background: #000; z-index: 5; }
+.wall { background: radial-gradient(120% 75% at 30% 5%, var(--wall) 0%, var(--night) 62%, #050506 100%); }
+.lock-time { position: absolute; top: 46px; left: 0; right: 0; text-align: center; }
+.lock-time small { display: block; font: 600 13px var(--label); opacity: .85; }
+.lock-time b { display: block; font: 600 72px/1 var(--label); font-stretch: 112%; letter-spacing: -0.02em; }
+.stack { position: absolute; left: 10px; right: 10px; bottom: 22px; display: grid; gap: 8px; }
+.note { border-radius: 6px; background: var(--paper); color: var(--ink); padding: 11px 13px 12px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.6); }
+.app-row { display: flex; justify-content: space-between; align-items: center; font: 600 10.5px var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted-c); margin-bottom: 6px; }
+.app-row span { display: flex; align-items: center; gap: 6px; }
+.ico { width: 18px; height: 18px; border-radius: 4px; background: var(--act); position: relative; flex: none; }
+.ico::after { content: ""; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 7px; border-radius: 1px; background: var(--paper); }
+.ico::before { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2.5px; border-radius: 1px; background: var(--fresh); transform: rotate(-10deg); }
+.why { font: 400 23px/1.08 var(--serif); margin: 0 0 6px; }
+.src { font: 500 11.5px/1.3 var(--label); color: var(--muted-c); }
+.src b { color: var(--ink); font-weight: 600; }
+.thumb { height: 76px; border-radius: 3px; overflow: hidden; margin: 8px 0; background: #fff; padding: 3px; }
+.thumb svg { display: block; width: 100%; height: 100%; }
+.btns { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 10px; }
+.btns span { text-align: center; padding: 8px 0; border-radius: 4px; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); font: 600 12px var(--label); }
+.btns span.go { background: var(--act); color: var(--on-act); border-color: var(--act); }
+.cover { border-radius: 6px; overflow: hidden; background: var(--paper); color: var(--ink); box-shadow: 0 8px 22px -12px rgba(0,0,0,.6); }
+.cover .img { height: 96px; position: relative; }
+.cover .img svg { display: block; width: 100%; height: 100%; }
+.cover .img::after { content: ""; position: absolute; inset: 0; background: var(--fresh); mix-blend-mode: multiply; opacity: .45; }
+.cover .mast { position: absolute; left: 12px; bottom: 6px; font: 400 32px/1 var(--serif); color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.35); z-index: 1; }
+.cover .body { padding: 10px 13px 12px; }
+.cover .meta { font: 600 10px var(--label); font-stretch: 80%; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-c); display: flex; justify-content: space-between; }
+.cover ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.cover li { display: grid; grid-template-columns: 16px 1fr; font: 400 16px/1.15 var(--serif); }
+.cover li b { font: 700 11px/1.6 var(--label); color: var(--act-text); }
+.appview { background: var(--paper); color: var(--ink); }
+.appview .top { position: absolute; top: 44px; left: 16px; right: 16px; }
+.appview h5 { margin: 0; font: 400 34px/1 var(--serif); }
+.appview .search { margin-top: 10px; padding: 8px 12px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 7%, transparent); font: 500 12.5px var(--label); color: var(--muted-c); }
+.appview .list { position: absolute; top: 136px; left: 16px; right: 16px; display: grid; gap: 10px; }
+.appview .day { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 13%, transparent); }
+.appview .day > b { font: 700 10px/1.3 var(--label); font-stretch: 80%; letter-spacing: .12em; text-transform: uppercase; color: var(--act-text); padding-top: 4px; }
+.appview .day > b span { display: block; font: 400 22px/1 var(--serif); color: var(--ink); letter-spacing: 0; }
+.appview .day p { margin: 0; font: 400 16px/1.15 var(--serif); }
+.appview .day small { display: block; font: 500 10.5px var(--label); color: var(--muted-c); margin-top: 3px; }
+.tagf { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; background: var(--fresh); color: var(--ink); font: 700 9px var(--label); letter-spacing: .08em; text-transform: uppercase; vertical-align: 2px; }
+.appview .day.done p { color: var(--muted-c); text-decoration: line-through; text-decoration-color: var(--done); text-decoration-thickness: 2px; }
+.appview .tick { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--done); margin-top: 2px; }
+.appview .tick svg { width: 12px; height: 12px; }
+.appview .fin { padding: 10px 12px; border-radius: 4px; background: var(--done); color: var(--ink); font: 500 12px/1.35 var(--label); }
+.appview .fin b { font: 400 17px var(--serif); display: block; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c7a1"/><stop offset=".55" stop-color="#f4a77a"/><stop offset="1" stop-color="#c98a8e"/></linearGradient>
+    <radialGradient id="neb" cx=".6" cy=".4" r=".6"><stop offset="0" stop-color="#c46aa0"/><stop offset=".5" stop-color="#4b3a8a"/><stop offset="1" stop-color="#0b0b1e"/></radialGradient>
+    <symbol id="ridge" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#sky)"/><circle cx="205" cy="92" r="20" fill="#fde3c4"/>
+      <path d="M0 110 L40 92 L80 104 L120 84 L165 100 L210 86 L255 98 L300 88 V200 H0Z" fill="#9b8fb3"/>
+      <path d="M0 128 L50 108 L95 122 L140 104 L190 120 L240 106 L300 118 V200 H0Z" fill="#6f6f9d"/>
+      <path d="M0 148 L45 130 L100 146 L150 128 L205 144 L260 130 L300 140 V200 H0Z" fill="#4c5683"/>
+      <path d="M0 172 L60 150 L120 168 L180 152 L240 170 L300 156 V200 H0Z" fill="#2e3a5e"/>
+    </symbol>
+    <symbol id="sky2" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#neb)"/>
+      <g fill="#fff"><circle cx="30" cy="30" r="1.2"/><circle cx="80" cy="140" r="1"/><circle cx="120" cy="50" r="1.6"/><circle cx="220" cy="30" r="1.1"/><circle cx="260" cy="150" r="1.4"/><circle cx="60" cy="90" r="1.3"/></g>
+      <circle cx="175" cy="85" r="5" fill="#fff" opacity=".9"/><circle cx="175" cy="85" r="14" fill="#fff" opacity=".15"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+<header>
+  <h1>Shoebox colors</h1>
+  <p>Four palettes, each taken from a real thing people keep in a shoebox, so every color has a reason and a job. Each is painted on the same three moments from the storyboard: the morning issue, an evening notification, and Coming back.</p>
+  <nav class="jump" aria-label="Palettes"><a href="#carbon">Carbon Copy</a><a href="#developing">Developing</a><a href="#cyanotype">Cyanotype</a><a href="#pressed">Pressed Flower</a></nav>
+</header>
+
+<!-- ============ 1 Carbon Copy ============ -->
+<section class="pal" id="carbon" style="--paper:#f6f4ec;--ink:#1d2340;--act:#23379a;--on-act:#fff;--act-text:#23379a;--muted-c:#6c6a62;--fresh:#f2df8a;--done:#f2c1c8;--night:#0f1530;--wall:#2a3c8c">
+  <div class="head">
+    <div><div class="n">Palette 1</div><h2>Carbon Copy</h2>
+      <p>The note you wrote to yourself, in triplicate. Onionskin white, carbon-paper blue for your words and the one action, and the two copy colors: canary for what's coming back, pink for what you've finished.</p>
+      <p class="ref">From: the white, yellow and pink copies of an old receipt book.</p></div>
+    <div class="sw">
+      <div><i style="background:#f6f4ec"></i><b>Onionskin</b><span>#F6F4EC</span></div>
+      <div><i style="background:#1d2340"></i><b>Ink</b><span>#1D2340</span></div>
+      <div><i style="background:#23379a"></i><b>Carbon</b><span>#23379A</span></div>
+      <div><i style="background:#f2df8a"></i><b>Canary</b><span>#F2DF8A</span></div>
+      <div><i style="background:#f2c1c8"></i><b>Pink copy</b><span>#F2C1C8</span></div>
+      <div><i style="background:#6c6a62"></i><b>Muted</b><span>#6C6A62</span></div>
+      <div><i style="background:#0f1530"></i><b>Night</b><span>#0F1530</span></div>
+    </div>
+  </div>
+  <div class="board">
+    <article class="frame"><div class="when"><span>7:00 AM</span><span>Issue</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>7:00</b></div><div class="stack"><div class="cover"><div class="img"><svg><use href="#ridge"/></svg><div class="mast">Shoebox</div></div><div class="body"><div class="meta"><span>Today's issue</span><span>3 things · 25 min</span></div><ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol><div class="btns"><span>Read it to me</span><span class="go">Open</span></div></div></div></div></div></div></div><p>Canary washes the cover photo, the color of things coming back.</p></article>
+    <article class="frame"><div class="when"><span>6:10 PM</span><span>At home</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div><div class="stack"><div class="note"><div class="app-row"><span><i class="ico"></i>Shoebox</span><span>now</span></div><div class="why">Show the kids at dinner.</div><div class="thumb"><svg><use href="#sky2"/></svg></div><div class="src"><b>Astronomy Picture of the Day</b> · tonight</div><div class="btns"><span>Tomorrow</span><span>Drop</span><span class="go">Show it</span></div></div></div></div></div></div><p>Carbon blue is your handwriting and the one button.</p></article>
+    <article class="frame"><div class="when"><span>Sunday</span><span>Coming back</span></div><div class="stage"><div class="phone"><div class="scr appview"><div class="island"></div><div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div><div class="list">
+      <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving. <span class="tagf">New</span></p><small>Kintsugi · kept today</small></div></div>
+      <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review</small></div></div>
+      <div class="day done"><b><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1d2340" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><div><p>Show the kids at dinner.</p><small>Done Thursday</small></div></div>
+      <div class="fin"><b>Three done this week.</b>The pink copies stay in the box.</div>
+    </div></div></div></div><p>Pink marks done, canary marks new. Two copy colors, two meanings.</p></article>
+  </div>
+</section>
+
+<!-- ============ 2 Developing ============ -->
+<section class="pal" id="developing" style="--paper:#f6f4ee;--ink:#1b1b18;--act:#e0913f;--on-act:#1b1b18;--act-text:#a85f1a;--muted-c:#6f6d64;--fresh:#f3cf9e;--done:#7fb3ae;--night:#23251f;--wall:#4b5144">
+  <div class="head">
+    <div><div class="n">Palette 2</div><h2>Developing</h2>
+      <p>An instant photo coming into view. It starts as a murky olive grey, then warm amber and teal bloom out of it. That is exactly what Shoebox does: something you kept slowly comes back. White frame, olive night, amber to act, teal for done.</p>
+      <p class="ref">From: an instant photo in the first minutes after it comes out of the camera.</p></div>
+    <div class="sw">
+      <div><i style="background:#f6f4ee"></i><b>Frame</b><span>#F6F4EE</span></div>
+      <div><i style="background:#1b1b18"></i><b>Ink</b><span>#1B1B18</span></div>
+      <div><i style="background:#e0913f"></i><b>Amber</b><span>#E0913F</span></div>
+      <div><i style="background:#f3cf9e"></i><b>Glow</b><span>#F3CF9E</span></div>
+      <div><i style="background:#7fb3ae"></i><b>Teal</b><span>#7FB3AE</span></div>
+      <div><i style="background:#6f6d64"></i><b>Muted</b><span>#6F6D64</span></div>
+      <div><i style="background:#23251f"></i><b>Murk</b><span>#23251F</span></div>
+    </div>
+  </div>
+  <div class="board">
+    <article class="frame"><div class="when"><span>7:00 AM</span><span>Issue</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>7:00</b></div><div class="stack"><div class="cover"><div class="img"><svg><use href="#ridge"/></svg><div class="mast">Shoebox</div></div><div class="body"><div class="meta"><span>Today's issue</span><span>3 things · 25 min</span></div><ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol><div class="btns"><span>Read it to me</span><span class="go">Open</span></div></div></div></div></div></div></div><p>The olive night behind the Lock Screen is the undeveloped photo.</p></article>
+    <article class="frame"><div class="when"><span>6:10 PM</span><span>At home</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div><div class="stack"><div class="note"><div class="app-row"><span><i class="ico"></i>Shoebox</span><span>now</span></div><div class="why">Show the kids at dinner.</div><div class="thumb"><svg><use href="#sky2"/></svg></div><div class="src"><b>Astronomy Picture of the Day</b> · tonight</div><div class="btns"><span>Tomorrow</span><span>Drop</span><span class="go">Show it</span></div></div></div></div></div></div><p>Amber is warm and urgent without being alarming.</p></article>
+    <article class="frame"><div class="when"><span>Sunday</span><span>Coming back</span></div><div class="stage"><div class="phone"><div class="scr appview"><div class="island"></div><div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div><div class="list">
+      <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving. <span class="tagf">New</span></p><small>Kintsugi · kept today</small></div></div>
+      <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review</small></div></div>
+      <div class="day done"><b><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1b1b18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><div><p>Show the kids at dinner.</p><small>Done Thursday</small></div></div>
+      <div class="fin"><b>Three done this week.</b>Fully developed.</div>
+    </div></div></div></div><p>Teal, the cool color that appears last in a developing photo, means done.</p></article>
+  </div>
+</section>
+
+<!-- ============ 3 Cyanotype ============ -->
+<section class="pal" id="cyanotype" style="--paper:#f3f1ea;--ink:#14284f;--act:#1f3a7a;--on-act:#fff;--act-text:#1f3a7a;--muted-c:#5f6878;--fresh:#d6b98a;--done:#9fb6db;--night:#0b1630;--wall:#1f3a7a">
+  <div class="head">
+    <div><div class="n">Palette 3</div><h2>Cyanotype</h2>
+      <p>A sun print. You lay a leaf on treated paper, leave it in the light, and time makes the image in Prussian blue. One deep blue does almost everything, with kraft for what's new and a sun-faded blue for done. The calmest and most serious of the four.</p>
+      <p class="ref">From: a sun print made on a summer afternoon, kept in an envelope.</p></div>
+    <div class="sw">
+      <div><i style="background:#f3f1ea"></i><b>Paper</b><span>#F3F1EA</span></div>
+      <div><i style="background:#14284f"></i><b>Ink</b><span>#14284F</span></div>
+      <div><i style="background:#1f3a7a"></i><b>Prussian</b><span>#1F3A7A</span></div>
+      <div><i style="background:#d6b98a"></i><b>Kraft</b><span>#D6B98A</span></div>
+      <div><i style="background:#9fb6db"></i><b>Faded blue</b><span>#9FB6DB</span></div>
+      <div><i style="background:#5f6878"></i><b>Muted</b><span>#5F6878</span></div>
+      <div><i style="background:#0b1630"></i><b>Night</b><span>#0B1630</span></div>
+    </div>
+  </div>
+  <div class="board">
+    <article class="frame"><div class="when"><span>7:00 AM</span><span>Issue</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>7:00</b></div><div class="stack"><div class="cover"><div class="img"><svg><use href="#ridge"/></svg><div class="mast">Shoebox</div></div><div class="body"><div class="meta"><span>Today's issue</span><span>3 things · 25 min</span></div><ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol><div class="btns"><span>Read it to me</span><span class="go">Open</span></div></div></div></div></div></div></div><p>Kraft warms the cover photo; everything else is blue on paper.</p></article>
+    <article class="frame"><div class="when"><span>6:10 PM</span><span>At home</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div><div class="stack"><div class="note"><div class="app-row"><span><i class="ico"></i>Shoebox</span><span>now</span></div><div class="why">Show the kids at dinner.</div><div class="thumb"><svg><use href="#sky2"/></svg></div><div class="src"><b>Astronomy Picture of the Day</b> · tonight</div><div class="btns"><span>Tomorrow</span><span>Drop</span><span class="go">Show it</span></div></div></div></div></div></div><p>Blue on a blue Lock Screen: quiet, very readable.</p></article>
+    <article class="frame"><div class="when"><span>Sunday</span><span>Coming back</span></div><div class="stage"><div class="phone"><div class="scr appview"><div class="island"></div><div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div><div class="list">
+      <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving. <span class="tagf">New</span></p><small>Kintsugi · kept today</small></div></div>
+      <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review</small></div></div>
+      <div class="day done"><b><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#14284f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><div><p>Show the kids at dinner.</p><small>Done Thursday</small></div></div>
+      <div class="fin"><b>Three done this week.</b>Left out in the sun.</div>
+    </div></div></div></div><p>Done fades to a sun-bleached blue, like an old print.</p></article>
+  </div>
+</section>
+
+<!-- ============ 4 Pressed Flower ============ -->
+<section class="pal" id="pressed" style="--paper:#f2ecdc;--ink:#2e2a22;--act:#6b4f8c;--on-act:#fff;--act-text:#6b4f8c;--muted-c:#6f6658;--fresh:#e9b2c0;--done:#a3b38a;--night:#1b1722;--wall:#4a3a63">
+  <div class="head">
+    <div><div class="n">Palette 4</div><h2>Pressed Flower</h2>
+      <p>A violet pressed between the pages of a book so you'd remember the day. Parchment, brown-black ink, violet to act, petal pink for what's new and the sage of the stem for done. The closest to Plum and Peach, but gentler and less expected.</p>
+      <p class="ref">From: a flower pressed in a book, found years later.</p></div>
+    <div class="sw">
+      <div><i style="background:#f2ecdc"></i><b>Parchment</b><span>#F2ECDC</span></div>
+      <div><i style="background:#2e2a22"></i><b>Ink</b><span>#2E2A22</span></div>
+      <div><i style="background:#6b4f8c"></i><b>Violet</b><span>#6B4F8C</span></div>
+      <div><i style="background:#e9b2c0"></i><b>Petal</b><span>#E9B2C0</span></div>
+      <div><i style="background:#a3b38a"></i><b>Sage</b><span>#A3B38A</span></div>
+      <div><i style="background:#6f6658"></i><b>Muted</b><span>#6F6658</span></div>
+      <div><i style="background:#1b1722"></i><b>Night</b><span>#1B1722</span></div>
+    </div>
+  </div>
+  <div class="board">
+    <article class="frame"><div class="when"><span>7:00 AM</span><span>Issue</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>7:00</b></div><div class="stack"><div class="cover"><div class="img"><svg><use href="#ridge"/></svg><div class="mast">Shoebox</div></div><div class="body"><div class="meta"><span>Today's issue</span><span>3 things · 25 min</span></div><ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol><div class="btns"><span>Read it to me</span><span class="go">Open</span></div></div></div></div></div></div></div><p>Petal pink washes the cover; violet numbers the lines.</p></article>
+    <article class="frame"><div class="when"><span>6:10 PM</span><span>At home</span></div><div class="stage"><div class="phone"><div class="scr wall"><div class="island"></div><div class="lock-time"><small>Thursday, October 29</small><b>6:10</b></div><div class="stack"><div class="note"><div class="app-row"><span><i class="ico"></i>Shoebox</span><span>now</span></div><div class="why">Show the kids at dinner.</div><div class="thumb"><svg><use href="#sky2"/></svg></div><div class="src"><b>Astronomy Picture of the Day</b> · tonight</div><div class="btns"><span>Tomorrow</span><span>Drop</span><span class="go">Show it</span></div></div></div></div></div></div><p>Violet keeps the warmth of plum but reads cooler and calmer.</p></article>
+    <article class="frame"><div class="when"><span>Sunday</span><span>Coming back</span></div><div class="stage"><div class="phone"><div class="scr appview"><div class="island"></div><div class="top"><h5>Coming back</h5><div class="search">Ask or search everything you kept</div></div><div class="list">
+      <div class="day"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving. <span class="tagf">New</span></p><small>Kintsugi · kept today</small></div></div>
+      <div class="day"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up again.</p><small>Before Sprint review</small></div></div>
+      <div class="day done"><b><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#2e2a22" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></b><div><p>Show the kids at dinner.</p><small>Done Thursday</small></div></div>
+      <div class="fin"><b>Three done this week.</b>Pressed and kept.</div>
+    </div></div></div></div><p>Sage, the green of the stem, means done.</p></article>
+  </div>
+</section>
+</div>

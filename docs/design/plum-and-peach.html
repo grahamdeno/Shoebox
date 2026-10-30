@@ -1,0 +1,183 @@
+<title>Plum and Peach</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one palette, five ideas about how color can work in Shoebox, then the radius question on its own. Each idea is a band: the idea in words, then the moments painted with it. */
+:root { --bg: #ebe7e6; --fg: #1d1620; --muted: #67606a; --line: #d4cdd0; --card: #f7f4f3;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif; --serif: "DM Serif Display", Georgia, serif; --label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --plum: #7a2e6e; --plum-ink: #2a1830; --peach: #f4b49a; --blush: #f7efe9; --mauve: #806a7c; --night: #1d1222; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161217; --fg: #efe9ee; --muted: #a59ca7; --line: #2e2730; --card: #1e1920; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #161217; --fg: #efe9ee; --muted: #a59ca7; --line: #2e2730; --card: #1e1920; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+h1 { font: 400 clamp(38px, 6vw, 62px)/1 var(--serif); margin: 0 0 12px; }
+.intro { max-width: 64ch; color: var(--muted); margin: 0; }
+section { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px 44px; padding-block: 48px; border-top: 1px solid var(--line); margin-top: 40px; }
+section + section { margin-top: 0; }
+.about h2 { font: 400 32px/1.05 var(--serif); margin: 4px 0 10px; }
+.about .n { font: 600 12px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.about p { margin: 0 0 12px; }
+.about .why { color: var(--muted); font-size: 14px; }
+.about .why b { color: var(--fg); font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; min-width: 0; }
+@media (max-width: 860px) { section { grid-template-columns: minmax(0, 1fr); } }
+
+/* Shared tiles. --r is the corner radius, set per idea. */
+.lock { --r: 4px; position: relative; width: 236px; max-width: 100%; height: 300px; overflow: hidden; padding: 14px 10px; border-radius: 22px; background: radial-gradient(120% 80% at 30% 0%, #4a2347 0%, var(--night) 70%); display: flex; flex-direction: column; justify-content: space-between; flex: none; }
+.lock .t { text-align: center; color: #fff; font: 600 44px/1 var(--label); font-stretch: 112%; }
+.lock .t small { display: block; font: 600 10.5px var(--label); opacity: .8; margin-bottom: 3px; }
+.n { border-radius: var(--r); padding: 10px 11px 11px; background: var(--blush); color: var(--plum-ink); }
+.n .a { display: flex; align-items: center; justify-content: space-between; font: 600 9px var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--mauve); margin-bottom: 5px; }
+.n .a span { display: flex; gap: 6px; align-items: center; }
+.n .a i { width: 12px; height: 12px; border-radius: calc(var(--r) * .6); background: var(--plum); }
+.n .w { font: 400 19px/1.06 var(--serif); }
+.n .s { font: 500 10px var(--label); color: var(--mauve); margin-top: 4px; }
+.n .bt { display: grid; grid-template-columns: 1fr 1.2fr; gap: 5px; margin-top: 9px; }
+.n .bt span { text-align: center; padding: 6px 0; border-radius: calc(var(--r) * .8); font: 600 10px var(--label); border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.n .bt span.go { background: var(--plum); color: #fff; border-color: var(--plum); }
+.app { --r: 4px; width: 236px; max-width: 100%; height: 300px; overflow: hidden; padding: 16px 14px; border-radius: 22px; background: var(--blush); color: var(--plum-ink); box-shadow: inset 0 0 0 1px rgba(127,127,127,.2); flex: none; }
+.app h3 { margin: 0 0 10px; font: 400 26px/1 var(--serif); }
+.app .it { display: grid; grid-template-columns: 34px 1fr; gap: 8px; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--plum-ink) 14%, transparent); }
+.app .it b { font: 700 8.5px/1.2 var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--plum); }
+.app .it b span { display: block; font: 400 18px/1 var(--serif); color: var(--plum-ink); letter-spacing: 0; }
+.app .it p { margin: 0; font: 400 14px/1.15 var(--serif); }
+.app .it small { display: block; font: 500 9.5px var(--label); color: var(--mauve); margin-top: 2px; }
+.app .chip { display: inline-block; margin-top: 10px; padding: 6px 11px; border-radius: var(--r); background: var(--plum); color: #fff; font: 600 10px var(--label); }
+.cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; max-width: 236px; }
+figure { margin: 0; }
+
+/* 2 Dusk to dawn */
+.tod { width: 236px; max-width: 100%; flex: none; }
+.tod .n { --r: 4px; box-shadow: 0 10px 24px -14px rgba(0,0,0,.5); }
+.tod .when { font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.tod .when i { font-style: normal; color: var(--fg); }
+.am .n { background: #fde3d2; color: #2a1830; }
+.am .n .a i, .am .n .bt span.go { background: #b2456f; border-color: #b2456f; }
+.noon .n { background: #f6f1ef; color: #2a1830; }
+.pm .n { background: #4a2148; color: #fbe3d6; }
+.pm .n .a { color: #d9a9c3; }
+.pm .n .s { color: #d9a9c3; }
+.pm .n .a i { background: var(--peach); }
+.pm .n .bt span.go { background: var(--peach); color: #2a1830; border-color: var(--peach); }
+.tod .ramp { height: 10px; margin-top: 12px; border-radius: 2px; }
+
+/* 3 Ripening */
+.ripe { --r: 3px; }
+.ages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 236px; max-width: 100%; margin-bottom: 12px; }
+.ages div { font: 500 9.5px/1.25 var(--sans); color: var(--muted); }
+.ages i { display: block; height: 30px; border-radius: 2px; margin-bottom: 4px; }
+.ripe .it b { display: grid; place-items: center; height: 38px; border-radius: 3px; color: #fff; font-size: 8px; }
+.ripe .it b span { color: inherit; font-size: 16px; }
+
+/* 4 Two-ink print */
+.riso { --r: 0px; position: relative; width: 236px; max-width: 100%; height: 300px; overflow: hidden; background: #f3ede4; color: #5a1e52; flex: none; border-radius: 0; }
+.riso::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .32; background-image: radial-gradient(rgba(60,20,50,.35) .6px, transparent .7px); background-size: 3px 3px; mix-blend-mode: multiply; }
+.riso .blk { position: absolute; left: 0; right: 0; top: 0; height: 132px; background: #ff9e7a; mix-blend-mode: multiply; }
+.riso .circ { position: absolute; width: 150px; height: 150px; border-radius: 50%; right: -36px; top: 36px; background: #9d3c8f; mix-blend-mode: multiply; }
+.riso .txt { position: absolute; left: 14px; right: 14px; top: 14px; }
+.riso .mast { font: 400 40px/0.9 var(--serif); color: #5a1e52; }
+.riso .meta { font: 700 9px var(--label); font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; margin-top: 6px; }
+.riso ol { position: absolute; left: 14px; right: 14px; top: 150px; list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.riso li { display: grid; grid-template-columns: 18px 1fr; font: 400 17px/1.08 var(--serif); }
+.riso li b { font: 700 10px/1.8 var(--label); color: #e2603a; }
+.riso .go { position: absolute; left: 14px; bottom: 14px; padding: 7px 12px; background: #5a1e52; color: #f3ede4; font: 700 10px var(--label); letter-spacing: .1em; text-transform: uppercase; }
+
+/* 5 Plum night */
+.night .app { background: #22142a; color: #f7e3d8; box-shadow: none; }
+.night .app .it { border-top-color: rgba(247,227,216,.14); }
+.night .app .it b { color: var(--peach); }
+.night .app .it b span { color: #f7e3d8; }
+.night .app .it small { color: #b597ae; }
+.night .app .chip { background: var(--peach); color: #22142a; }
+.night .lock .n { background: #2e1b36; color: #f7e3d8; box-shadow: inset 0 0 0 1px rgba(244,180,154,.25); }
+.night .lock .n .a, .night .lock .n .s { color: #b597ae; }
+.night .lock .n .a i { background: var(--peach); }
+.night .lock .n .bt span.go { background: var(--peach); color: #22142a; border-color: var(--peach); }
+
+/* Radius study */
+.radii { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 16px; }
+.radii .lock { width: 100%; }
+.radii h4 { margin: 10px 0 2px; font: 600 14px var(--sans); }
+.radii p { margin: 0; font-size: 13px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+<h1>Plum and Peach</h1>
+<p class="intro">One palette, five ideas about what color should do in Shoebox. Round one only changed the paint. These change what the color means. The last section takes the corner radius on its own, so you can see how much of the softness came from it.</p>
+
+<section>
+  <div class="about"><div class="n">Idea 1</div><h2>Sharpened</h2>
+    <p>The same palette with small corners (4 pixels), thin outlines instead of filled grey buttons, and plum only on the one action that matters.</p>
+    <p class="why"><b>Tests:</b> whether the radius was the problem. If this already feels better, the palette was fine all along.</p></div>
+  <div class="row">
+    <figure><div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div></figure>
+    <figure><div class="app"><h3>Coming back</h3><div class="it"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="it"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><div class="it"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up.</p><small>Martin Fowler</small></div></div><span class="chip">Ask your shoebox</span></div></figure>
+  </div>
+</section>
+
+<section>
+  <div class="about"><div class="n">Idea 2</div><h2>Dusk to dawn</h2>
+    <p>Shoebox is about the right moment, so the color follows the time of day. Mornings are peach paper with plum, midday is pale, and evenings turn to plum with peach type.</p>
+    <p class="why"><b>Strength:</b> you know when something came back by its color alone, and evening notifications don't glare. <b>Cost:</b> three looks to keep consistent.</p></div>
+  <div class="row">
+    <figure class="tod am"><div class="when"><span>Morning</span><i>7:00</i></div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Field trip form and $12, due Friday.</div><div class="s">From the school flyer</div><div class="bt"><span>Tonight</span><span class="go">Done</span></div></div><div class="ramp" style="background:linear-gradient(90deg,#fde3d2,#f4b49a)"></div></figure>
+    <figure class="tod noon"><div class="when"><span>Midday</span><i>12:15</i></div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Book the campsite at Carolina Beach.</div><div class="s">Two waterfront sites open Nov 14 to 16</div><div class="bt"><span>Not now</span><span class="go">Book it</span></div></div><div class="ramp" style="background:linear-gradient(90deg,#f6f1ef,#e9d6dc)"></div></figure>
+    <figure class="tod pm"><div class="when"><span>Evening</span><i>6:10</i></div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div><div class="ramp" style="background:linear-gradient(90deg,#7a2e6e,#4a2148)"></div></figure>
+  </div>
+</section>
+
+<section>
+  <div class="about"><div class="n">Idea 3</div><h2>Ripening</h2>
+    <p>Color shows how long you've kept something. A fresh save is peach. The longer it waits, the deeper it gets, through rose to plum, like fruit ripening.</p>
+    <p class="why"><b>Strength:</b> the "Coming back" list tells you at a glance what you've been carrying the longest. <b>Cost:</b> five shades to manage, and color can't be the only signal, so the age is written too.</p></div>
+  <div class="row">
+    <div>
+      <div class="ages">
+        <div><i style="background:#f4b49a"></i>Today</div><div><i style="background:#e5939a"></i>A week</div><div><i style="background:#c06b91"></i>A month</div><div><i style="background:#8e3a7d"></i>3 months</div><div><i style="background:#4a1d45"></i>A year</div>
+      </div>
+      <div class="app ripe"><h3>Coming back</h3>
+        <div class="it"><b style="background:#e5939a">Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Kept 6 days</small></div></div>
+        <div class="it"><b style="background:#f4b49a;color:#2a1830">Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kept today</small></div></div>
+        <div class="it"><b style="background:#8e3a7d">Tue<span>3</span></b><div><p>Bring this up when tech debt comes up.</p><small>Kept 3 months</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="about"><div class="n">Idea 4</div><h2>Two-ink print</h2>
+    <p>Plum and peach as two printing inks, like a risograph zine. Where they overlap they make a third color. A fine grain, square corners and the Daily Issue's layouts.</p>
+    <p class="why"><b>Strength:</b> nothing else on a phone looks like this, and it belongs with the Daily Issue cover. <b>Cost:</b> it's a strong style; it has to stay out of the way on everyday screens.</p></div>
+  <div class="row">
+    <figure><div class="riso"><div class="blk"></div><div class="circ"></div><div class="txt"><div class="mast">Shoebox</div><div class="meta">Thursday 29 October · 3 things</div></div>
+      <ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol><div class="go">Open the issue</div></div>
+      <p class="cap">The 7:00 AM issue as a two-ink cover.</p></figure>
+    <figure><div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n" style="--r:0px;background:#f3ede4"><div class="a"><span><i style="background:#ff9e7a"></i>Shoebox</span>now</div><div class="w" style="color:#5a1e52">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go" style="background:#5a1e52;border-color:#5a1e52">Show it</span></div></div></div></figure>
+  </div>
+</section>
+
+<section class="night">
+  <div class="about"><div class="n">Idea 5</div><h2>Plum night</h2>
+    <p>Dark first. Most of Shoebox now happens on the Lock Screen, which is dark most of the time. Deep plum surfaces with peach type and peach actions.</p>
+    <p class="why"><b>Strength:</b> it looks native on the Lock Screen and calm at night. <b>Cost:</b> the light version needs equal care; Idea 1 would be its daytime twin.</p></div>
+  <div class="row">
+    <figure><div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div></figure>
+    <figure><div class="app"><h3>Coming back</h3><div class="it"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="it"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><div class="it"><b>Tue<span>3</span></b><div><p>Bring this up when tech debt comes up.</p><small>Martin Fowler</small></div></div><span class="chip">Ask your shoebox</span></div></figure>
+  </div>
+</section>
+
+<section>
+  <div class="about"><div class="n">The radius</div><h2>How round?</h2>
+    <p>The same notification at four corner sizes. The phone's own corners stay round; this is only about Shoebox's cards and buttons.</p>
+    <p class="why"><b>My take:</b> 4 pixels. It reads as paper and print, not as a bubble, and it still feels like it belongs on an iPhone.</p></div>
+  <div class="radii">
+    <figure><div class="lock" style="--r:22px"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div><h4>22 px</h4><p>Round one. Soft, like most apps.</p></figure>
+    <figure><div class="lock" style="--r:10px"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div><h4>10 px</h4><p>In between.</p></figure>
+    <figure><div class="lock" style="--r:4px"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div><h4>4 px</h4><p>Paper and print. My pick.</p></figure>
+    <figure><div class="lock" style="--r:0px"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div><h4>0 px</h4><p>Square. Editorial, a little severe.</p></figure>
+  </div>
+</section>
+</div>
