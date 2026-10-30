@@ -1,0 +1,228 @@
+<title>Faded Print</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the story first (a print before and after years in a box), then the palette by job, then the same moments from the storyboard painted with it. */
+:root {
+  --bg: #ece6e2; --fg: #22161f; --muted: #6b5c66; --line: #d6ccc9; --card: #f8f3ef;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif; --serif: "DM Serif Display", Georgia, serif; --label: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  /* Faded Print: every color is something an old snapshot turns into. */
+  --cream: #f8f1e7;   /* the print's white border, gone warm */
+  --ink: #2b1428;     /* faded shadow, near black */
+  --plum: #7a2e6e;    /* faded shadow, the one action color */
+  --peach: #f2b39b;   /* faded highlight: fresh, morning, warmth */
+  --rose: #8c5f72;    /* faded midtone: dates, sources, quiet text */
+  --cyan: #7fa8a6;    /* the last cool dye left: only for done */
+  --night: #1f1320; --night-2: #2c1b2e; --night-ink: #f6e4d8;
+  --r: 4px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171116; --fg: #f1e8ec; --muted: #a8979f; --line: #2f2530; --card: #1f171f; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #171116; --fg: #f1e8ec; --muted: #a8979f; --line: #2f2530; --card: #1f171f; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+h1 { font: 400 clamp(40px, 7vw, 70px)/0.98 var(--serif); margin: 0 0 14px; }
+.lede { max-width: 62ch; margin: 0; color: var(--muted); }
+h2 { font: 400 34px/1.05 var(--serif); margin: 0 0 8px; }
+.sub { margin: 0 0 22px; color: var(--muted); max-width: 64ch; }
+section { padding-block: 48px; border-top: 1px solid var(--line); }
+section:first-of-type { margin-top: 36px; }
+
+/* Before and after */
+.ba { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; }
+.print { background: #fbfbf7; padding: 12px 12px 40px; box-shadow: 0 14px 30px -16px rgba(40,10,30,.5); width: 280px; max-width: 100%; position: relative; }
+.print svg { display: block; width: 100%; height: 200px; }
+.print span { position: absolute; left: 14px; bottom: 12px; font: 400 15px var(--serif); color: #4a3a44; }
+.print.old { background: var(--cream); transform: rotate(-2.5deg); }
+.arrow { font: 400 14px var(--sans); color: var(--muted); padding-bottom: 80px; }
+
+/* Swatches */
+.sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.sw div { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.sw i { display: block; height: 70px; }
+.sw b { display: block; padding: 10px 12px 0; font: 600 14px var(--sans); }
+.sw small { display: block; padding: 0 12px; font: 400 12px var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sw p { margin: 6px 12px 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+/* Moments */
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; }
+.board figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+.board figcaption { font-size: 13px; color: var(--muted); max-width: 250px; }
+.board figcaption b { color: var(--fg); font-weight: 600; }
+.tile { position: relative; width: 250px; max-width: 100%; height: 330px; border-radius: 24px; overflow: hidden; }
+.lock { padding: 14px 10px; display: flex; flex-direction: column; justify-content: space-between; background: radial-gradient(120% 80% at 30% 0%, #4a2347 0%, var(--night) 72%); }
+.lock .t { text-align: center; color: #fff; font: 600 46px/1 var(--label); font-stretch: 112%; }
+.lock .t small { display: block; font: 600 10.5px var(--label); opacity: .8; margin-bottom: 3px; }
+.n { border-radius: var(--r); background: var(--cream); color: var(--ink); padding: 10px 11px 11px; }
+.n .a { display: flex; justify-content: space-between; align-items: center; font: 600 9px var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--rose); margin-bottom: 5px; }
+.n .a span { display: flex; gap: 6px; align-items: center; }
+.n .a i { width: 12px; height: 12px; border-radius: 2px; background: var(--plum); }
+.n .w { font: 400 20px/1.06 var(--serif); }
+.n .s { font: 500 10px var(--label); color: var(--rose); margin-top: 4px; }
+.n .pic { background: #fbfbf7; padding: 4px; margin-top: 8px; border-radius: 2px; }
+.n .pic svg { display: block; width: 100%; height: 64px; }
+.n .bt { display: grid; grid-template-columns: 1fr 1.25fr; gap: 5px; margin-top: 9px; }
+.n .bt span { text-align: center; padding: 6px 0; border-radius: 3px; font: 600 10px var(--label); border: 1px solid color-mix(in srgb, currentColor 28%, transparent); }
+.n .bt span.go { background: var(--plum); color: #fff; border-color: var(--plum); }
+.lock.dark .n { background: var(--night-2); color: var(--night-ink); box-shadow: inset 0 0 0 1px rgba(242,179,155,.22); }
+.lock.dark .n .a, .lock.dark .n .s { color: #c29aae; }
+.lock.dark .n .a i { background: var(--peach); }
+.lock.dark .n .bt span.go { background: var(--peach); color: var(--ink); border-color: var(--peach); }
+
+/* Morning cover: two inks on cream, with a faded print */
+.cover { background: var(--cream); color: var(--plum); padding: 0; border-radius: 24px; }
+.cover::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .28; background-image: radial-gradient(rgba(60,20,50,.4) .6px, transparent .7px); background-size: 3px 3px; mix-blend-mode: multiply; }
+.cover .band { position: absolute; left: 0; right: 0; top: 0; height: 150px; background: var(--peach); mix-blend-mode: multiply; }
+.cover .photo { position: absolute; right: 16px; top: 46px; width: 128px; background: #fbfbf7; padding: 5px 5px 16px; transform: rotate(4deg); box-shadow: 0 8px 16px -8px rgba(60,20,50,.5); }
+.cover .photo svg { display: block; width: 100%; height: 92px; }
+.cover .mast { position: absolute; left: 16px; top: 22px; font: 400 40px/0.9 var(--serif); }
+.cover .meta { position: absolute; left: 16px; top: 66px; width: 100px; font: 700 9px/1.4 var(--label); font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; }
+.cover ol { position: absolute; left: 16px; right: 16px; top: 168px; list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cover li { display: grid; grid-template-columns: 18px 1fr; font: 400 18px/1.06 var(--serif); color: var(--ink); }
+.cover li b { font: 700 10px/1.9 var(--label); color: var(--plum); }
+.cover .go { position: absolute; left: 16px; bottom: 16px; padding: 8px 13px; background: var(--plum); color: var(--cream); font: 700 10px var(--label); letter-spacing: .1em; text-transform: uppercase; border-radius: 3px; }
+
+/* Coming back, ripening */
+.app { background: var(--cream); color: var(--ink); padding: 18px 14px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.18); }
+.app h3 { margin: 0 0 4px; font: 400 28px/1 var(--serif); }
+.app .hint { font: 500 10px var(--label); color: var(--rose); margin-bottom: 8px; }
+.app .it { display: grid; grid-template-columns: 54px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(43,20,40,.12); align-items: center; }
+.app .thumb { background: #fbfbf7; padding: 3px 3px 9px; box-shadow: 0 2px 5px -2px rgba(60,20,50,.4); }
+.app .thumb svg { display: block; width: 100%; height: 36px; }
+.app .it p { margin: 0; font: 400 14px/1.12 var(--serif); }
+.app .it small { display: block; margin-top: 3px; font: 500 9.5px var(--label); color: var(--rose); }
+.app .it small b { color: var(--plum); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+/* Done */
+.done { background: var(--cream); color: var(--ink); padding: 18px 16px; display: grid; align-content: center; justify-items: center; text-align: center; gap: 12px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.18); }
+.done .chk { width: 64px; height: 64px; border-radius: 50%; background: var(--cyan); display: grid; place-items: center; }
+.done .chk svg { width: 30px; height: 30px; }
+.done h3 { margin: 0; font: 400 30px/1.05 var(--serif); }
+.done p { margin: 0; font: 500 12px/1.4 var(--label); color: var(--rose); max-width: 24ch; }
+.done .strip { display: flex; gap: 6px; margin-top: 4px; }
+.done .strip div { background: #fbfbf7; padding: 3px 3px 8px; width: 46px; box-shadow: 0 2px 5px -2px rgba(60,20,50,.4); }
+.done .strip svg { display: block; width: 100%; height: 32px; }
+
+/* Everything you kept: a box of prints */
+.box { background: var(--night); padding: 16px 12px; }
+.box h3 { margin: 0 0 10px; font: 400 26px/1 var(--serif); color: var(--night-ink); }
+.box .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.box .p { background: var(--cream); padding: 4px 4px 0; }
+.box .p svg { display: block; width: 100%; height: 50px; }
+.box .p span { display: block; padding: 4px 1px 6px; font: 400 10px/1.1 var(--serif); color: var(--ink); }
+.box .q { display: grid; place-items: center; height: 50px; background: var(--peach); color: var(--ink); font: 400 11px/1.1 var(--serif); text-align: center; padding: 4px; }
+.box .q.old { background: #c98aa0; }
+.box .q.older { background: var(--plum); color: var(--cream); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb2e5"/><stop offset=".6" stop-color="#bcd8ee"/><stop offset="1" stop-color="#e9eef0"/></linearGradient>
+    <filter id="f1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.80 0.12 0.08 0 0.10  0.05 0.85 0.05 0 0.04  0.05 0.05 0.80 0 0.06  0 0 0 1 0"/></filter>
+    <filter id="f2" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.62 0.16 0.10 0 0.26  0.08 0.66 0.08 0 0.10  0.10 0.08 0.58 0 0.16  0 0 0 1 0"/></filter>
+    <filter id="f3" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.48 0.14 0.10 0 0.38  0.06 0.50 0.08 0 0.16  0.14 0.06 0.46 0 0.22  0 0 0 1 0"/></filter>
+    <symbol id="scene" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#sky)"/>
+      <circle cx="210" cy="60" r="18" fill="#fff6d8"/>
+      <path d="M0 112 L40 92 L80 104 L120 82 L165 100 L210 86 L255 98 L300 88 V200 H0Z" fill="#6d93b8"/>
+      <path d="M0 132 L50 110 L95 124 L140 104 L190 120 L240 106 L300 118 V200 H0Z" fill="#3f6f8e"/>
+      <path d="M0 152 L45 134 L100 148 L150 130 L205 146 L260 132 L300 142 V200 H0Z" fill="#2d5a5c"/>
+      <path d="M0 176 L60 156 L120 172 L180 158 L240 174 L300 160 V200 H0Z" fill="#1d3b2e"/>
+      <path d="M150 200 Q160 170 175 160" stroke="#d9d2bf" stroke-width="4" fill="none"/>
+    </symbol>
+    <symbol id="bowl" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#2d3a45"/><ellipse cx="150" cy="168" rx="92" ry="10" fill="#1d262e"/>
+      <path d="M62 86 Q150 104 238 86 Q232 160 150 164 Q68 160 62 86Z" fill="#3e7a8a"/><ellipse cx="150" cy="86" rx="88" ry="14" fill="#5c97a6"/><ellipse cx="150" cy="87" rx="78" ry="9" fill="#2b5866"/>
+      <path d="M108 96 L120 118 L112 134 L128 152 M120 118 L146 124 L160 146 L156 162 M146 124 L170 104 L188 100" fill="none" stroke="#e8c45a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="stars" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#10224a"/><circle cx="170" cy="90" r="40" fill="#3a5fb0" opacity=".6"/><circle cx="170" cy="90" r="16" fill="#9ec1ff" opacity=".7"/><circle cx="170" cy="90" r="5" fill="#fff"/>
+      <g fill="#fff"><circle cx="30" cy="30" r="1.4"/><circle cx="80" cy="140" r="1.2"/><circle cx="120" cy="50" r="1.6"/><circle cx="240" cy="30" r="1.2"/><circle cx="260" cy="150" r="1.5"/><circle cx="60" cy="90" r="1.3"/></g>
+    </symbol>
+    <symbol id="bread" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#b9c9cf"/><ellipse cx="150" cy="128" rx="104" ry="56" fill="#8a5a33"/><ellipse cx="150" cy="116" rx="98" ry="50" fill="#b77a45"/>
+      <path d="M92 104 Q150 74 208 104 M102 126 Q150 98 198 126" stroke="#e8cfa8" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+<h1>Faded Print</h1>
+<p class="lede">Color photos kept in a shoebox fade the same way. The cyan dye breaks down first, so the print drifts toward magenta and peach: shadows go plum, skies and skin go peach and rose, the white border warms to cream. This palette is that drift. Every color in Shoebox is something an old snapshot turns into.</p>
+
+<section>
+  <h2>The drift</h2>
+  <p class="sub">The same snapshot, new and after years in the box. The colors on the right become the palette.</p>
+  <div class="ba">
+    <div class="print"><svg><use href="#scene"/></svg><span>New</span></div>
+    <div class="arrow">Years in a shoebox →</div>
+    <div class="print old"><svg style="filter:url(#f3)"><use href="#scene"/></svg><span>Kept</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>The palette</h2>
+  <p class="sub">Six colors with jobs. Plum is the only color that asks you to act. Faded cyan, the last cool dye in an old print, appears only when something is done.</p>
+  <div class="sw">
+    <div><i style="background:#f8f1e7"></i><b>Cream</b><small>#F8F1E7</small><p>The print's border. Every surface, every margin.</p></div>
+    <div><i style="background:#2b1428"></i><b>Ink</b><small>#2B1428</small><p>Faded shadow. Your words, always.</p></div>
+    <div><i style="background:#7a2e6e"></i><b>Plum</b><small>#7A2E6E</small><p>The one action on any screen.</p></div>
+    <div><i style="background:#f2b39b"></i><b>Peach</b><small>#F2B39B</small><p>Faded highlight. Fresh saves, mornings, the cover.</p></div>
+    <div><i style="background:#8c5f72"></i><b>Rose</b><small>#8C5F72</small><p>Faded midtone. Dates, sources, quiet text.</p></div>
+    <div><i style="background:#7fa8a6"></i><b>Faded cyan</b><small>#7FA8A6</small><p>Only for done. Finishing feels cool and calm.</p></div>
+    <div><i style="background:#1f1320"></i><b>Night</b><small>#1F1320</small><p>Dark mode and the Lock Screen: plum-black, peach type.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The moments</h2>
+  <p class="sub">The same moments from the storyboard. Corners are 4 pixels, like a print's edge, and pictures sit in white borders like snapshots.</p>
+  <div class="board">
+
+    <figure><div class="tile cover"><div class="band"></div>
+      <div class="mast">Shoebox</div><div class="meta">Thursday 29 Oct<br>3 things · 25 min</div>
+      <div class="photo"><svg style="filter:url(#f2)"><use href="#scene"/></svg></div>
+      <ol><li><b>1</b>Read before we plan next quarter.</li><li><b>2</b>Show the kids at dinner.</li><li><b>3</b>Field trip form due Friday.</li></ol>
+      <div class="go">Open the issue</div></div>
+      <figcaption><b>7:00 AM.</b> The morning issue in two inks, plum and peach, on cream, with the cover photo in a snapshot border.</figcaption></figure>
+
+    <figure><div class="tile lock"><div class="t"><small>Thursday 29</small>6:10</div>
+      <div class="n"><div class="a"><span><i></i>Shoebox</span>now</div><div class="w">Show the kids at dinner.</div><div class="pic"><svg style="filter:url(#f1)"><use href="#stars"/></svg></div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+      <figcaption><b>6:10 PM, light.</b> Cream card, plum action, the picture in a print border.</figcaption></figure>
+
+    <figure><div class="tile lock dark"><div class="t"><small>Thursday 29</small>9:48</div>
+      <div class="n"><div class="a"><span><i></i>Shoebox</span>12 min until planning</div><div class="w">Read before we plan next quarter.</div><div class="s">Shape Up, chapter 3 · 11 min</div><div class="bt"><span>After</span><span class="go">Read now</span></div></div></div>
+      <figcaption><b>Dark.</b> Plum-black card, peach type and a peach action. At home on a dark Lock Screen.</figcaption></figure>
+
+    <figure><div class="tile app"><h3>Coming back</h3><div class="hint">The longer you've kept it, the more it's faded</div>
+      <div class="it"><div class="thumb"><svg style="filter:url(#f1)"><use href="#bread"/></svg></div><div><p>Try the long cold ferment.</p><small><b>Sat 31</b> · kept 6 days</small></div></div>
+      <div class="it"><div class="thumb"><svg><use href="#bowl"/></svg></div><div><p>For the bowl that broke at Thanksgiving.</p><small><b>Sun 1</b> · kept today</small></div></div>
+      <div class="it"><div class="thumb"><svg style="filter:url(#f2)"><use href="#stars"/></svg></div><div><p>Show the kids at dinner.</p><small><b>Tonight</b> · kept 3 weeks</small></div></div>
+      <div class="it"><div class="thumb"><svg style="filter:url(#f3)"><use href="#scene"/></svg></div><div><p>Drive it next fall.</p><small><b>Sep</b> · kept 4 months</small></div></div>
+    </div>
+      <figcaption><b>Ripening, for real.</b> Pictures fade toward plum and peach the longer you've kept them. Today's save is still bright.</figcaption></figure>
+
+    <figure><div class="tile done"><div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#2b1428" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h3>That's today.</h3><p>Three done, one moved to Saturday. Back in the box.</p>
+      <div class="strip"><div><svg style="filter:url(#f1)"><use href="#bowl"/></svg></div><div><svg style="filter:url(#f2)"><use href="#stars"/></svg></div><div><svg style="filter:url(#f3)"><use href="#scene"/></svg></div></div></div>
+      <figcaption><b>Done.</b> The only cool color in the app. Finishing feels like relief, not a reward.</figcaption></figure>
+
+    <figure><div class="tile box"><h3>Everything you kept</h3>
+      <div class="grid">
+        <div class="p"><svg><use href="#bowl"/></svg><span>Kintsugi</span></div>
+        <div class="q">“Plans are worthless…”</div>
+        <div class="p"><svg style="filter:url(#f1)"><use href="#bread"/></svg><span>Sourdough</span></div>
+        <div class="q old">Book the campsite</div>
+        <div class="p"><svg style="filter:url(#f2)"><use href="#stars"/></svg><span>APOD</span></div>
+        <div class="p"><svg style="filter:url(#f3)"><use href="#scene"/></svg><span>Blue Ridge</span></div>
+        <div class="q older">Shape Up</div>
+        <div class="p"><svg style="filter:url(#f3)"><use href="#bowl"/></svg><span>Glaze notes</span></div>
+        <div class="q old">Tech debt talk</div>
+      </div></div>
+      <figcaption><b>The archive, at night.</b> A box of prints. Notes are cards whose color shows their age.</figcaption></figure>
+
+  </div>
+</section>
+</div>

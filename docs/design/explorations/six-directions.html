@@ -1,0 +1,548 @@
+<title>Shoebox Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Courier+Prime:wght@400;700&family=DM+Serif+Display:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Kalam:wght@400;700&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap">
+<style>
+/* Layout: a quiet studio wall. Each direction is a band: its idea on the left, two phones on the right. The phones carry the identity; the page stays out of the way. */
+:root {
+  --bg: #e9ebee; --fg: #17191c; --muted: #5d636b; --line: #cfd3d9; --chip: #dde0e5; --mark: #2346d8;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --display: "Fraunces", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #14161a; --fg: #eceef1; --muted: #9aa1ab; --line: #2b2f36; --chip: #22262c; --mark: #8ea2ff; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #14161a; --fg: #eceef1; --muted: #9aa1ab; --line: #2b2f36; --chip: #22262c; --mark: #8ea2ff; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; }
+header.top h1 { font: 500 clamp(34px, 6vw, 56px)/1 var(--display); letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); margin: 0; }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+nav.jump a { padding: 6px 12px; border-radius: 999px; background: var(--chip); color: var(--fg); text-decoration: none; font-weight: 500; font-size: 14px; }
+nav.jump a:focus-visible, nav.jump a:hover { outline: 2px solid var(--mark); outline-offset: 1px; }
+section.dir { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px 48px; align-items: start; padding-block: 56px; border-top: 1px solid var(--line); }
+section.dir:first-of-type { margin-top: 40px; }
+.about { min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); }
+.about .n { font: 400 15px var(--sans); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.about h2 { font: 500 38px/1.05 var(--display); margin: 6px 0 12px; }
+.about p { margin: 0 0 14px; max-width: 46ch; }
+.about dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 18px 0; font-size: 14px; }
+.about dt { color: var(--muted); }
+.about dd { margin: 0; font-variant-numeric: tabular-nums; }
+.about .gives { color: var(--muted); font-size: 14px; }
+.pick { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 999px; border: 1.5px solid var(--mark); color: var(--mark); font-size: 13px; font-weight: 600; }
+.pair { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+figure { margin: 0; display: grid; gap: 12px; justify-items: center; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 300px; text-align: center; }
+@media (max-width: 900px) { section.dir { grid-template-columns: minmax(0, 1fr); } .about { position: static; } }
+
+/* ---------- Phone ---------- */
+.phone { width: 300px; height: 640px; max-width: 100%; border-radius: 46px; padding: 9px; background: #0c0d0f; box-shadow: 0 30px 60px -20px rgba(10, 12, 20, 0.45), inset 0 0 0 1.5px #2a2c31; flex: none; }
+.screen { position: relative; height: 100%; border-radius: 38px; overflow: hidden; }
+.sb { position: absolute; inset: 0 0 auto; height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 28px 0; font: 600 13px var(--sans); z-index: 5; }
+.sb::after { content: ""; position: absolute; left: 50%; top: 10px; width: 86px; height: 24px; margin-left: -43px; border-radius: 14px; background: #0c0d0f; }
+.sb .r { display: flex; gap: 4px; align-items: center; }
+.sb .bat { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; opacity: .8; position: relative; }
+.sb .bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home { position: absolute; left: 50%; bottom: 7px; width: 110px; height: 4px; margin-left: -55px; border-radius: 3px; z-index: 6; }
+.ph svg, svg.fill { display: block; width: 100%; height: 100%; }
+
+/* ---------- 1 The Stack ---------- */
+.c1 { background: #24342f; color: #eef0ea; font-family: var(--sans); }
+.c1 .home { background: #eef0ea; }
+.c1 .hd { position: absolute; top: 50px; left: 22px; right: 22px; display: flex; justify-content: space-between; font-size: 13px; color: #b9c6bd; }
+.c1 .pips { position: absolute; top: 74px; left: 22px; right: 22px; display: flex; gap: 5px; }
+.c1 .pips i { flex: 1; height: 3px; border-radius: 2px; background: #3f524b; }
+.c1 .pips i.on { background: #b9d39f; }
+.c1 .deck { position: absolute; top: 100px; left: 18px; right: 18px; height: 440px; }
+.c1 .card { position: absolute; inset: 0; border-radius: 26px; background: #f4f2ec; color: #1e2a26; overflow: hidden; box-shadow: 0 10px 24px -10px rgba(0,0,0,.5); }
+.c1 .card.b1 { transform: translateY(14px) scale(.94); background: #e6e3da; }
+.c1 .card.b2 { transform: translateY(26px) scale(.88); background: #d6d3c9; }
+.c1 .ph { height: 170px; }
+.c1 .body { padding: 18px 22px; }
+.c1 .who { font-size: 12px; color: #6a756f; letter-spacing: .02em; }
+.c1 .why { font: italic 400 34px/1.08 "Fraunces", Georgia, serif; margin: 8px 0 18px; letter-spacing: -0.01em; }
+.c1 .src { display: flex; gap: 10px; align-items: center; padding-top: 14px; border-top: 1px solid #ddd9cf; }
+.c1 .src b { display: block; font-weight: 600; font-size: 14px; }
+.c1 .src span { font-size: 12px; color: #6a756f; }
+.c1 .fav { width: 34px; height: 34px; border-radius: 9px; background: #5d7f4e; color: #f4f2ec; display: grid; place-items: center; font-weight: 600; flex: none; }
+.c1 .hints { position: absolute; left: 18px; right: 18px; bottom: 30px; display: flex; justify-content: space-between; font-size: 13px; color: #b9c6bd; }
+.c1 .hints b { color: #eef0ea; font-weight: 600; }
+.c1 .card.fly { transform: translate(130px, -10px) rotate(13deg); box-shadow: 0 30px 50px -16px rgba(0,0,0,.6); }
+.c1 .stamp { position: absolute; top: 26px; left: 22px; padding: 6px 14px; border: 3px solid #4f7d3c; color: #4f7d3c; border-radius: 10px; font: 700 22px/1 var(--sans); letter-spacing: .12em; transform: rotate(-12deg); background: rgba(244,242,236,.85); }
+.c1 .glow { position: absolute; right: 0; top: 160px; bottom: 160px; width: 60px; background: linear-gradient(90deg, transparent, rgba(185,211,159,.35)); border-radius: 30px 0 0 30px; }
+
+/* ---------- 2 The Daily Issue ---------- */
+.c2 { background: #111; color: #fff; font-family: "Archivo", var(--sans); }
+.c2 .home { background: #fff; }
+.c2 .cover { position: absolute; inset: 0; }
+.c2 .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,14,30,.55) 0%, rgba(10,14,30,0) 26%, rgba(10,14,30,0) 44%, rgba(12,10,22,.92) 76%); }
+.c2 .mast { position: absolute; top: 46px; left: 20px; right: 20px; }
+.c2 .mast h3 { margin: 0; font: 400 64px/0.9 "DM Serif Display", Georgia, serif; letter-spacing: -0.02em; }
+.c2 .mast p { margin: 6px 0 0; font: 600 10.5px/1.3 "Archivo"; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.55); padding-top: 6px; }
+.c2 .lines { position: absolute; left: 20px; right: 20px; bottom: 34px; }
+.c2 .lead { font: 400 40px/0.98 "DM Serif Display", Georgia, serif; margin: 0 0 6px; }
+.c2 .lead small { display: block; font: 600 11px "Archivo"; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; color: #f39a5c; margin-bottom: 6px; }
+.c2 .lines ol { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid rgba(255,255,255,.35); display: grid; gap: 8px; }
+.c2 .lines li { display: grid; grid-template-columns: 22px 1fr; font: 500 15px/1.25 "Archivo"; font-stretch: 88%; }
+.c2 .lines li b { color: #f39a5c; font-weight: 700; }
+.c2 .lines li.more { color: rgba(255,255,255,.7); }
+.c2.in { background: #f5efe6; color: #1c1612; }
+.c2.in .home { background: #1c1612; }
+.c2 .bar { position: absolute; top: 44px; left: 18px; right: 18px; display: flex; justify-content: space-between; font: 700 10.5px "Archivo"; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; color: #8a6d57; }
+.c2 .art { position: absolute; top: 70px; left: 0; right: 0; height: 200px; background: #2a1f2c; }
+.c2 .ink { position: absolute; top: 284px; left: 20px; right: 20px; }
+.c2 .kick { font: 700 10.5px "Archivo"; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; color: #d0662a; }
+.c2 .hl { font: 400 52px/0.95 "DM Serif Display", Georgia, serif; margin: 4px 0 8px; letter-spacing: -0.015em; }
+.c2 .deck { font: 400 14px/1.4 "Archivo"; font-stretch: 92%; color: #4c3f36; margin: 0 0 14px; }
+.c2 .pull { border-left: 3px solid #d0662a; padding-left: 12px; font: italic 400 21px/1.15 "DM Serif Display", Georgia, serif; margin: 0; }
+.c2 .pull small { display: block; font: 600 10px "Archivo"; font-style: normal; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; color: #8a6d57; margin-bottom: 4px; }
+.c2 .verdict { position: absolute; left: 14px; right: 14px; bottom: 26px; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 6px; }
+.c2 .verdict span { text-align: center; padding: 12px 0; border-radius: 4px; border: 1.5px solid #1c1612; font: 700 12px "Archivo"; font-stretch: 85%; letter-spacing: .1em; text-transform: uppercase; }
+.c2 .verdict span.go { background: #1c1612; color: #f5efe6; }
+.c2 .next { position: absolute; right: 18px; bottom: 76px; font: 600 11px "Archivo"; font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; color: #8a6d57; }
+
+/* ---------- 3 The Box ---------- */
+.c3 { background: #b48d5c; color: #2b1d10; font-family: "Courier Prime", monospace;
+  background-image: repeating-linear-gradient(93deg, rgba(255,255,255,.04) 0 2px, transparent 2px 7px), repeating-linear-gradient(2deg, rgba(60,30,0,.05) 0 1px, transparent 1px 5px); }
+.c3 .home { background: #2b1d10; }
+.c3 .lidedge { position: absolute; inset: 40px 0 auto; height: 52px; background: #9c7646; box-shadow: 0 4px 0 #87633a; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; }
+.c3 .label { background: #f6f0e1; padding: 4px 10px; font: 700 15px "Kalam", cursive; transform: rotate(-1.5deg); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.c3 .lift { font: 400 14px "Kalam", cursive; color: #f6efe0; }
+.c3 .polaroid { position: absolute; top: 112px; left: 20px; width: 168px; padding: 8px 8px 0; background: #fbfaf6; transform: rotate(-5deg); box-shadow: 0 8px 16px -6px rgba(40,20,0,.55); }
+.c3 .polaroid .ph { height: 140px; }
+.c3 .polaroid p { margin: 0; padding: 8px 2px 10px; font: 400 19px/1.1 "Kalam", cursive; }
+.c3 .icard { position: absolute; top: 292px; right: 12px; width: 176px; padding: 26px 12px 12px; background: #fdfcf7; transform: rotate(4deg); box-shadow: 0 8px 16px -6px rgba(40,20,0,.5);
+  background-image: linear-gradient(#e08a8a, #e08a8a), repeating-linear-gradient(180deg, transparent 0 21px, #b9cfe4 21px 22px); background-size: 100% 1.5px, 100% 100%; background-position: 0 20px, 0 4px; background-repeat: no-repeat, repeat; font: 400 13px/22px "Courier Prime", monospace; }
+.c3 .note2 { position: absolute; top: 452px; left: 16px; width: 140px; padding: 12px; background: #f3e9c9; transform: rotate(-2deg); box-shadow: 0 6px 12px -6px rgba(40,20,0,.5); font: 400 16px/1.15 "Kalam", cursive; }
+.c3 .note2 b { display: block; font: 700 12px "Courier Prime"; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.c3 .trays { position: absolute; left: 12px; right: 12px; bottom: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.c3 .trays span { text-align: center; padding: 8px 4px; border: 1.5px dashed rgba(43,29,16,.55); border-radius: 8px; font: 700 11px/1.2 "Courier Prime"; }
+.c3.open { background-color: #5b3f22; color: #f6efe0; }
+.c3 .lidup { position: absolute; inset: 0 0 auto; height: 112px; background: #b48d5c; transform: perspective(500px) rotateX(38deg); transform-origin: top; box-shadow: 0 16px 20px -8px rgba(0,0,0,.6); }
+.c3 .search { position: absolute; top: 122px; left: 16px; right: 16px; padding: 10px 12px; background: #fdfcf7; color: #6d5a45; font: 400 14px "Courier Prime"; box-shadow: inset 0 1px 3px rgba(0,0,0,.25); }
+.c3 .tabs { position: absolute; top: 172px; left: 10px; right: 10px; display: flex; gap: 4px; }
+.c3 .tabs span { padding: 5px 9px 7px; background: #e9dcc0; color: #2b1d10; border-radius: 6px 6px 0 0; font: 700 13px "Kalam", cursive; }
+.c3 .tabs span.on { background: #fdfcf7; transform: translateY(-4px); }
+.c3 .file { position: absolute; top: 204px; left: 10px; right: 10px; bottom: 0; }
+.c3 .file div { position: absolute; left: 0; right: 0; height: 120px; padding: 10px 14px; background: #fdfcf7; color: #2b1d10; border-radius: 3px; box-shadow: 0 -2px 6px rgba(0,0,0,.25); font: 400 13px/1.3 "Courier Prime"; }
+.c3 .file b { display: block; font-size: 14px; }
+.c3 .file i { font: 400 15px "Kalam", cursive; font-style: normal; color: #6d5a45; }
+
+/* ---------- 4 The Ribbon ---------- */
+.c4 { background: #fbfbf9; color: #121212; font-family: "Newsreader", Georgia, serif; }
+.c4 .home { background: #121212; }
+.c4 .pull { position: absolute; top: 44px; left: 0; right: 0; text-align: center; font: 500 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9a9a94; }
+.c4 .days { position: absolute; top: 66px; left: -88px; display: flex; gap: 4px; }
+.c4 .d { width: 52px; padding: 7px 0 8px; border-radius: 12px; text-align: center; font: 500 10px var(--sans); letter-spacing: .08em; color: #8a8a84; }
+.c4 .d b { display: block; font: 400 22px/1.1 "Fraunces", Georgia, serif; color: #121212; letter-spacing: 0; }
+.c4 .d i { display: block; font-style: normal; height: 10px; font-size: 10px; color: #2346d8; }
+.c4 .d.past b { color: #b5b5ae; }
+.c4 .d.now { background: #2346d8; color: #dfe5ff; }
+.c4 .d.now b { color: #fff; }
+.c4 .d.drop { outline: 2px dashed #2346d8; outline-offset: -2px; background: #eef1ff; }
+.c4 .big { position: absolute; top: 140px; left: 22px; right: 22px; display: flex; align-items: flex-end; gap: 12px; border-bottom: 1px solid #121212; padding-bottom: 10px; }
+.c4 .big b { font: 300 84px/0.8 "Fraunces", Georgia, serif; letter-spacing: -0.04em; }
+.c4 .big span { font: 400 15px/1.25 "Newsreader"; padding-bottom: 2px; }
+.c4 .big span small { display: block; font: 500 11px var(--sans); color: #6c6c66; letter-spacing: .04em; }
+.c4 ul { position: absolute; top: 246px; left: 22px; right: 22px; list-style: none; margin: 0; padding: 0; }
+.c4 li { padding: 10px 0 11px; border-bottom: 1px solid #e3e3de; }
+.c4 li p { margin: 0; font: 400 19px/1.2 "Newsreader"; }
+.c4 li small { display: block; margin-top: 3px; font: 500 10px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: #8a8a84; }
+.c4 li.done p { color: #b0b0aa; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.c4 li.done small { color: #c7c7c1; }
+.c4 li.gap { height: 54px; border-bottom: 1px dashed #c9c9c2; }
+.c4 .lifted { position: absolute; z-index: 4; top: 120px; left: 96px; width: 180px; padding: 12px 14px; background: #fff; border-radius: 12px; box-shadow: 0 18px 30px -10px rgba(20,30,90,.35), 0 0 0 1px #d8dcf0; transform: rotate(-3deg); }
+.c4 .lifted p { margin: 0; font: 400 17px/1.2 "Newsreader"; }
+.c4 .lifted small { display: block; margin-top: 6px; font: 600 11px var(--sans); color: #2346d8; }
+.c4 .foot { position: absolute; left: 22px; right: 22px; bottom: 26px; font: 500 11px/1.4 var(--sans); color: #8a8a84; }
+
+/* ---------- 5 The Page ---------- */
+.c5 { background: #fbf3c6; color: #1b2340; font-family: "Newsreader", Georgia, serif;
+  background-image: linear-gradient(90deg, transparent 46px, #e39a95 46px, #e39a95 47.5px, transparent 47.5px, transparent 50px, #e39a95 50px, #e39a95 51.5px, transparent 51.5px), repeating-linear-gradient(180deg, transparent 0 31px, #a8c2dc 31px 32px); background-position: 0 0, 0 118px; }
+.c5 .home { background: #1b2340; }
+.c5 .bind { position: absolute; inset: 0 0 auto; height: 92px; background: #fbf3c6; border-bottom: 1px solid #e3d793; }
+.c5 .bind::before { content: ""; position: absolute; inset: 0 0 auto; height: 40px; background: #6f2a24; }
+.c5 .date { position: absolute; top: 56px; left: 62px; font: italic 400 21px "Newsreader"; }
+.c5 .lines { position: absolute; top: 118px; left: 62px; right: 18px; list-style: none; margin: 0; padding: 0; }
+.c5 .lines li { font: 400 18px/32px "Newsreader"; }
+.c5 .lines li small { font: 500 11px/32px "Newsreader"; font-variant: small-caps; letter-spacing: .06em; font-size: 14px; color: #5b6385; margin-left: 4px; }
+.c5 .lines li.x { color: #6b7192; text-decoration: line-through; text-decoration-color: #1b2340; text-decoration-thickness: 2px; }
+.c5 .lines li.held { background: linear-gradient(transparent 6px, rgba(255,214,60,.75) 6px, rgba(255,214,60,.75) 28px, transparent 28px); margin-left: -8px; padding-left: 8px; border-radius: 3px; }
+.c5 .margin { position: absolute; left: 10px; width: 32px; text-align: center; font: italic 400 14px "Newsreader"; color: #a3443b; }
+.c5 .pop { position: absolute; left: 70px; right: 26px; padding: 12px 14px; background: #fffdf2; border: 1px solid #d9cf9a; border-radius: 6px; box-shadow: 0 12px 24px -10px rgba(30,30,60,.35); font: 400 17px/1.4 "Newsreader"; }
+.c5 .pop small { display: block; font: italic 400 13px "Newsreader"; color: #5b6385; margin-bottom: 4px; }
+.c5 .pop span { display: inline-block; margin-right: 14px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.c5 .foot { position: absolute; left: 62px; right: 18px; bottom: 28px; font: italic 400 15px "Newsreader"; color: #5b6385; }
+
+/* ---------- 6 The Thread ---------- */
+.c6 { background: #eceee7; color: #1f2a2e; font-family: "Literata", Georgia, serif; }
+.c6 .home { background: #1f2a2e; }
+.c6 .top { position: absolute; inset: 40px 0 auto; padding: 8px 20px 10px; border-bottom: 1px solid #d5d9cf; background: #eceee7; z-index: 2; display: flex; justify-content: space-between; align-items: baseline; }
+.c6 .top b { font: 600 17px "Literata"; }
+.c6 .top span { font: 400 11px "IBM Plex Mono", monospace; color: #6c7670; }
+.c6 .log { position: absolute; top: 88px; left: 14px; right: 14px; display: grid; gap: 10px; }
+.c6 .div { text-align: center; font: 500 10px "IBM Plex Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: #7d877f; margin: 4px 0; }
+.c6 .me { justify-self: end; max-width: 82%; background: #fffdf7; border: 1px solid #ddd8c8; border-radius: 16px 16px 4px 16px; padding: 10px 12px; }
+.c6 .me p { margin: 0; font: italic 400 16px/1.3 "Literata"; }
+.c6 .lnk { display: flex; gap: 8px; align-items: center; margin-top: 8px; padding: 6px; border-radius: 10px; background: #f1ede1; font: 400 11px "IBM Plex Mono", monospace; color: #4e5a54; }
+.c6 .lnk i { width: 26px; height: 26px; border-radius: 6px; overflow: hidden; flex: none; }
+.c6 .back { max-width: 88%; padding: 2px 0 0 12px; border-left: 2px solid #1f2a2e; }
+.c6 .back small { font: 400 11px "IBM Plex Mono", monospace; color: #6c7670; }
+.c6 .back p { margin: 2px 0 6px; font: 400 21px/1.2 "Literata"; }
+.c6 .quick { display: flex; gap: 6px; }
+.c6 .quick span { padding: 6px 12px; border-radius: 999px; border: 1px solid #1f2a2e; font: 500 12.5px var(--sans); }
+.c6 .quick span.go { background: #1f2a2e; color: #eceee7; }
+.c6 .sys { font: 400 11.5px "IBM Plex Mono", monospace; color: #6c7670; text-align: center; }
+.c6 .comp { position: absolute; left: 10px; right: 10px; bottom: 22px; display: flex; gap: 8px; align-items: flex-end; }
+.c6 .field { flex: 1; min-height: 40px; padding: 10px 14px; border-radius: 20px; background: #fffdf7; border: 1px solid #d5d9cf; font: 400 14px "Literata"; color: #8a938c; }
+.c6 .field.typing { color: #1f2a2e; border-radius: 16px; }
+.c6 .field .chip { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding: 6px; border-radius: 10px; background: #f1ede1; font: 400 11px "IBM Plex Mono", monospace; color: #4e5a54; }
+.c6 .field .chip i { width: 24px; height: 24px; border-radius: 6px; background: #2c2230; flex: none; }
+.c6 .caret { display: inline-block; width: 1.5px; height: 17px; background: #1f2a2e; vertical-align: -3px; margin-left: 1px; }
+.c6 .send { width: 40px; height: 40px; border-radius: 50%; background: #1f2a2e; color: #eceee7; display: grid; place-items: center; flex: none; font: 600 18px var(--sans); }
+.c6 .send.off { background: #c9cec5; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .c1 .card.fly { animation: nudge 2.4s ease-in-out infinite alternate; }
+  @keyframes nudge { from { transform: translate(118px, -6px) rotate(11deg); } to { transform: translate(138px, -12px) rotate(14deg); } }
+  .c6 .caret { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c7a1"/><stop offset=".55" stop-color="#f4a77a"/><stop offset="1" stop-color="#c98a8e"/></linearGradient>
+    <symbol id="ridge" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="url(#sky)"/>
+      <circle cx="205" cy="92" r="20" fill="#fde3c4"/>
+      <path d="M0 110 L40 92 L80 104 L120 84 L165 100 L210 86 L255 98 L300 88 V200 H0Z" fill="#9b8fb3"/>
+      <path d="M0 128 L50 108 L95 122 L140 104 L190 120 L240 106 L300 118 V200 H0Z" fill="#6f6f9d"/>
+      <path d="M0 148 L45 130 L100 146 L150 128 L205 144 L260 130 L300 140 V200 H0Z" fill="#4c5683"/>
+      <path d="M0 172 L60 150 L120 168 L180 152 L240 170 L300 156 V200 H0Z" fill="#2e3a5e"/>
+    </symbol>
+    <symbol id="bowl" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#2a1f2c"/>
+      <ellipse cx="150" cy="168" rx="92" ry="10" fill="#1b141d"/>
+      <path d="M62 86 Q150 104 238 86 Q232 160 150 164 Q68 160 62 86Z" fill="#3e5a63"/>
+      <ellipse cx="150" cy="86" rx="88" ry="14" fill="#56767e"/>
+      <ellipse cx="150" cy="87" rx="78" ry="9" fill="#2c4148"/>
+      <path d="M108 96 L120 118 L112 134 L128 152 M120 118 L146 124 L160 146 L156 162 M146 124 L170 104 L188 100" fill="none" stroke="#e8b84a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+<header class="top">
+  <h1>Shoebox Directions</h1>
+  <p>Six ways Shoebox could look and move. Every phone shows the same saves. Each direction gets two screens: Today, and the one moment that makes it different.</p>
+  <nav class="jump" aria-label="Directions">
+    <a href="#stack">1 Stack</a><a href="#issue">2 Daily Issue</a><a href="#box">3 Box</a><a href="#ribbon">4 Ribbon</a><a href="#page">5 Page</a><a href="#thread">6 Thread</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="dir" id="stack">
+  <div class="about">
+    <div class="n">Direction 1</div>
+    <h2>The Stack</h2>
+    <p>One thing at a time. Today is a short stack of cards, and your reason is the headline. The stack gets thinner as you go.</p>
+    <dl><dt>Clear</dt><dd>1 swipe right</dd><dt>Later</dt><dd>Swipe down, then a day: 2</dd><dt>Find old</dt><dd>Pull past the top, type</dd><dt>Build</dt><dd>Web works; native feels better</dd></dl>
+    <p class="gives">Gives up the whole-day view. Swiping can feel like a dating app unless the motion stays slow.</p>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c1">
+        <div class="sb"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="hd"><span>Thursday</span><span>1 of 6</span></div>
+        <div class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="deck">
+          <div class="card b2"></div><div class="card b1"></div>
+          <div class="card">
+            <div class="ph"><svg><use href="#ridge"/></svg></div>
+            <div class="body">
+              <div class="who">You, Tuesday night</div>
+              <div class="why">Drive it next fall.</div>
+              <div class="src"><span class="fav">W</span><div><b>Blue Ridge Parkway</b><span>en.wikipedia.org · 7 min</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="hints"><span>← Let go</span><span>↓ Later</span><span><b>Done →</b></span></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today: one card, full screen. Your reason is the biggest thing on it.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c1">
+        <div class="sb"><span>7:41</span><span class="r"><span class="bat"></span></span></div>
+        <div class="hd"><span>Thursday</span><span>2 of 6</span></div>
+        <div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="deck">
+          <div class="card b1"></div>
+          <div class="card">
+            <div class="ph"><svg><use href="#bowl"/></svg></div>
+            <div class="body">
+              <div class="who">You, Sunday morning</div>
+              <div class="why">For the bowl that broke at Thanksgiving.</div>
+              <div class="src"><span class="fav">W</span><div><b>Kintsugi</b><span>en.wikipedia.org · 6 min</span></div></div>
+            </div>
+          </div>
+          <div class="card fly">
+            <div class="ph"><svg><use href="#ridge"/></svg></div>
+            <div class="body"><div class="who">You, Tuesday night</div><div class="why">Drive it next fall.</div></div>
+            <div class="stamp">DONE</div>
+          </div>
+        </div>
+        <div class="glow"></div>
+        <div class="hints"><span>← Let go</span><span>↓ Later</span><span><b>Done →</b></span></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: swipe right and it's done. The next card is already underneath.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="dir" id="issue">
+  <div class="about">
+    <div class="n">Direction 2</div>
+    <h2>The Daily Issue</h2>
+    <p>Each morning is a small magazine made only of what you saved. Your reasons are the cover lines. Each item gets a layout made for its kind.</p>
+    <dl><dt>Clear</dt><dd>1 tap at the foot of the page</dd><dt>Later</dt><dd>2</dd><dt>Find old</dt><dd>Back issues, or search</dd><dt>Build</dt><dd>Web; the layouts are the work</dd></dl>
+    <p class="gives">Gives up predictability: a day of plain links makes a plain cover. The most design work to build well.</p>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c2">
+        <div class="cover"><svg class="fill"><use href="#ridge"/></svg></div>
+        <div class="scrim"></div>
+        <div class="sb"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="mast"><h3>Shoebox</h3><p><span>Thursday 29 October</span><span>6 things · 50 min</span></p></div>
+        <div class="lines">
+          <p class="lead"><small>Cover · Travel</small>Drive it next fall.</p>
+          <ol>
+            <li><b>2</b>For the bowl that broke at Thanksgiving</li>
+            <li><b>3</b>Read before we plan next quarter</li>
+            <li><b>4</b>Show the kids at dinner</li>
+            <li class="more"><b>+2</b>more inside</li>
+          </ol>
+        </div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today: the cover. Tap a line to go to that page.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c2 in">
+        <div class="sb"><span>7:42</span><span class="r"><span class="bat"></span></span></div>
+        <div class="bar"><span>← Cover</span><span>Page 2 of 6</span><span>Crafts</span></div>
+        <div class="art"><svg class="fill"><use href="#bowl"/></svg></div>
+        <div class="ink">
+          <div class="kick">en.wikipedia.org · 6 min read</div>
+          <h3 class="hl">Kintsugi</h3>
+          <p class="deck">The Japanese art of mending broken pottery with gold, so the repair shows.</p>
+          <p class="pull"><small>Why you kept it</small>For the bowl that broke at Thanksgiving.</p>
+        </div>
+        <div class="next">Page 3 →</div>
+        <div class="verdict"><span>Let go</span><span>Later</span><span class="go">Done</span></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: an inside page laid out for its item. Your reason is the pull quote.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="dir" id="box">
+  <div class="about">
+    <div class="n">Direction 3</div>
+    <h2>The Box</h2>
+    <p>The shoebox, for real. Today's few lie on the lid. Everything else is filed inside like index cards, with tabs for months and topics.</p>
+    <dl><dt>Clear</dt><dd>Flick into "back in the box": 1</dd><dt>Later</dt><dd>Drag to "clip to a day": 1</dd><dt>Find old</dt><dd>Lift the lid, tap a tab: 2</dd><dt>Build</dt><dd>Native, or careful web. Most expensive.</dd></dl>
+    <p class="gives">Gives up restraint. It turns into clip art without real craft, and it's the hardest to make fast and accessible.</p>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c3">
+        <div class="sb"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="lidedge"><span class="label">Thursday · 3 left</span><span class="lift">lift the lid ↑</span></div>
+        <div class="polaroid"><div class="ph"><svg><use href="#ridge"/></svg></div><p>Drive it next fall.</p></div>
+        <div class="icard">Book the campsite at Carolina Beach for the long weekend. Ask for a site by the water.</div>
+        <div class="note2"><b>Kintsugi</b>For the bowl that broke at Thanksgiving.</div>
+        <div class="trays"><span>Back in<br>the box</span><span>Clip to<br>a day</span><span>Toss it</span></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today: what's on the lid. Drag a card to one of the three trays.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c3 open">
+        <div class="lidup"></div>
+        <div class="sb"><span>7:43</span><span class="r"><span class="bat"></span></span></div>
+        <div class="search">Search the box…</div>
+        <div class="tabs"><span class="on">Oct</span><span>Sep</span><span>Aug</span><span>Travel</span><span>Work</span><span>Kids</span></div>
+        <div class="file">
+          <div style="top:0"><b>Shape Up</b><i>Read before we plan next quarter.</i></div>
+          <div style="top:52px"><b>Sourdough</b><i>Try the long cold ferment this weekend.</i></div>
+          <div style="top:104px"><b>Astronomy Picture of the Day</b><i>Show the kids at dinner.</i></div>
+          <div style="top:156px"><b>Is quality worth the cost?</b><i>Bring this up when tech debt comes up again.</i></div>
+          <div style="top:208px; height: 220px"><b>Blue Ridge Parkway</b><i>Drive it next fall.</i><br><br>Saved Tuesday night · en.wikipedia.org</div>
+        </div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: lift the lid. Everything is filed by month and topic, and you thumb through the tabs.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="dir" id="ribbon">
+  <div class="about">
+    <div class="n">Direction 4</div>
+    <h2>The Ribbon</h2>
+    <p>Coming back is about time, so time is how you get around. Finished things drift left, today sits in the middle, and set-aside things wait on their day to the right. No tabs.</p>
+    <dl><dt>Clear</dt><dd>1 swipe on the line</dd><dt>Later</dt><dd>Drag onto a day: 1</dd><dt>Find old</dt><dd>Pull down, type</dd><dt>Build</dt><dd>Web works well</dd></dl>
+    <p class="gives">Gives up some familiarity: sideways movement takes a minute to learn, and topics come second to time.</p>
+    <span class="pick">Recommended, with The Page's type</span>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c4">
+        <div class="sb"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="pull">Pull down to search everything</div>
+        <div class="days">
+          <div class="d past">MON<b>26</b><i></i></div><div class="d past">TUE<b>27</b><i></i></div><div class="d past">WED<b>28</b><i></i></div>
+          <div class="d now">THU<b>29</b><i style="color:#dfe5ff">today</i></div>
+          <div class="d">FRI<b>30</b><i>●</i></div><div class="d">SAT<b>31</b><i>●●</i></div><div class="d">SUN<b>1</b><i></i></div>
+        </div>
+        <div class="big"><b>29</b><span>Thursday<small>4 of 6 left · about 40 min</small></span></div>
+        <ul>
+          <li><p>Drive it next fall.</p><small>Blue Ridge Parkway · 7 min</small></li>
+          <li><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi · 6 min</small></li>
+          <li><p>Read before we plan next quarter.</p><small>Shape Up · 2 hr</small></li>
+          <li><p>Show the kids at dinner.</p><small>Astronomy Picture of the Day</small></li>
+          <li class="done"><p>Bring this up when tech debt comes up again.</p><small>Done · Martin Fowler</small></li>
+        </ul>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today, in the middle of the week. Dots show what's coming back Friday and Saturday.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c4">
+        <div class="sb"><span>7:41</span><span class="r"><span class="bat"></span></span></div>
+        <div class="pull">Drop it on a day</div>
+        <div class="days">
+          <div class="d past">MON<b>26</b><i></i></div><div class="d past">TUE<b>27</b><i></i></div><div class="d past">WED<b>28</b><i></i></div>
+          <div class="d now">THU<b>29</b><i style="color:#dfe5ff">today</i></div>
+          <div class="d">FRI<b>30</b><i>●</i></div><div class="d drop">SAT<b>31</b><i>●●</i></div><div class="d">SUN<b>1</b><i></i></div>
+        </div>
+        <div class="lifted"><p>Try the long cold ferment this weekend.</p><small>Back Saturday morning</small></div>
+        <div class="big"><b>29</b><span>Thursday<small>4 of 6 left · about 40 min</small></span></div>
+        <ul>
+          <li><p>Drive it next fall.</p><small>Blue Ridge Parkway · 7 min</small></li>
+          <li class="gap"></li>
+          <li><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi · 6 min</small></li>
+          <li><p>Read before we plan next quarter.</p><small>Shape Up · 2 hr</small></li>
+          <li class="done"><p>Bring this up when tech debt comes up again.</p><small>Done · Martin Fowler</small></li>
+        </ul>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: Later is a drag. Hold a line and drop it on Saturday. No menu.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="dir" id="page">
+  <div class="about">
+    <div class="n">Direction 5</div>
+    <h2>The Page</h2>
+    <p>Almost nothing on screen. Today is a list on a legal pad: your reasons as sentences, in order. Done draws an ink line through it.</p>
+    <dl><dt>Clear</dt><dd>1 swipe: the line strikes through</dd><dt>Later</dt><dd>Hold, then a day: 2</dd><dt>Find old</dt><dd>Type on the same page</dd><dt>Build</dt><dd>Web; cheapest of the six</dd></dl>
+    <p class="gives">Gives up pictures until you open an item. A new user may read it as unfinished, and a save with no reason looks thin.</p>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c5">
+        <div class="bind"></div>
+        <div class="sb" style="color:#fbf3c6"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="date">Thursday, October 29</div>
+        <ul class="lines">
+          <li>Drive it next fall.<small>blue ridge parkway</small></li>
+          <li>For the bowl that broke at Thanksgiving.<small>kintsugi</small></li>
+          <li class="x">Bring this up when tech debt comes up again.</li>
+          <li>Read before we plan next quarter.<small>shape up</small></li>
+          <li class="x">Book the campsite at Carolina Beach.</li>
+          <li>Show the kids at dinner.<small>apod</small></li>
+        </ul>
+                <div class="foot">Four left. Swipe a line when it's done.</div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today: one page, one typeface. Two are already struck through.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c5">
+        <div class="bind"></div>
+        <div class="sb" style="color:#fbf3c6"><span>7:44</span><span class="r"><span class="bat"></span></span></div>
+        <div class="date">Thursday, October 29</div>
+        <ul class="lines">
+          <li>Drive it next fall.<small>blue ridge parkway</small></li>
+          <li>For the bowl that broke at Thanksgiving.<small>kintsugi</small></li>
+          <li class="x">Bring this up when tech debt comes up again.</li>
+          <li>Read before we plan next quarter.<small>shape up</small></li>
+          <li class="x">Book the campsite at Carolina Beach.</li>
+          <li>Show the kids at dinner.<small>apod</small></li>
+          <li class="held">Try the long cold ferment this weekend.</li>
+        </ul>
+        <div class="pop" style="top:330px"><small>Bring it back</small><span>Tomorrow</span><span>Saturday</span><span>Pick a day</span></div>
+        <div class="foot">Hold a line to bring it back later.</div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: hold a line, choose a day. The rest of the page stays put.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="dir" id="thread">
+  <div class="about">
+    <div class="n">Direction 6</div>
+    <h2>The Thread</h2>
+    <p>A running exchange with your past self. Saving is sending yourself a note. Each morning, what you sent comes back, and you answer it.</p>
+    <dl><dt>Save</dt><dd>Paste, then send: 1 tap</dd><dt>Clear</dt><dd>1 tap on a reply</dd><dt>Later</dt><dd>2</dd><dt>Build</dt><dd>Web</dd></dl>
+    <p class="gives">Gives up distinctiveness unless it's crafted carefully; it can read as another chat app. The thread grows long.</p>
+  </div>
+  <div class="pair">
+    <figure>
+      <div class="phone"><div class="screen c6">
+        <div class="sb"><span>7:40</span><span class="r"><span class="bat"></span></span></div>
+        <div class="top"><b>Shoebox</b><span>to you, from you</span></div>
+        <div class="log">
+          <div class="div">Tuesday · 9:12 PM</div>
+          <div class="me"><p>Drive it next fall.</p><div class="lnk"><i><svg><use href="#ridge"/></svg></i>en.wikipedia.org · Blue Ridge Parkway</div></div>
+          <div class="div">Today</div>
+          <div class="back"><small>Tuesday you said</small><p>Drive it next fall.</p><div class="quick"><span class="go">Done</span><span>Later</span><span>Let go</span></div></div>
+          <div class="back"><small>Sunday you said</small><p>For the bowl that broke at Thanksgiving.</p><div class="quick"><span class="go">Done</span><span>Later</span><span>Let go</span></div></div>
+        </div>
+        <div class="comp"><div class="field">Paste a link or write a note</div><div class="send off">↑</div></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>Today: what you sent comes back with your words on top. One tap to answer.</figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><div class="screen c6">
+        <div class="sb"><span>7:46</span><span class="r"><span class="bat"></span></span></div>
+        <div class="top"><b>Shoebox</b><span>to you, from you</span></div>
+        <div class="log">
+          <div class="back"><small>Saturday you said</small><p>Try the long cold ferment this weekend.</p></div>
+          <div class="me" style="max-width:60%"><p>Later · Saturday</p></div>
+          <div class="sys">Back Saturday morning.</div>
+          <div class="back"><small>Last week you said</small><p>Show the kids at dinner.</p><div class="quick"><span class="go">Done</span><span>Later</span><span>Let go</span></div></div>
+        </div>
+        <div class="comp"><div class="field typing"><div class="chip"><i></i>en.wikipedia.org/wiki/Kintsugi</div>Glue the bowl back with gold<span class="caret"></span></div><div class="send">↑</div></div>
+        <div class="home"></div>
+      </div></div>
+      <figcaption>The moment: saving is the composer. Paste a link, say why, send. No sheet, no form.</figcaption>
+    </figure>
+  </div>
+</section>
+</div>

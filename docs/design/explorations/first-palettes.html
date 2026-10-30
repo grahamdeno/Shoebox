@@ -1,0 +1,190 @@
+<title>Shoebox Palettes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: seven palette cards. Each shows its five colors by job, then the same two moments painted with it: a Lock Screen notification and the Coming back screen. */
+:root { --bg: #e8e7e4; --fg: #19181a; --muted: #625f63; --line: #d1cec9; --card: #f6f5f2;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif; --serif: "DM Serif Display", Georgia, serif; --label: "Archivo", "Helvetica Neue", Arial, sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #141315; --fg: #eeece9; --muted: #a29fa3; --line: #2b2a2d; --card: #1c1b1e; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #141315; --fg: #eeece9; --muted: #a29fa3; --line: #2b2a2d; --card: #1c1b1e; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--sans); }
+.wrap { max-width: 1220px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px; }
+h1 { font: 400 clamp(36px, 6vw, 60px)/1 var(--serif); margin: 0 0 12px; }
+.intro { max-width: 62ch; color: var(--muted); margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; margin-top: 36px; }
+.pal { min-width: 0; display: grid; gap: 16px; align-content: start; padding: 20px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); }
+.pal header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pal h2 { margin: 0; font: 400 28px/1.05 var(--serif); }
+.pal .tag { font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.pal .tag.now { color: var(--fg); padding: 3px 9px; border: 1.5px solid var(--fg); border-radius: 999px; }
+.pal > p { margin: -6px 0 0; color: var(--muted); font-size: 14.5px; }
+.sw { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.sw div { display: grid; gap: 4px; }
+.sw i { display: block; height: 44px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.25); }
+.sw b { font: 600 11px var(--sans); }
+.sw span { font: 400 10.5px/1.2 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+.demo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Lock-screen tile */
+.lock { position: relative; height: 250px; border-radius: 20px; overflow: hidden; padding: 12px 10px; background: radial-gradient(120% 80% at 30% 0%, color-mix(in srgb, var(--accent) 35%, var(--night)) 0%, var(--night) 70%); display: flex; flex-direction: column; justify-content: space-between; }
+.lock .t { text-align: center; color: #fff; font: 600 40px/1 var(--label); font-stretch: 112%; }
+.lock .t small { display: block; font: 600 10px var(--label); opacity: .8; margin-bottom: 2px; }
+.n { border-radius: 16px; background: var(--paper); color: var(--ink); padding: 9px 10px 10px; }
+.n .a { display: flex; align-items: center; gap: 5px; font: 600 8.5px var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted-c); margin-bottom: 4px; }
+.n .a i { width: 12px; height: 12px; border-radius: 3.5px; background: var(--accent); }
+.n .w { font: 400 16px/1.08 var(--serif); }
+.n .s { font: 500 9.5px var(--label); color: var(--muted-c); margin-top: 3px; }
+.n .bt { display: grid; grid-template-columns: 1fr 1.2fr; gap: 5px; margin-top: 8px; }
+.n .bt span { text-align: center; padding: 5px 0; border-radius: 9px; font: 600 9.5px var(--label); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.n .bt span.go { background: var(--accent); color: var(--on-accent); }
+
+/* App tile */
+.app { height: 250px; border-radius: 20px; overflow: hidden; background: var(--paper); color: var(--ink); padding: 14px 12px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.2); }
+.app h3 { margin: 0 0 8px; font: 400 22px/1 var(--serif); }
+.app .row { display: grid; grid-template-columns: 30px 1fr; gap: 6px; padding: 7px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+.app .row b { font: 700 8px/1.2 var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text); }
+.app .row b span { display: block; font: 400 16px/1 var(--serif); color: var(--ink); letter-spacing: 0; }
+.app .row p { margin: 0; font: 400 12.5px/1.15 var(--serif); }
+.app .row small { display: block; font: 500 8.5px var(--label); color: var(--muted-c); margin-top: 2px; }
+.app .chip { display: inline-block; margin-top: 9px; padding: 5px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font: 600 9.5px var(--label); }
+.why { font-size: 13.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; margin: 0; }
+.why b { color: var(--fg); font-weight: 600; }
+</style>
+
+<div class="wrap">
+<h1>Shoebox Palettes</h1>
+<p class="intro">Seven palettes, each with five jobs: paper (the surface), ink (your words), accent (the one color that means "act"), muted (sources and times) and night (the Lock Screen around it). Each is painted on the same two moments from the storyboard.</p>
+
+<div class="grid">
+
+<!-- 1 -->
+<article class="pal" style="--paper:#f5efe6;--ink:#1c1612;--accent:#e0702f;--on-accent:#1c1612;--accent-text:#b4511a;--muted-c:#7d6b5d;--night:#121014">
+  <header><h2>Ember</h2><span class="tag now">From the mockups</span></header>
+  <p>Warm paper, brown-black ink, one ember orange. Feels like a well-kept notebook.</p>
+  <div class="sw">
+    <div><i style="background:#f5efe6"></i><b>Paper</b><span>#F5EFE6</span></div>
+    <div><i style="background:#1c1612"></i><b>Ink</b><span>#1C1612</span></div>
+    <div><i style="background:#e0702f"></i><b>Ember</b><span>#E0702F</span></div>
+    <div><i style="background:#7d6b5d"></i><b>Muted</b><span>#7D6B5D</span></div>
+    <div><i style="background:#121014"></i><b>Night</b><span>#121014</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> warm and personal. <b>Risk:</b> cream with orange is a common look right now.</p>
+</article>
+
+<!-- 2 -->
+<article class="pal" style="--paper:#f1ebe0;--ink:#14213d;--accent:#2f55d4;--on-accent:#ffffff;--accent-text:#2f55d4;--muted-c:#6d6a7a;--night:#0e1426">
+  <header><h2>Kraft and Cobalt</h2><span class="tag">New</span></header>
+  <p>The inside of a shoebox lid and a ballpoint pen. Navy ink, a blue that only appears where you act.</p>
+  <div class="sw">
+    <div><i style="background:#f1ebe0"></i><b>Paper</b><span>#F1EBE0</span></div>
+    <div><i style="background:#14213d"></i><b>Ink</b><span>#14213D</span></div>
+    <div><i style="background:#2f55d4"></i><b>Cobalt</b><span>#2F55D4</span></div>
+    <div><i style="background:#6d6a7a"></i><b>Muted</b><span>#6D6A7A</span></div>
+    <div><i style="background:#0e1426"></i><b>Night</b><span>#0E1426</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> calm, trustworthy, very readable. <b>Risk:</b> blue is the most common app color.</p>
+</article>
+
+<!-- 3 -->
+<article class="pal" style="--paper:#f7f6f2;--ink:#0f2a3f;--accent:#f2b705;--on-accent:#0f2a3f;--accent-text:#8c6400;--muted-c:#5d6f7e;--night:#0b1c2a">
+  <header><h2>Ink and Marigold</h2><span class="tag">New</span></header>
+  <p>Cool white, deep harbor blue, and marigold like a highlighter across the one line that matters.</p>
+  <div class="sw">
+    <div><i style="background:#f7f6f2"></i><b>Paper</b><span>#F7F6F2</span></div>
+    <div><i style="background:#0f2a3f"></i><b>Ink</b><span>#0F2A3F</span></div>
+    <div><i style="background:#f2b705"></i><b>Marigold</b><span>#F2B705</span></div>
+    <div><i style="background:#5d6f7e"></i><b>Muted</b><span>#5D6F7E</span></div>
+    <div><i style="background:#0b1c2a"></i><b>Night</b><span>#0B1C2A</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> bright and clear, and it keeps the yellow from today's Shoebox. <b>Risk:</b> marigold can't be used for text, only for fills.</p>
+</article>
+
+<!-- 4 -->
+<article class="pal" style="--paper:#eceae2;--ink:#1f2a22;--accent:#5d7f4e;--on-accent:#ffffff;--accent-text:#4b6a3e;--muted-c:#6f776d;--night:#141c16">
+  <header><h2>Moss and Bone</h2><span class="tag">New</span></header>
+  <p>Quiet and outdoorsy. A soft green that says "go" without shouting.</p>
+  <div class="sw">
+    <div><i style="background:#eceae2"></i><b>Paper</b><span>#ECEAE2</span></div>
+    <div><i style="background:#1f2a22"></i><b>Ink</b><span>#1F2A22</span></div>
+    <div><i style="background:#5d7f4e"></i><b>Moss</b><span>#5D7F4E</span></div>
+    <div><i style="background:#6f776d"></i><b>Muted</b><span>#6F776D</span></div>
+    <div><i style="background:#141c16"></i><b>Night</b><span>#141C16</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> the calmest of the seven. <b>Risk:</b> low energy; it may not stand out on a busy Lock Screen.</p>
+</article>
+
+<!-- 5 -->
+<article class="pal" style="--paper:#f7efe9;--ink:#2a1830;--accent:#7a2e6e;--on-accent:#ffffff;--accent-text:#7a2e6e;--muted-c:#806a7c;--night:#1d1222">
+  <header><h2>Plum and Peach</h2><span class="tag">New</span></header>
+  <p>An evening palette. Deep plum for action on a blush paper, close to Shoebox's purple but grown up.</p>
+  <div class="sw">
+    <div><i style="background:#f7efe9"></i><b>Paper</b><span>#F7EFE9</span></div>
+    <div><i style="background:#2a1830"></i><b>Ink</b><span>#2A1830</span></div>
+    <div><i style="background:#7a2e6e"></i><b>Plum</b><span>#7A2E6E</span></div>
+    <div><i style="background:#806a7c"></i><b>Muted</b><span>#806A7C</span></div>
+    <div><i style="background:#1d1222"></i><b>Night</b><span>#1D1222</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> keeps a thread to today's brand and the app icon. <b>Risk:</b> plum on a dark Lock Screen is quiet.</p>
+</article>
+
+<!-- 6 -->
+<article class="pal" style="--paper:#efede7;--ink:#1a1a1a;--accent:#d2352b;--on-accent:#ffffff;--accent-text:#bd2e25;--muted-c:#6b6a66;--night:#141414">
+  <header><h2>Postmark</h2><span class="tag">New</span></header>
+  <p>Newsprint grey, black ink and postmark red. Mail you sent yourself, coming back stamped.</p>
+  <div class="sw">
+    <div><i style="background:#efede7"></i><b>Paper</b><span>#EFEDE7</span></div>
+    <div><i style="background:#1a1a1a"></i><b>Ink</b><span>#1A1A1A</span></div>
+    <div><i style="background:#d2352b"></i><b>Red</b><span>#D2352B</span></div>
+    <div><i style="background:#6b6a66"></i><b>Muted</b><span>#6B6A66</span></div>
+    <div><i style="background:#141414"></i><b>Night</b><span>#141414</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> the most editorial; pairs best with the Daily Issue. <b>Risk:</b> red can read as an error or a warning.</p>
+</article>
+
+<!-- 7 -->
+<article class="pal" style="--paper:#161821;--ink:#f2ead8;--accent:#f0b45b;--on-accent:#161821;--accent-text:#f0b45b;--muted-c:#9a9cae;--night:#0b0c12">
+  <header><h2>Lamplight</h2><span class="tag">New, dark first</span></header>
+  <p>Built for evenings: a dark page with warm, readable type and one lamp-gold accent.</p>
+  <div class="sw">
+    <div><i style="background:#161821"></i><b>Paper</b><span>#161821</span></div>
+    <div><i style="background:#f2ead8"></i><b>Ink</b><span>#F2EAD8</span></div>
+    <div><i style="background:#f0b45b"></i><b>Lamp</b><span>#F0B45B</span></div>
+    <div><i style="background:#9a9cae"></i><b>Muted</b><span>#9A9CAE</span></div>
+    <div><i style="background:#0b0c12"></i><b>Night</b><span>#0B0C12</span></div>
+  </div>
+  <div class="demo">
+    <div class="lock"><div class="t"><small>Thursday 29</small>6:10</div><div class="n"><div class="a"><i></i>Shoebox</div><div class="w">Show the kids at dinner.</div><div class="s">Astronomy Picture of the Day</div><div class="bt"><span>Tomorrow</span><span class="go">Show it</span></div></div></div>
+    <div class="app"><h3>Coming back</h3><div class="row"><b>Sat<span>31</span></b><div><p>Try the long cold ferment.</p><small>Sourdough</small></div></div><div class="row"><b>Sun<span>1</span></b><div><p>For the bowl that broke at Thanksgiving.</p><small>Kintsugi</small></div></div><span class="chip">Ask your shoebox</span></div>
+  </div>
+  <p class="why"><b>Strength:</b> most of Shoebox's moments happen on a dark Lock Screen, and this one is at home there. <b>Risk:</b> it needs a light version too, designed with the same care.</p>
+</article>
+
+</div>
+</div>

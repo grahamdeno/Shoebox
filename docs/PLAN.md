@@ -50,7 +50,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
-| Palette | Midnight Gold, dark first, with a Day twin | Chosen October 29. Section 5. |
+| Palette | Midnight Gold, dark first, with a Day twin; Plum and Peach kept as the alternate | Chosen October 29. Sections 5 and 5a. |
 | Type | DM Serif Display for your reasons; Archivo for labels and UI | Both open-licensed (OFL), bundled in the app. |
 | Shape | 4 to 6 px corners; thin outlines; no pill buttons | Reads as paper and print, not bubbles. |
 | Gold | One gold element per screen: the thing to tap | Gold means "act". Decoration in gold is not allowed. |
@@ -71,6 +71,29 @@ Reference: `docs/design/storyboard.html` (Night/Day switch at the top). The full
 | Lines | cream at 13% | navy at 12% |
 
 Your reason is always the largest text on a moment, in the serif. Sources and times are small, in Archivo. Pictures sit in plain frames with 3 px corners.
+
+### 5a. Alternate palette: Plum and Peach
+
+Graham's favorite from the first round, kept in the spec as the alternate. Midnight Gold stays the primary unless Graham changes it (open decision 8). Reference: `docs/design/plum-and-peach.html`.
+
+**Base colors**
+
+| Job | Day (Sharpened) | Night (Plum night) |
+|---|---|---|
+| Surface | Blush `#F7EFE9` | `#22142A`, cards `#2E1B36` |
+| Text (your words) | Plum ink `#2A1830` | `#F7E3D8` |
+| The one action | Plum `#7A2E6E`, white text | Peach `#F4B49A`, text `#22142A` |
+| Quiet (dates, sources) | Mauve `#806A7C` | `#B597AE` |
+| Deep (Lock Screen) | `#1D1222` | `#1D1222` |
+
+The same rules apply: one action color per screen, 4 px corners, thin outlines, no pills.
+
+**Four ideas that come with it** (each optional, decided when the design system is built):
+
+1. **Sharpened.** The base above: small corners, outlined secondary buttons, plum only on the main action.
+2. **Dusk to dawn.** The notification's color follows the time of day: morning `#FDE3D2` with `#B2456F`, midday `#F6F1EF` with plum, evening `#4A2148` with peach type and a peach action. More to keep consistent; strong sense of time.
+3. **Ripening.** The date on a Coming back row shows how long you've kept the save: today `#F4B49A`, a week `#E5939A`, a month `#C06B91`, three months `#8E3A7D`, a year `#4A1D45`. The age is always written too, since color can't be the only signal.
+4. **Two-ink print.** For the Daily Issue cover only: peach `#FF9E7A` and plum `#9D3C8F` as overlapping inks on `#F3EDE4`, type in `#5A1E52`, a fine grain and square corners.
 
 ## 6. Architecture
 
@@ -147,6 +170,7 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 | 5 | Shoebox Me (Graham's private variant): keep? | Drop it. One app; Graham uses the real one. |
 | 6 | Beta sign-up page and `/beta`: keep for 2.0 TestFlight? | Keep until launch, then remove. |
 | 7 | Submit old 1.0, or wait for 2.0? | Wait for 2.0. |
+| 8 | Primary palette: Midnight Gold, Plum and Peach, or offer both as a theme choice? | Pick one as the primary for 2.0; a second theme can come later without a redesign, since colors are tokens. |
 
 ## 10. Build phases
 
