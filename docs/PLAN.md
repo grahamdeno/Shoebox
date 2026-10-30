@@ -47,7 +47,13 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | PWA, web, Android | Not now | Can come later. See section 8 for what keeps that cheap. |
 | Repo | New repo, `Shoebox` | Clean structure around "a save is a moment". The old repo becomes the archive. |
 | App Store | Same record and bundle ID (`com.grahamdeno.shoebox`); this ships as version 2.0 | Keeps the name and listing. Never create a new app record. |
-| Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
+| Old 1.0 | Submit it (Graham decided October 30). Graham presses Submit for Review himself. | Gets Shoebox in front of people now. 2.0 then ships as an update to the same app, so it must carry 1.0 users' saves over by itself (section 11). |
+| Minimum iOS | 26 | On-device AI, current Live Activities and App Intents. The relay covers phones without Apple Intelligence. |
+| Planner AI | Plain rules first, then on-device model, then the relay | Most reasons never need AI. Private, free per call, works offline. |
+| "At home" | No location in v1. A home-evening window set once in onboarding (default 6:00 to 8:30 PM), sharpened by a Home Focus if you use one, and moved over time by when you actually answer. | Location "Always" is a heavy ask and the wrong first impression for a privacy-first app. Most people don't run a Home Focus, so Focus alone would leave "at dinner" broken for them. Learning from answers costs no permission. Location can come later as an opt-in. |
+| New screenshots | Photos access limited to screenshots; a Shortcut automation is offered as the no-permission path | |
+| Shoebox Me | Dropped. One app. | |
+| Beta page and `/beta` | Kept until 2.0 launches, then removed | |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
 | Palette | Midnight Gold, dark first, with a Day twin; Plum and Peach kept as the alternate | Chosen October 29. Sections 5 and 5a. |
@@ -104,7 +110,7 @@ The same rules apply: one action color per screen, 4 px corners, thin outlines, 
 - App Intents (in the app target): Action Button capture, Siri questions, Shortcuts, Spotlight.
 - Later: a Watch app; CarPlay audio (needs Apple's audio entitlement).
 
-**Minimum iOS:** 26. That gives Foundation Models (on-device AI), current Live Activities and App Intents. Devices without Apple Intelligence fall back to the relay's AI. Open decision 1 in section 9.
+**Minimum iOS:** 26 (decided). That gives Foundation Models (on-device AI), current Live Activities and App Intents. Devices without Apple Intelligence fall back to the relay's AI.
 
 **Storage:** SwiftData in the shared App Group (`group.com.grahamdeno.shoebox`), so the app, share extension and widgets read one store. Files and photos live as files in the group container.
 - Every record has a UUID, `createdAt`, `updatedAt`, and a soft-delete marker. This makes sync possible later without a migration.
@@ -134,7 +140,7 @@ The same rules apply: one action color per screen, 4 px corners, thin outlines, 
 | `/ical` | Calendar is read on the phone with EventKit |
 | `/song`, `/apple/*` | Song of the day isn't in v1 |
 | `/ai/quotes`, `/ai/stories` | Quote of the day and top stories aren't in v1 |
-| `/beta` | Decide at launch (open decision 6) |
+| `/beta` | Kept until 2.0 launches, then removed (decision 6) |
 
 New relay work: a lookup route for task saves (moment 8), returning facts with their sources, never acting.
 
@@ -159,18 +165,22 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 2. **Data is sync-ready from day one:** UUIDs, timestamps on every change, soft deletes, a documented export format.
 3. **Design tokens live in one file** (`design/tokens.json`), generated into Swift. A web or Android build reads the same file.
 
-## 9. Open decisions
+## 9. Decisions made October 30 (were open)
 
-| # | Decision | Recommendation |
+Seven are settled; decision 8 is still open. The results are also in section 4.
+
+| # | Decision | Answer |
 |---|---|---|
-| 1 | Minimum iOS 26 (on-device AI) or 17 (wider reach)? | iOS 26. By launch most active iPhones will run it; the relay covers devices without Apple Intelligence. |
-| 2 | AI for the return planner: on device first, or relay first? | On device first, relay fallback. More private and free per call. |
-| 3 | "At home": Focus only, or location too? | Focus only in v1. No location permission. |
-| 4 | Reading new screenshots: Photos access, or a Shortcut automation? | Ask for Photos access limited to screenshots; offer the Shortcut as the no-permission path. |
-| 5 | Shoebox Me (Graham's private variant): keep? | Drop it. One app; Graham uses the real one. |
-| 6 | Beta sign-up page and `/beta`: keep for 2.0 TestFlight? | Keep until launch, then remove. |
-| 7 | Submit old 1.0, or wait for 2.0? | Wait for 2.0. |
-| 8 | Primary palette: Midnight Gold, Plum and Peach, or offer both as a theme choice? | Pick one as the primary for 2.0; a second theme can come later without a redesign, since colors are tokens. |
+| 1 | Minimum iOS 26 or 17? | **iOS 26.** |
+| 2 | Return planner AI: on device first, or relay first? | **On device first, relay fallback**, with plain rules ahead of both. |
+| 3 | "At home": Focus only, or location too? | **Claude's call, as experience design:** no location in v1. A home-evening window set once (default 6:00 to 8:30 PM), sharpened by a Home Focus when there is one, and moved over time by when Graham actually answers. Reasoning in section 4. |
+| 4 | New screenshots: Photos access or a Shortcut? | **Photos access limited to screenshots,** Shortcut as the no-permission path. |
+| 5 | Shoebox Me: keep? | **Drop it.** |
+| 6 | Beta page and `/beta`: keep for 2.0 TestFlight? | **Keep until launch, then remove.** |
+| 7 | Submit old 1.0, or wait for 2.0? | **Submit 1.0.** Graham presses Submit. This adds two requirements, in section 11. |
+| 8 | Primary palette: Midnight Gold, Plum and Peach, or both as a theme choice? | **Still open.** Graham is leaning toward Plum and Peach as the primary (October 30). The design system in phase 1 carries both as themes, so the choice is the order of themes, not a redesign. |
+
+New questions raised by the spec are listed at the end of `docs/SPEC.md` ("For Graham to check").
 
 ## 10. Build phases
 
@@ -191,9 +201,12 @@ Each phase ends with something Graham can try on his phone. The model named is t
 
 - **PR #166** (removes Quote of the day) is open and unmerged. Recommendation: close it without merging; the old app is frozen.
 - **TestFlight build 36** (web 4.70.0, relay 26) is the current build. It stays installed until 2.0.
-- **Do not submit 1.0** (decision 7). The App Store listing text in `edition/docs/app-store.md` gets rewritten for 2.0.
-- **The relay** keeps running from the old repo until phase 2 moves it here. Don't deploy it from two places at once.
-- **inmyshoebox.com** (the welcome, privacy and support pages) gets rewritten for 2.0 in phase 6.
+- **1.0 goes to App Review** (decision 7, changed October 30). **Graham presses Submit for Review; no agent does.** The listing text in `edition/docs/app-store.md` is used for 1.0 and rewritten for 2.0.
+- **Because 1.0 ships, two things become requirements:**
+  1. **2.0 must carry 1.0 saves over with no action from the person.** 1.0 already writes a daily backup to its own Documents › Backups folder (and iCloud Drive › Shoebox › Backups). 2.0 is an update to the same app, so on first launch it reads the newest backup there and imports it (`docs/SPEC.md`, section 11). A last-resort path reads the old web storage directly. Nothing is deleted.
+  2. **inmyshoebox.com must keep serving the old web app while 1.0 is installed anywhere.** 1.0 loads `https://inmyshoebox.com/?native=1` live; if phase 6 replaces that page, every 1.0 install breaks. The 2.0 site goes beside it (new paths), and the old app is retired only after 2.0 has been out long enough.
+- **The relay** keeps running from the old repo until phase 2 moves it here. Don't deploy it from two places at once. 1.0 still uses the routes this plan drops (`/push/*`, `/remind`, `/ical`, `/song`, `/ai/quotes`, `/ai/stories`), so they stay live until 1.0 is retired, even after 2.0 stops calling them.
+- **inmyshoebox.com** (the welcome, privacy and support pages) gets rewritten for 2.0 in phase 6, without breaking the 1.0 app page (above).
 
 ## 12. How we work
 
