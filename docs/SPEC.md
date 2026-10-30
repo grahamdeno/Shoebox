@@ -6,6 +6,7 @@ Written October 30, 2026, in phase 0, from the old code in `grahamdeno/edition` 
 
 - **[Old]** comes straight from the old code, with the file named.
 - **[Check]** is something the old code didn't settle, so Claude decided it here. Graham should confirm or change each one. They are collected in section 14.
+- **(Storyboard)** points to the new design reference, `docs/design/storyboard.html`, not the old code.
 - Plain text with neither marker follows directly from `docs/PLAN.md`.
 
 ---
@@ -44,7 +45,7 @@ One thing kept: a link, a note, a photo, a file.
 | `imageURL` | string or null | Remote picture for a link or video. |
 | `attachmentIds` | [UUID] | Original file, thumbnail, chosen page picture. |
 | `summary` | string, max 200 | One line on why it might be worth the time **[Old]** `enrich`. |
-| `hook` | string, max 70 | The short face-of-card line **[Old]** `HOOK_RULE`, `HOOK_VERSION` 2. |
+| `hook` | string, asked for at 50 chars, stored up to 70 | The short face-of-card line, 5 to 8 words **[Old]** `HOOK_RULE` (50), `cleanHook` (70), `HOOK_VERSION` 2. |
 | `points` | [string], max 3 | Key points **[Old]**. |
 | `extended` | string, max 1800 | Fuller summary of a page or document **[Old]**. |
 | `transcript` | string, max 1500 | Text read from a photo or screenshot **[Old]**. |
@@ -62,7 +63,7 @@ One thing kept: a link, a note, a photo, a file.
 | `doneAt`, `droppedAt`, `quietAt` | timestamp or null | |
 | `loved` | bool | **[Old]** `loved`. Kept; not shown in v1 **[Check]**. |
 | `thoughts` | [`{at, text}`] | Your later notes on it **[Old]** `replies`. |
-| `edited` | set of `title`, `tags`, `reason` | Fields you changed by hand, which AI never overwrites **[Old]** `titleMine`, `tagsMine`, `editedAt`. |
+| `edited` | set of `title`, `tags`, `reason` | Fields you changed by hand, which AI never overwrites **[Old]** `titleMine`, `tagsMine`; old `editedAt` marked any hand edit. `reason` is new. |
 | `school` | `SchoolPost` or null | Section 7. |
 | `email` | `{from, fromName, subject, receivedAt}` or null | For saves that came by email. |
 | `enrichedAt`, `enrichTries` | timestamp, int | AI filing state; at most 3 tries **[Check]**. |
@@ -72,8 +73,8 @@ One thing kept: a link, a note, a photo, a file.
 
 | Status | Meaning | Old equivalent |
 |---|---|---|
-| `planned` | Has a moment coming. | `queued`, `aside` |
-| `unplanned` | The planner hasn't placed it yet (just saved, or waiting for the model). | `inbox` |
+| `planned` | Has a moment coming. | `aside` |
+| `unplanned` | The planner hasn't placed it yet (just saved, imported, or waiting for the model). It becomes `planned` as soon as it has a moment. | `inbox`, `queued` (not faded) |
 | `quiet` | Passed twice. Kept, never offered, back only if you ask. | faded (`fadedAt`, or 21 days untouched), `washedOut` |
 | `done` | You did it. | `done` |
 | `dropped` | You let it go. Kept in Everything kept under "Let go"; never deleted on its own. | `archived` |
@@ -132,7 +133,7 @@ Everything that happens to a save, in order. This is the learning signal and the
 | `workHours` | Mon to Fri, 9:00 AM to 5:00 PM | Read from Focus if a Work Focus exists **[Check]**. |
 | `weekendMorning` | Saturday 9:00 AM | |
 | `dailyBudget` | 4 notifications a day, the Issue included | Section 4.6 **[Check]**. |
-| `school` | `{on, childNames[], school, about, words[], days[]}` | **[Old]** `edition.school`, days default Mon and Fri. |
+| `school` | `{on, child, school, about, words[], days[]}` | **[Old]** `edition.school`. `child` is one string; names are split on commas or "and" (`childNames`). Days default Mon and Fri. |
 | `inbox` | `{key, address}` | The email-in key and address, carried over on import. |
 | `ai` | `{consent, device, token, attested}` | Carried over on import, so 1.0 users keep their AI sign-up. |
 | `statsOff` | false | **[Old]** `edition.statsOff`. |
@@ -193,7 +194,7 @@ A photo whose main subject is a book becomes a book save (title and author read 
 
 ### 2.4 Time to read or watch, when AI hasn't said **[Old]** `estimateMinutes`
 
-note: words ÷ 220, at least 1 · quote 1 · photo 1 · link 6 · pdf 15 · video 10 · file 5 · book 30.
+note: words ÷ 220, at least 1 · quote 1 · photo 1 · link 6 · pdf 15 · video 10 · file 5. A book costs 30 **[Old]** `asBook`, `BOOK_SITTING_MINUTES` (not in `estimateMinutes`).
 
 ---
 
@@ -205,7 +206,7 @@ Every moment carries three actions, usable from the Lock Screen without unlockin
 |---|---|---|
 | **Done** (the main action, gold) | The kind's own word: Read (read), Watched (watch), Listened (listen), Done (task; or the reason's verb when it starts with one: Booked, Ordered, Signed, Called), Tried it (idea), Kept (reference, photo, quote), I've read it (book). School posts: Done (action), Decided (decision), Got it (info) **[Old]** for school and book; the rest **[Check]**. | `status = done`, `doneAt` set, moment `answered`. Nothing else comes back for it. On the Lock Screen the main action may instead be the doing word ("Read now", "Show it", "Book it"), which opens the thing and marks it done after you return **[Check]**. |
 | **Later** | A concrete time from the planner: "Tomorrow", "Saturday", "After planning", "Tonight". Expanded, it offers: Tonight, Tomorrow morning, This weekend, Next week, Pick a time, and "You choose" (Shoebox picks). | Plans one new moment. Doesn't count as a pass. The third Later asks instead: "Keep it, or let it go quiet?" **[Check]**. |
-| **Drop** | Drop (Not for me on anything Shoebox suggested) **[Old]** "Let go". | `status = dropped`. Kept under Let go in Everything kept; restorable; never deleted on its own **[Old]** "nothing was ever deleted automatically". |
+| **Drop** | Drop (Not for me on anything Shoebox suggested) **[Old]** "Let go". | `status = dropped`. Kept under Let go in Everything kept; restorable; never deleted on its own **[Old]** `model.js`: "Nothing is let go automatically". |
 
 **Restore** puts a dropped, done or quiet save back to `unplanned` with `passes = 0`, `laters = 0`, and the planner places it **[Old]** `restore`.
 
@@ -232,7 +233,7 @@ The planner reruns for a save when its moment passes, when you choose Later, whe
 | Morning (when a part of day is asked for) | the Issue |
 | Lunch | 12:15 PM |
 | Afternoon | 3:30 PM |
-| Home evening | 6:00 to 8:30 PM; "at dinner" lands 10 minutes in (6:10 PM) **[Old]** storyboard 6:10 |
+| Home evening | 6:00 to 8:30 PM; "at dinner" lands 10 minutes in (6:10 PM) (Storyboard) 6:10 |
 | Tonight | 7:30 PM |
 | After bed / late | 8:30 PM, the end of home evening |
 | Weekend morning | Saturday 9:00 AM |
@@ -248,7 +249,7 @@ The first rule that matches wins. "Lead" is how far ahead of the target the mome
 |---|---|---|
 | R1 | An explicit clock time ("7pm", "at 3") | That time, today if still ahead, else tomorrow. Notification. |
 | R2 | Relative time ("in an hour", "in 2 weeks", "in 3 days") | That time; days round to the Issue of that day. |
-| R3 | "before / ahead of / for [something]" where [something] matches a calendar event in the next 60 days (on-device matching of words, then the model if unsure) | **Short event:** start at event start − (minutes + 1); window until the event starts; Live Activity on the Lock Screen with a countdown **[Old]** storyboard 9:48 for an 11-minute read before 10:00. If that time isn't free, the latest free gap that day long enough; if none, that day's Issue. **Multi-day event or trip:** Issue 7 days before for trips, 2 days for anything else **[Check]**. |
+| R3 | "before / ahead of / for / at / when it comes up at [something]" where [something] matches a calendar event in the next 60 days (on-device matching of words, then the model if unsure) | **Short event:** start at event start − (minutes + 1); window until the event starts; Live Activity on the Lock Screen with a countdown (Storyboard) 9:48 for an 11-minute read before 10:00. If that time isn't free, the latest free gap that day long enough; if none, that day's Issue. **Multi-day event or trip:** Issue 7 days before for trips, 2 days for anything else **[Check]**. |
 | R4 | "on the plane / flight" with a flight on the calendar | The evening before departure at home, 7:30 PM, so it's downloaded **[Check]**. |
 | R5 | Gift words ("gift", "present", "for X's birthday") with a dated target | Issue 10 days before the date **[Check]**. |
 | R6 | A date ("Nov 20", "the 20th", "12/3") | That day's Issue. With deadline words ("by", "due", "register", "sign up", "before"): Issue 2 days before, or the day before if that's sooner than 2 days away. |
@@ -256,11 +257,11 @@ The first rule that matches wins. "Lead" is how far ahead of the target the mome
 | R8 | "today", "this morning/afternoon", "tonight", "at lunch", "after the kids are in bed" | Today at that part of day if it's still ahead; otherwise the same part of day tomorrow. |
 | R9 | "tomorrow", "tomorrow night" | Tomorrow at the Issue, or at the part of day named. |
 | R10 | "at dinner", "at home", "with the kids", "show [family]" | Home evening, today if before 5:30 PM, else tomorrow. Place `homeEvening`. |
-| R11 | "this weekend" | Saturday weekend morning. If it's already Saturday before noon: today 2:00 PM; Saturday afternoon or Sunday: Sunday 9:00 AM; Sunday after noon: next weekend. If the content needs a day ahead (a recipe with an overnight step, a delivery), the model may move it earlier, to Saturday 8:00 AM or Friday evening **[Old]** storyboard 8:05 AM sourdough. Watch kinds go to weekend evening. |
+| R11 | "this weekend" | Saturday weekend morning. If it's already Saturday before noon: today 2:00 PM; Saturday afternoon or Sunday: Sunday 9:00 AM; Sunday after noon: next weekend. If the content needs a day ahead (a recipe with an overnight step, a delivery), the model may move it earlier, to Saturday 8:05 AM or Friday evening (Storyboard) 8:05 AM sourdough. Watch kinds go to weekend evening. |
 | R12 | "next weekend" | The Saturday after the coming one. If that weekend is blocked by an all-day or away event on the calendar, the Friday 7:30 PM before it **[Check]**. |
 | R13 | "next week" | Monday's Issue. |
 | R14 | "this month", "next month", "end of the month", "in March" | Month start: the first weekday's Issue. "End of the month": the last weekday's Issue. |
-| R15 | Seasons ("this fall", "next spring", "this summer") | Season in progress: this weekend (R11). Season ahead: the first Saturday on or after the season's start, weekend morning. If the save is about a place or event with a known best time (peak leaf color, a festival), the relay may look that up and use it instead **[Old]** storyboard "first weekend of peak color". |
+| R15 | Seasons ("this fall", "next spring", "this summer") | Season in progress: this weekend (R11). Season ahead: the first Saturday on or after the season's start, weekend morning. If the save is about a place or event with a known best time (peak leaf color, a festival), the relay may look that up and use it instead (Storyboard) "first weekend of peak color". |
 | R16 | Holidays ("Christmas", "Thanksgiving", "spring break") | The holiday is the target; with "before": Issue 14 days before for gifts and travel, 2 days otherwise. "Spring break" and other school dates come from school posts if one names it; otherwise Shoebox asks once at capture **[Check]**. |
 | R17 | "next quarter", "next year" | The first workday of the next quarter or year, at its Issue. |
 | R18 | Work words ("at work", "Monday at work", "for the team") | Workday start + 30 minutes on the next workday (or the day named). Place `work`. |
@@ -300,7 +301,7 @@ Each example is planned on its own, as if it were the only save. When several la
 | 12 | Tuesday | Link | Tue Nov 10, 7:00 AM | Issue | R7. Next Tuesday that isn't today. |
 | 13 | Next Tuesday | Link | Tue Nov 10, 7:00 AM | Issue | R7. On a Wednesday, read as the coming Tuesday **[Check]**. |
 | 14 | This weekend | Link, 20 min | Sat Nov 7, 9:00 AM | Notification (mirrors to Watch) | R11. |
-| 15 | Try the long cold ferment this weekend | Link (recipe) | Sat Nov 7, 8:00 AM | Notification | R11. The model sees an overnight step and moves it earlier so the bread is ready Sunday. |
+| 15 | Try the long cold ferment this weekend | Link (recipe) | Sat Nov 7, 8:05 AM | Notification | R11. The model sees an overnight step and moves it earlier so the bread is ready Sunday. |
 | 16 | Watch with Kate this weekend | Video, 95 min | Sat Nov 7, 7:30 PM | Notification | R11. A long watch goes to weekend evening. |
 | 17 | Next weekend | Link | Fri Nov 13, 7:30 PM | Notification | R12. That weekend is all camping, so the Friday evening before. |
 | 18 | Next week | Link | Mon Nov 9, 7:00 AM | Issue | R13. |
@@ -325,7 +326,7 @@ Each example is planned on its own, as if it were the only save. When several la
 | 37 | Pick up at Costco | Note | Sat Nov 7, 10:30 AM | Notification | R19. No location; the errand time. |
 | 38 | Someday | Link | Sat Dec 5, 8:00 AM | Issue | R20. About 4 weeks out, on a Saturday. |
 | 39 | (no reason) | Link, 6 min | Fri Nov 6, 7:00 AM | Issue | R20. Short read; 2 to 5 days out, the lightest Issue. |
-| 40 | (no reason) | Link, 35 min, and AI calls it a weekend project | Sat Nov 7, 9:00 AM | Notification | R20 **[Old]** storyboard "It sounds like a weekend project". |
+| 40 | (no reason) | Link, 35 min, and AI calls it a weekend project | Sat Nov 7, 9:00 AM | Notification | R20 (Storyboard) "It sounds like a weekend project". |
 | 41 | Interesting | Link, 6 min | Fri Nov 6, 7:00 AM | Issue | R20. No time in it, so treated like no reason. |
 | 42 | For the house | Link, 25 min | Sat Nov 7, 9:00 AM | Notification | R20. Topic only, no time; medium length goes to the weekend. |
 | 43 | When Sam visits | Note | Asks at capture: "This weekend · Next month · Pick a date". Unanswered: Fri Nov 6, 7:00 AM, marked `guess` | Issue | R21. No calendar match. |
@@ -349,7 +350,7 @@ Home evening moves with you: after 10 answered home-evening moments, if the midd
 
 ### 4.7 The capture line
 
-Right after saving, the sheet shows one line in plain words: "Comes back Saturday morning", "Back at 9:48, before Quarterly planning", "Back at dinner tonight". Tapping it offers the Later choices plus Pick a time. The line comes from the rules at once; if the model refines it later, the change shows in Coming back, never as a new notification **[Old]** storyboard "Comes back Saturday morning, at home".
+Right after saving, the sheet shows one line in plain words: "Comes back Saturday morning", "Back at 9:48, before Quarterly planning", "Back at dinner tonight". Tapping it offers the Later choices plus Pick a time. The line comes from the rules at once; if the model refines it later, the change shows in Coming back, never as a new notification (Storyboard) "Comes back Saturday morning, at home".
 
 ---
 
@@ -397,19 +398,19 @@ One rich notification each morning: a small cover with today's few, as your reas
 
 ### 7.1 Settings **[Old]** `app.js` `SCHOOL_PUBLIC`
 
-`on` (off by default), `childNames` (comma or "and" separated), `school` (short name), `about` (what the parent cares about: grade, teams, activities), `words` (other words that mark school mail, such as the mascot), `days` (Mon and Fri, when the app asks for a pasted newsletter).
+`on` (off by default), `child` (one string; several names split on commas or "and"), `school` (short name), `about` (what the parent cares about: grade, teams, activities), `words` (other words that mark school mail, such as the mascot), `days` (Mon and Fri, when the app asks for a pasted newsletter).
 
 ### 7.2 Which mail is school mail **[Old]** `isSchoolMail`
 
 A mail is school mail when the school's name or any of the words (3+ characters) appears in its sender, sender name or subject, or in the first 4,000 characters of its text. A PDF you send yourself (a district calendar) is also read as possible school mail when school posts are on and an `about` or child name is set; if nothing in it is for your child, it's kept as an ordinary file save.
 
-A short email (under 400 characters) that only links to the newsletter's page: the relay reads the page (`/preview?text=1`) and that text is used. Up to 3 linked PDFs and 6 attachments are read with it **[Old]** `mailFiles`.
+An email with no attachments, a body under 400 characters and at least one link: the relay reads the first link's page (`/preview?text=1`) and that text is used. Up to 3 linked PDFs and 6 attachments are read with it **[Old]** `mailFiles`.
 
 ### 7.3 Masking the child's name **[Old]** `maskNames`, `nameIn`, `unmaskName`, `CHILD_TOKEN`
 
-1. Before anything is sent, each name in `childNames` (2+ characters, whole word, any case) is replaced with `{child}` in the newsletter text and in `about`. With no name set, "your child" is used.
+1. Before anything is sent, each name in `child` (2+ characters, whole word, any case) is replaced with `{child}` in the newsletter text and in `about`. With no name set, "your child" is used.
 2. The AI is told to write `{child}` exactly, braces included, never "your child" and never an invented name.
-3. On the phone, `{child}` is replaced with the first name (or "your child", capitalized at the start of a sentence).
+3. On the phone, `{child}` is replaced with the first name (or "your child"; the old code capitalized it only at the very start of the text, 2.0 capitalizes it at the start of any sentence **[Check]**).
 
 **Gap in the old app, and the fix [Check]:** attachments (flyers, PDFs) went to AI as they were, names and all; the privacy page said so. In 2.0, attachments are read on the phone first (text recognition for pictures, PDF text extraction), masked, and sent as text. A picture is sent as a picture only when no text could be read from it, and the privacy page keeps saying that.
 
@@ -441,7 +442,7 @@ Pictures for school posts (Openverse photos plus an overlay line about the child
 
 ## 8. Other email (not school) **[Old]** `emailPost`
 
-One email becomes one save: a plain headline (max 70), a body (1 to 3 sentences, max 280), up to 4 dated items, the one link worth opening, and your own note above a forward as the reason. Never the whole email. The cleaned text (no forward headers, quoted replies, signatures, footers, tracking links) is kept as "The whole email" **[Old]** `cleanEmail`. Without AI, the first 280 characters of the cleaned text are the body **[Old]** `emailPreview`.
+One email becomes one save: a plain headline (max 70), a body (1 to 3 sentences, max 280), up to 4 dated items, the one link worth opening, and your own note above a forward as the reason. Never the whole email. The cleaned text (no forward headers, quoted replies, signatures, footers, tracking links) is kept as "The whole email" **[Old]** `cleanEmail`. Without AI, the body is the cleaned text cut to 280 characters, ending at the last sentence end past the halfway point, else at a word boundary with "…" **[Old]** `emailPreview`.
 
 ---
 
@@ -465,7 +466,7 @@ AI consent is asked once, the first time a save would need the relay, with the p
 
 ### 9.2 App Attest **[Old]** `ai.js` `attest`, relay `/ai/challenge`, `/ai/attest`
 
-1. The app asks the relay for a one-time challenge (`POST /ai/challenge`; kept 5 minutes; a few per network per day).
+1. The app asks the relay for a one-time challenge (`POST /ai/challenge`; kept 5 minutes; up to 30 per network per day).
 2. The app attests a new App Attest key with that challenge.
 3. `POST /ai/attest` with the challenge, key id and attestation. The relay checks it against Apple's App Attest root and returns a device id and token. Only a hash of the token is kept.
 4. Every AI call carries `x-shoebox-device` and `x-shoebox-token`. A 401 with code `register` means start over; a 403 with code `attest` means attest again (once).
@@ -513,7 +514,7 @@ Reminders no longer go through the server (they're local notifications), so the 
 
 ### 11.1 Where the old saves are
 
-1.0 is a web app in an iPhone wrapper (`edition/ios/App/WebViewController.swift` loads `https://inmyshoebox.com/?native=1`). Its saves live in that page's IndexedDB (`edition` database, stores `items`, `blobs`, `meta`) and its settings in localStorage (`edition.*` keys) **[Old]** `db.js`. Every day it also writes a backup:
+1.0 is a web app in an iPhone wrapper (`edition/ios/App/WebViewController.swift` loads `https://inmyshoebox.com/?native=1`). Its saves live in that page's IndexedDB (`edition` database, stores `items`, `blobs`, `meta`, `shares`) and its settings in localStorage (`edition.*` keys) **[Old]** `db.js`. Every day it also writes a backup:
 
 - `Documents/Backups/shoebox-backup-YYYY-MM-DD.json` in the app's own container (Files › On My iPhone › Shoebox › Backups), last 7 kept;
 - a copy in iCloud Drive › Shoebox › Backups when iCloud Drive is on.
@@ -569,7 +570,7 @@ Settings › Import a backup accepts a version 1 or 2 old backup (`"app": "editi
 
 Short here; phase 1 designs it.
 
-- **Coming back:** planned saves by moment, grouped by day ("Sun", "Tue", "Nov", "Sep '27"), each with its reason and the source in small type **[Old]** storyboard "Sunday · The app".
+- **Coming back:** planned saves by moment, grouped by day ("Sun", "Tue", "Nov", "Sep '27"), each with its reason and the source in small type (Storyboard) "Sunday · The app".
 - **Everything kept:** one question away. Search by asking ("the campsite thing") across reasons, titles, text and transcripts; filters for Quiet, Done, Let go.
 - No inbox to clear, no counts of what's waiting.
 
@@ -619,7 +620,7 @@ Every **[Check]** above, in one list. A "yes to all" is fine; otherwise name the
 | 22 | 4.6 | Collision rules and the 2-hour spacing. |
 | 23 | 5 | Opening without a verdict isn't a pass; undelivered moments aren't passes; no nudges about quiet saves. |
 | 24 | 6 | Issue holds up to 3 saves and 2 school posts; needs a Notification Content extension target (add to PLAN section 6). |
-| 25 | 7.3 | Flyers and PDFs read on the phone and masked before sending (fixes an old gap); sender and subject masked too. |
+| 25 | 7.3 | Flyers and PDFs read on the phone and masked before sending (fixes an old gap); sender and subject masked too; "Your child" capitalized at any sentence start. |
 | 26 | 7.5 | School post moments; undated info goes quiet after one pass; school photos and overlays left out of v1. |
 | 27 | 9.1 | No AI consent means relay jobs are skipped; over-limit jobs retry after the reset. |
 | 28 | 10 | 1.0's privacy page stays as is while 1.0 is in use. |
