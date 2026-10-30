@@ -225,9 +225,31 @@ struct ThreeMoves: View {
                         .fill(Theme.lid.opacity(glow ? 0.45 : 0.15))
                         .padding(-6)
                 )
+                .overlay(alignment: .topLeading) { FlickArrow().offset(x: -6, y: -84) }
                 .padding(.trailing, Metrics.lidInset)
                 .padding(.bottom, Metrics.lidBottom)
                 .onAppear { withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glow = true } }
         }
+    }
+}
+
+/// The dashed arrow above the lid on the three-moves screen: lift it out.
+private struct FlickArrow: View {
+    var body: some View {
+        ZStack {
+            Path { p in
+                p.move(to: CGPoint(x: 72, y: 70))
+                p.addQuadCurve(to: CGPoint(x: 12, y: 12), control: CGPoint(x: 62, y: 22))
+            }
+            .stroke(Theme.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 5]))
+            Path { p in
+                p.move(to: CGPoint(x: 26, y: 10))
+                p.addLine(to: CGPoint(x: 12, y: 12))
+                p.addLine(to: CGPoint(x: 18, y: 25))
+            }
+            .stroke(Theme.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        }
+        .frame(width: 80, height: 76)
+        .accessibilityHidden(true)
     }
 }

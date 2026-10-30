@@ -92,7 +92,7 @@ struct AddSheet: View {
         }
         .padding(.horizontal, 24)
         .background(Theme.sheet.ignoresSafeArea())
-        .presentationDetents([.large])
+        .presentationDetents([.height(470)])
         .presentationCornerRadius(Metrics.sheetRadius)
         .onAppear { focus = .text }
         .onChange(of: photo) { _, item in

@@ -68,7 +68,7 @@ struct LaterList: View {
             }
             .buttonStyle(.plain)
 
-            ForEach(options, id: \.label) { option in
+            ForEach(options.filter { $0.label != suggestion.label }, id: \.label) { option in
                 row(option.label) { onPick(option) }
             }
             row("Pick a date", action: onPickDate)

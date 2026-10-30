@@ -45,6 +45,7 @@ struct TodayView: View {
 
             VStack(spacing: 0) {
                 topBar
+                    .opacity(lidOpen ? 0 : 1)
                 if let current = queue.first {
                     PostView(save: current, planner: planner, now: now)
                         .id(current.id)
@@ -66,6 +67,9 @@ struct TodayView: View {
                     clearState
                 }
             }
+            .opacity(lidOpen ? 0.35 : 1)
+            .saturation(lidOpen ? 0 : 1)
+            .allowsHitTesting(!lidOpen)
 
             if let current = queue.first {
                 lidLayer(for: current)
@@ -93,7 +97,7 @@ struct TodayView: View {
                 onLetGo: { opened = nil; letGo(save) }
             )
         }
-        .sheet(isPresented: $showBox) {
+        .fullScreenCover(isPresented: $showBox) {
             BoxView(planner: planner, onBringBack: { bringBack($0) })
         }
         .sheet(isPresented: $showAdd) {
