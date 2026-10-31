@@ -110,7 +110,7 @@ enum StockPhoto {
     // MARK: The server and the pick
 
     private static func search(_ phrase: String) async -> [Candidate]? {
-        let req = Relay.request("photo", query: [.init(name: "q", value: phrase), .init(name: "n", value: "6")])
+        let req = Relay.request("stock", query: [.init(name: "q", value: phrase), .init(name: "n", value: "6")])
         guard let (data, res) = try? await URLSession.shared.data(for: req),
               (res as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return (try? JSONDecoder().decode(Reply.self, from: data))?.photos

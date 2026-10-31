@@ -142,7 +142,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 
 - The phone does the thinking. Apple Intelligence turns the post into two to four generic words ("school gym string lights"), asks the relay for about six candidates, and picks the best by their captions. Without Apple Intelligence, a short list of plain keyword rules writes the words and the server's first candidate is used.
 - Only those generic words leave the phone: never names, your text or your reason. A guard drops any word that looks like a name from the post. Posts about health, money or legal matters are never looked up.
-- The relay's `/photo?q=&n=` endpoint asks Pixabay (key kept as a Worker secret) and returns candidates, cached 24 hours. Nothing about the post is logged.
+- The relay's `/stock?q=&n=` endpoint (not `/photo`, which Shoebox 1 still uses) asks Pixabay (key kept as a Worker secret) and returns candidates, cached 24 hours. Nothing about the post is logged.
 - The picture is copied to the phone when it is chosen (Pixabay does not allow keeping links). The credit ("Photo by … on Pixabay", linked) shows under the words on the opened post.
 - A real picture from the page replaces a stock one. A miss is retried tomorrow. Settings > Pictures turns it off.
 
@@ -208,7 +208,7 @@ The Nectarine bar with Later and Open, the Later list and date picker, neumorphi
 
 1. Home Screen and Lock Screen widgets.
 2. Later and Open on the notification itself.
-3. The relay's source moved into this repo (`relay/`), so a deploy from the frozen edition repo can't remove `/photo`.
+3. The relay's source moved into this repo (`relay/`), so a deploy from the frozen edition repo can't remove `/stock`.
 4. School newsletters turned into short dated posts by AI, with the child's name masked as `{child}` (Core `NameMask` is ready).
 5. The richer return planner: Core rules R1 to R20 plus Foundation Models, and "before the meeting" from the calendar.
 6. Siri and Shortcuts: Keep, Find, Bring back.
