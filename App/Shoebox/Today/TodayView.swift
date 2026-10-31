@@ -51,7 +51,8 @@ struct TodayView: View {
 
     private var now: Date { Date() }
     private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
-    private var boxCount: Int { rules.kept(all).count + rules.away(all, now: now).count }
+    /// Everything in the Shoebox that is not put away.
+    private var boxCount: Int { rules.library(all, now: now).count }
     private var anyKept: Bool { all.contains { $0.deletedAt == nil } }
     private var moreWaiting: [Save] { rules.queue(all, now: now).filter { !pickIds.contains($0.id.uuidString) } }
     private var moving: Bool { drag != 0 || fly != 0 }
@@ -107,7 +108,9 @@ struct TodayView: View {
                 save: save,
                 onClose: { opened = nil },
                 onNotNow: { opened = nil; notNow(save) },
-                onPutAway: { opened = nil; putAway(save) }
+                onPutAway: { opened = nil; putAway(save) },
+                onBringBack: { opened = nil; bringBack(save) },
+                onDelete: { opened = nil; deleteSave(save) }
             )
         }
         .sheet(isPresented: $showBox) {
@@ -349,20 +352,11 @@ struct TodayView: View {
             Spacer()
             HStack {
                 Spacer()
-                HStack(spacing: 2) {
-                    Text(toast.text).opacity(0.8).padding(.leading, 16)
-                    Button("Undo") {
-                        toast.undo()
-                        withAnimation(.snappy) { self.toast = nil }
-                        refreshPick()
-                    }
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: Metrics.touchMin)
+                UndoPill(text: toast.text) {
+                    toast.undo()
+                    withAnimation(.snappy) { self.toast = nil }
+                    refreshPick()
                 }
-                .font(.system(size: 14))
-                .foregroundStyle(Theme.ground)
-                .background(Theme.ink, in: Capsule())
             }
             .padding(.trailing, 16)
             .padding(.bottom, Self.stripHeight + 14)
@@ -447,8 +441,13 @@ struct TodayView: View {
     // MARK: Actions
 
     private func perform(_ text: String, on save: Save, _ change: (Save) -> Void) {
+        perform(on: save) { change($0); return text }
+    }
+
+    /// Makes the change, keeps it, and shows Undo for 5 seconds. The change returns the words for the message.
+    private func perform(on save: Save, _ change: (Save) -> String) {
         let snapshot = SaveSnapshot(save)
-        change(save)
+        let text = change(save)
         try? context.save()
         let new = Toast(text: text, undo: { snapshot.restore(save); try? context.save() })
         withAnimation(.snappy) { toast = new }
@@ -458,15 +457,15 @@ struct TodayView: View {
         }
     }
 
-    /// Not now: back when your why says (a weekday, the weekend, tonight), else tomorrow.
+    /// Next: back when your why says (a weekday, the weekend, tonight), else tomorrow.
     /// Dated posts keep their own schedule of reminders.
     private func notNow(_ save: Save) {
-        if save.eventDate == nil, let when = planner.match(words: save.note, now: now) {
-            let label = when.label == "Tomorrow" ? "tomorrow" : when.label
-            perform("Back \(label)", on: save) { actions.later($0, until: when.date, now: now) }
-        } else {
-            perform(save.eventDate == nil ? "Back tomorrow" : "Back before the date", on: save) { actions.pass($0, now: now) }
-        }
+        perform(on: save) { actions.next($0, planner: planner, now: now) }
+    }
+
+    /// Delete: gone from every list, kept in backups, and Undo for 5 seconds.
+    private func deleteSave(_ save: Save) {
+        perform("Deleted", on: save) { actions.letGo($0, now: now) }
     }
 
     /// Into the box: done, kept and searchable.

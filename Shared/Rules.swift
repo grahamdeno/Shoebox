@@ -91,6 +91,27 @@ struct TodayRules {
             .sorted { ($0.returnDate ?? .distantFuture) < ($1.returnDate ?? .distantFuture) }
     }
 
+    /// Everything not put away, the way the stack brings it: what is on Today first, then by when it comes back.
+    func library(_ all: [Save], now: Date) -> [Save] {
+        let first = queue(all, now: now)
+        let onToday = Set(first.map(\.id))
+        let rest = all.filter { $0.deletedAt == nil && $0.status != .kept && !onToday.contains($0.id) }.sorted {
+            let a = comesBack($0, now: now) ?? Date.distantFuture
+            let b = comesBack($1, now: now) ?? Date.distantFuture
+            return a == b ? $0.createdAt < $1.createdAt : a < b
+        }
+        return first + rest
+    }
+
+    /// When a post that is not on Today comes back. Nil when it is on Today now.
+    func comesBack(_ s: Save, now: Date) -> Date? {
+        if isOnToday(s, now: now) { return nil }
+        if s.status == .away, let due = s.returnDate { return due }
+        // Seen today: back tomorrow morning.
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
+        return calendar.date(byAdding: .hour, value: 8, to: tomorrow) ?? tomorrow
+    }
+
     func kept(_ all: [Save]) -> [Save] {
         all.filter { $0.deletedAt == nil && $0.status == .kept }
             .sorted { $0.updatedAt > $1.updatedAt }
@@ -158,6 +179,19 @@ struct SaveActions {
         s.seenOn = nil
         s.deletedAt = nil
         s.updatedAt = now
+    }
+}
+
+extension SaveActions {
+    /// Next (flick up): back when your why says (a weekday, the weekend, tonight), else tomorrow.
+    /// Dated posts keep their own schedule of reminders. Returns the words for the Undo message.
+    func next(_ s: Save, planner: LaterPlanner, now: Date) -> String {
+        if s.eventDate == nil, let when = planner.match(words: s.note, now: now) {
+            later(s, until: when.date, now: now)
+            return "Back " + (when.label == "Tomorrow" ? "tomorrow" : when.label)
+        }
+        pass(s, now: now)
+        return s.eventDate == nil ? "Back tomorrow" : "Back before the date"
     }
 }
 
