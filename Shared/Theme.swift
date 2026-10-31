@@ -28,6 +28,8 @@ enum Theme {
     static let ink = adaptive(light: 0x0A171D, dark: 0xFFF6E9)
     static let quiet = adaptive(light: 0x5A6B6E, dark: 0x93A4A6)
     static let line = adaptive(light: 0xEADFCC, dark: 0x1E3036)
+    /// A group's card: one step off the ground. Darker Wheat in light, lighter Onyx in dark. No outline.
+    static let card = adaptive(light: 0xF2E7D3, dark: 0x14252D)
 
     // Neumorphic light and shade. Light falls from the top left.
     static let lightSide = Color(UIColor { t in
@@ -64,6 +66,18 @@ enum Theme {
     // The box in the logo. Oceanic, and a lighter Oceanic on Onyx so it shows.
     static let logoBox = adaptive(light: 0x003F47, dark: 0x2F7E88)
     static let logoLid = Color(UIColor(hex: 0xFFBD76))
+    /// The bottom box: Wheat in both modes, with the Nectarine lid on top.
+    static let boxBody = Color(UIColor(hex: 0xFFF6E9))
+    static let boxBodyQuiet = Color(UIColor(hex: 0x5A6B6E))
+    static let logoCards = adaptive(light: 0x5A6B6E, dark: 0xB8C4BF)
+
+    // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
+    // hairline fields, words for actions. Laid out like Scales.
+    static let formGround = ground
+    static let formInk = ink
+    static let formQuiet = quiet
+    static let formLine = adaptive(light: 0xD9CCB6, dark: 0x24363C)
+    static let formAction = adaptive(light: 0x0A171D, dark: 0xFFBD76)
 }
 
 enum Metrics {

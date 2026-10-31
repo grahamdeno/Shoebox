@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Query private var all: [Save]
 
     @State private var perDay = Prefs.perDay
+    @State private var appearance = Prefs.appearance
     @State private var time = DailyTime.date(fromMinute: Prefs.dailyMinute)
     @State private var notificationsOn = Prefs.notificationsOn
     @State private var address = Prefs.inboxAddress
@@ -38,11 +39,12 @@ struct SettingsView: View {
                 .padding(.top, 20)
 
                 section("Each day")
+                card {
                 row {
                     Text("Coming out each day").foregroundStyle(Theme.ink)
                     Spacer()
-                    ForEach([3, 5, 8], id: \.self) { n in
-                        Button("\(n)") { perDay = n; Prefs.perDay = n }
+                    ForEach([5, 10, Prefs.noLimit], id: \.self) { n in
+                        Button(n == Prefs.noLimit ? "All" : "\(n)") { perDay = n; Prefs.perDay = n }
                             .font(.system(size: 17, weight: perDay == n ? .bold : .regular))
                             .foregroundStyle(perDay == n ? Theme.ink : Theme.quiet)
                             .underline(perDay == n)
@@ -81,8 +83,25 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.ink)
                     .frame(minHeight: Metrics.touchMin)
                 }
+                }
+
+                section("Look")
+                card {
+                row {
+                    Text("Appearance").foregroundStyle(Theme.ink)
+                    Spacer()
+                    ForEach([(0, "Auto"), (1, "Light"), (2, "Dark")], id: \.0) { value, name in
+                        Button(name) { appearance = value; Prefs.appearance = value }
+                            .font(.system(size: 17, weight: appearance == value ? .bold : .regular))
+                            .foregroundStyle(appearance == value ? Theme.ink : Theme.quiet)
+                            .underline(appearance == value)
+                            .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin)
+                    }
+                }
+                }
 
                 section("Your Shoebox email")
+                card {
                 if let address {
                     note("Forward an email here and it becomes a post. Write a line above the forward to say why.")
                     row {
@@ -114,8 +133,10 @@ struct SettingsView: View {
                     }
                     if !addressNote.isEmpty { note(addressNote) }
                 }
+                }
 
                 section("Backups")
+                card {
                 note(backupNote)
                 row {
                     Button("Bring in a backup") { importing = true }
@@ -133,8 +154,10 @@ struct SettingsView: View {
                     }
                 }
                 if !importNote.isEmpty { note(importNote) }
+                }
 
                 section("Help")
+                card {
                 row {
                     Button("Show the three moves again") { showMoves = true }
                         .foregroundStyle(Theme.ink)
@@ -142,11 +165,15 @@ struct SettingsView: View {
                     Spacer()
                 }
                 note("To save from Safari or any app: tap Share, then Shoebox. If it isn't in the row, swipe to the end, tap More, then Edit, and add Shoebox to your favorites.")
+                }
 
                 section("Privacy")
+                card {
                 note("Your saves stay on this phone. No account, no ads, no tracking. Link previews and your Shoebox email pass through Shoebox's server and aren't kept there once your phone collects them.")
+                }
 
                 section("Everything")
+                card {
                 if confirmDelete {
                     note("This deletes all \(all.count) saves on this phone. Your backups in Files and iCloud Drive stay.")
                     row {
@@ -165,6 +192,7 @@ struct SettingsView: View {
                             .frame(minHeight: Metrics.touchMin)
                         Spacer()
                     }
+                }
                 }
 
                 Text("Shoebox \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
@@ -221,12 +249,23 @@ struct SettingsView: View {
         dismiss()
     }
 
+    /// The group's label: small caps, muted, above its card.
     private func section(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 13, weight: .medium).lowercaseSmallCaps())
+            .tracking(0.8)
             .foregroundStyle(Theme.quiet)
+            .padding(.leading, 6)
             .padding(.top, 28)
-            .padding(.bottom, 4)
+            .padding(.bottom, 8)
+    }
+
+    private func card<C: View>(@ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 0) { content() }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func note(_ text: String) -> some View {
@@ -234,14 +273,13 @@ struct SettingsView: View {
             .font(.system(size: 15))
             .foregroundStyle(Theme.quiet)
             .lineSpacing(2)
-            .padding(.vertical, 6)
+            .padding(.vertical, 10)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     private func row<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         HStack(spacing: 12) { content() }
             .frame(minHeight: 52)
-            .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
     }
 }
 

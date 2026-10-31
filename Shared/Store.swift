@@ -40,9 +40,17 @@ enum Prefs {
     }
 
     /// How many come out of the box each day.
+    /// How many come out each day. No limit unless one is chosen in Settings.
+    static let noLimit = Int.max
     static var perDay: Int {
-        get { let n = d.integer(forKey: "perDay"); return n == 0 ? 5 : n }
-        set { d.set(newValue, forKey: "perDay") }
+        get { let n = d.integer(forKey: "dailyLimit"); return n <= 0 ? noLimit : n }
+        set { d.set(newValue == noLimit ? 0 : newValue, forKey: "dailyLimit") }
+    }
+
+    /// 0 follows the phone, 1 is always light, 2 is always dark.
+    static var appearance: Int {
+        get { d.integer(forKey: "appearance") }
+        set { d.set(newValue, forKey: "appearance") }
     }
 
     /// When they come out: minutes after midnight. Default 7:30 AM.

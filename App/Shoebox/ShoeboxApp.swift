@@ -30,6 +30,7 @@ struct ShoeboxApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .appearance()
         }
         .modelContainer(container)
     }
@@ -77,4 +78,18 @@ struct RootView: View {
         Backups.dailyBackup(context)
         Task { await Notifier.schedule(context) }
     }
+}
+
+/// Light, dark or follow the phone, from Settings. Read from the App Group so it
+/// changes the moment it is tapped.
+private struct AppearanceModifier: ViewModifier {
+    @AppStorage("appearance", store: AppGroup.defaults) private var appearance = 0
+
+    func body(content: Content) -> some View {
+        content.preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)
+    }
+}
+
+extension View {
+    func appearance() -> some View { modifier(AppearanceModifier()) }
 }

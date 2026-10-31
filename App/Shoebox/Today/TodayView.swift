@@ -39,6 +39,7 @@ struct TodayView: View {
     @State private var flyScale: CGFloat = 1
     @State private var flyOpacity: Double = 1
     @State private var busy = false
+    @State private var bump = 0
 
     private let rules = TodayRules()
     private let actions = SaveActions()
@@ -182,34 +183,34 @@ struct TodayView: View {
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
     }
 
-    /// Your Shoebox, across the bottom. It rises a little as a post is pulled toward it, and its lid
-    /// line lifts and turns Nectarine once the post is far enough to drop in. Tap it or pull it up to open the Box.
+    /// Your Shoebox, across the bottom: a Wheat box with its Nectarine lid on top, like the logo.
+    /// The lid lifts and tips open once a post is far enough to drop in, and the whole box rattles
+    /// when a post is flicked away or dropped into it. Tap it or pull it up to open the Box.
     private var strip: some View {
         let ready = crossed == -1
         let growth = drag > 0 ? min(40, drag * 0.25) : 0
         return VStack(spacing: 0) {
             Spacer()
             ZStack(alignment: .top) {
-                UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22, style: .continuous)
-                    .fill(Theme.box)
-                    .ignoresSafeArea(edges: .bottom)
                 Rectangle()
-                    .fill(ready ? Theme.lid : Theme.boxLid)
-                    .frame(height: ready ? 4 : 3)
-                    .shadow(color: ready ? Theme.lid.opacity(0.7) : .clear, radius: 8)
-                    .padding(.top, ready ? 6 : 12)
-                HStack(alignment: .firstTextBaseline) {
+                    .fill(Theme.boxBody)
+                    .padding(.top, 8)
+                    .shadow(color: .black.opacity(0.28), radius: 14, y: -4)
+                    .ignoresSafeArea(edges: .bottom)
+                HStack(alignment: .center, spacing: 12) {
+                    AppLogo(size: 30, tile: false)
                     Text(ready ? "Let go to put it away" : "Your Shoebox")
                         .font(.system(size: 17, weight: .semibold))
                     Spacer()
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxQuiet)
+                        .foregroundStyle(Theme.boxBodyQuiet)
                 }
-                .foregroundStyle(Theme.boxInk)
+                .foregroundStyle(Theme.lidInk)
                 .padding(.horizontal, 24)
-                .padding(.top, 32)
+                .padding(.top, 34)
+                lid(ready: ready)
             }
             .frame(height: Self.stripHeight + growth)
             .contentShape(Rectangle())
@@ -217,10 +218,66 @@ struct TodayView: View {
             .gesture(DragGesture(minimumDistance: 12).onEnded { v in
                 if v.translation.height < -40 { showBox = true }
             })
+            .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
+                content.offset(x: v.dx)
+            } keyframes: { _ in
+                KeyframeTrack(\.dx) {
+                    LinearKeyframe(0, duration: 0.001)
+                    CubicKeyframe(-4, duration: 0.04)
+                    CubicKeyframe(4, duration: 0.06)
+                    CubicKeyframe(-3, duration: 0.06)
+                    CubicKeyframe(2, duration: 0.06)
+                    CubicKeyframe(-1, duration: 0.06)
+                    CubicKeyframe(0, duration: 0.08)
+                }
+            }
             .animation(.snappy, value: ready)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
             .accessibilityHint("Opens everything you kept")
+        }
+    }
+
+    /// The Nectarine lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
+    /// Bumped, it knocks against the box.
+    private func lid(ready: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Theme.lid
+                .shadow(.inner(color: .white.opacity(0.5), radius: 1, x: 0, y: 1.5)))
+            .frame(height: 16)
+            .padding(.horizontal, -8)
+            .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.18), radius: ready ? 10 : 4, y: ready ? 0 : 2)
+            .rotationEffect(.degrees(ready ? -4 : -0.8), anchor: .leading)
+            .offset(y: ready ? -4 : 0)
+            .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
+                content.rotationEffect(.degrees(v.angle), anchor: .leading).offset(y: v.lift)
+            } keyframes: { _ in
+                KeyframeTrack(\.angle) {
+                    LinearKeyframe(0, duration: 0.001)
+                    CubicKeyframe(-5, duration: 0.05)
+                    CubicKeyframe(3, duration: 0.07)
+                    CubicKeyframe(-3.5, duration: 0.07)
+                    CubicKeyframe(2, duration: 0.07)
+                    CubicKeyframe(-1, duration: 0.06)
+                    CubicKeyframe(0, duration: 0.08)
+                }
+                KeyframeTrack(\.lift) {
+                    LinearKeyframe(0, duration: 0.001)
+                    CubicKeyframe(-5, duration: 0.05)
+                    CubicKeyframe(0, duration: 0.07)
+                    CubicKeyframe(-3, duration: 0.07)
+                    CubicKeyframe(0, duration: 0.07)
+                    CubicKeyframe(-1, duration: 0.06)
+                    CubicKeyframe(0, duration: 0.08)
+                }
+            }
+    }
+
+    /// Rattle the box: the lid knocks and the haptics rustle.
+    private func rattleBox(strong: Bool, after delay: Double = 0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            bump += 1
+            BoxRattle.play(strong: strong)
         }
     }
 
@@ -369,15 +426,14 @@ struct TodayView: View {
     }
 
     private func goNext(_ save: Save, height: CGFloat) {
+        rattleBox(strong: false)
         flyOff(up: true, height: height) { notNow(save) }
     }
 
     private func goAway(_ save: Save, height: CGFloat) {
         // Set down firmly, then it fades away.
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) {
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-        }
+        rattleBox(strong: true, after: 0.18)
         flyOff(up: false, height: height) { putAway(save) }
     }
 
@@ -460,4 +516,11 @@ struct TodayView: View {
         }
         #endif
     }
+}
+
+/// The box's shake, played as keyframes.
+struct BoxShake {
+    var dx: CGFloat = 0
+    var angle: Double = 0
+    var lift: CGFloat = 0
 }

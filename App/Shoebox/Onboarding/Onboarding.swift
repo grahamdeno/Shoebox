@@ -51,9 +51,9 @@ struct Onboarding: View {
 
     private var welcome: some View {
         page(button: "Start", action: next) {
-            LogoTile(size: 132).padding(.bottom, 16)
+            AppLogo(size: 120).padding(.bottom, 16)
             title("Keep it.\nIt comes back to you.")
-            para("Save the things you mean to come back to. Each morning a few come out of the box, with your reason on top. Swipe past, put away, or deal with it.")
+            para("Save the things you mean to come back to. Each morning they come back out of the box, with your reason on top. Swipe past, put away, or deal with it.")
             if let report {
                 Text(report)
                     .font(.system(size: 16))
