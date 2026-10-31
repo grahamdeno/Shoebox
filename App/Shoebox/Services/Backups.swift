@@ -93,6 +93,8 @@ enum Backups {
     }
 
     static func importData(_ data: Data, _ context: ModelContext) throws -> String {
+        // Saves that come in now get their dates read on the next refresh.
+        Prefs.datesBackfilled = false
         if let mine = try? JSONDecoder.shoebox.decode(Export.self, from: data), mine.app == "shoebox-native" {
             return restore(mine, context)
         }

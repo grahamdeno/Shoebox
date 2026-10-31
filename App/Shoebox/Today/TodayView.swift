@@ -522,7 +522,8 @@ struct TodayView: View {
     private func backfillDates() {
         guard !Prefs.datesBackfilled else { return }
         for s in all where s.deletedAt == nil && s.status != .kept && s.eventDate == nil {
-            guard DateReader.apply(to: s), let event = s.eventDate else { continue }
+            // Read as of today, so a date already gone by is never taken, and nothing is moved to Kept unseen.
+            guard DateReader.apply(to: s, asOf: now), let event = s.eventDate else { continue }
             if s.status == .away, let due = s.returnDate,
                let first = actions.reminders(for: event).first(where: { $0 > now }), first < due {
                 s.returnDate = first

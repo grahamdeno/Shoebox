@@ -147,6 +147,12 @@ struct SaveActions {
 
     /// Pulled out of the Box by hand.
     func bringBack(_ s: Save, now: Date) {
+        // A post whose day has gone by would go straight back to Kept; you asked for it, so it stays.
+        if let event = s.eventDate, Calendar.current.startOfDay(for: event) < Calendar.current.startOfDay(for: now) {
+            s.eventDate = nil
+            s.eventHasTime = false
+            s.otherDatesRaw = ""
+        }
         s.status = .today
         s.returnDate = nil
         s.seenOn = nil

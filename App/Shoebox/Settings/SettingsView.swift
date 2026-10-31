@@ -182,7 +182,7 @@ struct SettingsView: View {
 
                 section("Privacy")
                 card {
-                note("Your saves stay on this phone. No account, no ads, no tracking. Link previews, stock photo searches (a few generic words only) and your Shoebox email pass through Shoebox's server and aren't kept there.")
+                note("Your saves stay on this phone. No account, no ads, no tracking. Link previews, stock photo searches (a few generic words only) and your Shoebox email pass through Shoebox's server and aren't kept there. A stock picture is downloaded from Pixabay, which can see your phone's address, but nothing you saved.")
                 }
 
                 section("Everything")
