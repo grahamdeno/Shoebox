@@ -195,9 +195,9 @@ struct ThreeMoves: View {
                 .font(.system(size: 34, weight: .semibold))
                 .tracking(-0.8)
                 .foregroundStyle(Theme.ink)
-            NumberedStep(n: 1, head: "Swipe up", text: "Next one. What you passed comes back tomorrow.")
-            NumberedStep(n: 2, head: "Tap Later", text: "Put it away until a better time. One tap takes the suggestion.")
-            NumberedStep(n: 3, head: "Tap the post", text: "Open it full screen. Done is waiting at the bottom.")
+            NumberedStep(n: 1, head: "Swipe up", text: "Next one. It comes back when your why says, or tomorrow.")
+            NumberedStep(n: 2, head: "Pull down", text: "Into your Shoebox. Done, and kept where you can find it.")
+            NumberedStep(n: 3, head: "Tap it", text: "Opens it full screen.")
             Spacer()
         }
         .padding(.horizontal, 32)

@@ -1,17 +1,13 @@
 import SwiftUI
 import UIKit
 
-/// A post opened full screen, with the bar across the bottom: Later and Done.
+/// A post opened full screen: the picture behind, the words on Liquid Glass, and the same two moves as Today
+/// as words at the bottom: Not now and Put away.
 struct OpenedView: View {
     let save: Save
-    let planner: LaterPlanner
     var onClose: () -> Void
-    var onDone: () -> Void
-    var onLater: (LaterSuggestion) -> Void
-    var onPickDate: () -> Void
-    var onLetGo: () -> Void
-
-    @State private var laterOpen = false
+    var onNotNow: () -> Void
+    var onPutAway: () -> Void
 
     private var image: UIImage? { save.imageData.flatMap(UIImage.init(data:)) }
 
@@ -92,18 +88,6 @@ struct OpenedView: View {
 
             closeButton
 
-            if laterOpen {
-                Color.black.opacity(0.25).ignoresSafeArea().onTapGesture { withAnimation(.snappy) { laterOpen = false } }
-                LaterList(
-                    suggestion: planner.suggestion(for: save, now: Date()),
-                    options: planner.fixedOptions(now: Date()),
-                    onPick: { onLater($0) },
-                    onPickDate: onPickDate,
-                    onLetGo: onLetGo,
-                    onClose: { withAnimation(.snappy) { laterOpen = false } }
-                )
-                .transition(.move(edge: .bottom))
-            }
         }
         .environment(\.colorScheme, .dark)
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
@@ -148,9 +132,23 @@ struct OpenedView: View {
         .padding(.top, 6)
     }
 
-    /// The bar across the bottom.
+    /// The two moves, as words on glass.
     private var strip: some View {
-        BottomBar(leading: "Later", onLeading: { withAnimation(.snappy) { laterOpen = true } },
-                  trailing: "Done", onTrailing: onDone)
+        HStack {
+            Button(action: onNotNow) {
+                Text("Not now").frame(minWidth: 88, minHeight: 52, alignment: .leading).contentShape(Rectangle())
+            }
+            Spacer()
+            Button(action: onPutAway) {
+                Text("Put away").frame(minWidth: 88, minHeight: 52, alignment: .trailing).contentShape(Rectangle())
+            }
+        }
+        .font(.system(size: 18, weight: .semibold))
+        .foregroundStyle(.white)
+        .buttonStyle(.plain)
+        .padding(.horizontal, 22)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 8)
     }
 }

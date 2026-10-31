@@ -9,7 +9,7 @@ xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged --b
 xcrun simctl install "$SIM" "$APP"
 xcrun simctl spawn "$SIM" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true || true
 mkdir -p screens
-SCREENS="${SCREENS:-today lid opened box add clear welcome share time learn settings}"
+SCREENS="${SCREENS:-today up away opened box add clear welcome share time learn settings}"
 for look in light dark; do
   xcrun simctl ui "$SIM" appearance $look
   for screen in $SCREENS; do

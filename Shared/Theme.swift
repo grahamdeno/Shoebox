@@ -51,6 +51,16 @@ enum Theme {
     static let lidInk = Color(UIColor(hex: 0x0A171D))
     static let lidQuiet = Color(UIColor(hex: 0x534938))
 
+    // The palette, by name.
+    static let onyx = Color(UIColor(hex: 0x0A171D))
+    static let oceanic = Color(UIColor(hex: 0x003F47))
+
+    // Your Shoebox, the box across the bottom of Today. Oceanic in both modes, its lid line edge to edge.
+    static let box = Color(UIColor(hex: 0x003F47))
+    static let boxInk = Color(UIColor(hex: 0xFFF6E9))
+    static let boxQuiet = Color(UIColor(hex: 0x9CC3C6))
+    static let boxLid = Color(UIColor(hex: 0xFFF6E9)).opacity(0.45)
+
     // The box in the logo. Oceanic, and a lighter Oceanic on Onyx so it shows.
     static let logoBox = adaptive(light: 0x003F47, dark: 0x2F7E88)
     static let logoLid = Color(UIColor(hex: 0xFFBD76))
@@ -58,9 +68,9 @@ enum Theme {
 
 enum Metrics {
     /// Outer radius = inner radius + padding, so nested corners stay parallel.
-    static let cardRadius: CGFloat = 34
-    static let cardInset: CGFloat = 12
-    static let photoRadius: CGFloat = 22   // cardRadius - cardInset
+    static let cardRadius: CGFloat = 20
+    static let cardInset: CGFloat = 8
+    static let photoRadius: CGFloat = 12   // cardRadius - cardInset
     static let sheetRadius: CGFloat = 28
     static let barRadius: CGFloat = 28
     static let fieldRadius: CGFloat = 16
