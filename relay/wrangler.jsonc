@@ -1,0 +1,18 @@
+{
+  // Shoebox relay (Cloudflare Worker). Same settings as the live deploys (bdba0fc9, 91ae1328).
+  // Deploy from this folder: npx wrangler deploy -c wrangler.jsonc
+  "name": "shoebox-relay",
+  "main": "perplexity-relay.js",
+  "compatibility_date": "2026-10-01",
+  // Keep the variables set in the Cloudflare dashboard (EMAIL_*, AI_* limits) on every deploy.
+  "keep_vars": true,
+  "workers_dev": true,
+  // KV namespace for reminders, inbox mail, AI spend and the photo rate limit.
+  // The id is left out of the repo on purpose. Before deploying, replace the placeholder with the
+  // SHOEBOX namespace id (Cloudflare dashboard: Storage & Databases > KV, or `npx wrangler kv namespace list`).
+  // Don't commit the real id.
+  "kv_namespaces": [{ "binding": "SHOEBOX", "id": "REPLACE_WITH_SHOEBOX_KV_NAMESPACE_ID" }],
+  // Sends reminders that are due.
+  "triggers": { "crons": ["*/15 * * * *"] },
+  "routes": [{ "pattern": "shoebox-api.tangomike.app", "custom_domain": true }]
+}

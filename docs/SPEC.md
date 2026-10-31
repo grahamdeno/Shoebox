@@ -47,17 +47,26 @@ A smoked-glass box across the bottom (dark glass the photo blurs through), under
 
 ### 2.3 The opened post
 
-- The photo fills the screen and stays still while the words scroll over it.
-- Close sits top left on Liquid Glass.
+- The photo fills the screen, darker than on Today (a little over all of it, more behind the words), and stays still while the words scroll over it.
+- **Close** sits top left and **Edit** top right, both words on Liquid Glass.
 - Your reason, the link, then the full text, each on glass.
-- A glass strip along the bottom: **Not now** (same as flick up) and **Put away** (same as pull down).
+- A glass strip along the bottom: **Next** (same as flick up) and **Put away** (same as pull down). A put away post has one word instead: **Bring back**.
 
-### 2.4 Box
+#### Edit
 
-- "Today" on the left and "Settings" on the right, a large "Box" title, then search ("Search everything you kept").
-- Put-away posts grouped by when they come back, then kept posts, dimmed.
-- Search covers the headline, reason, snippet, full text and link.
-- Tap a post and it comes back to Today, first in line.
+- Laid out like Keep something: **Close** and **Keep** at the top, hairline fields (title, words for your own notes, why you kept it, the date it is about), nothing rides the keyboard.
+- It saves on its own a moment after you stop typing and again when you leave. **Keep** saves, taps a haptic and the post shows "Saved". A line under the title says "Changes save as you go" and then "Saved".
+- The date can be added, changed, given a time, or cleared. New words that name a date are read, unless you cleared one yourself.
+- **Delete** is the last word, bottom left, in thumb reach. One tap closes the post and shows Undo for 5 seconds. A delete is soft: the post is hidden from every list and stays in backups.
+
+### 2.4 Shoebox (the library)
+
+- "Today" on the left and "Settings" on the right, a large "Shoebox" title, then search ("Search everything").
+- The list is everything you are not done with, in the order the stack will bring it: what is on Today first, then by when each comes back.
+- One word at the top right, **Put away (41)**, shows only what you are done with, newest first. The title becomes "Put away" and the word becomes **Shoebox**. It does not show when nothing is put away.
+- Search covers the headline, reason, snippet, full text and link, and always looks everywhere. Put away posts that match appear under their own "Put away" heading.
+- Tap a post to open it. Everything else (Next, Put away, Bring back, Edit, Delete) is on the opened post, so each is learned once.
+- The count on the box at the bottom of Today is the posts in this list.
 
 ### 2.5 Keep something, and the share sheet
 
@@ -108,7 +117,7 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
    - The rest of the pile follows, up to the daily limit if one is set in Settings. By default there is no limit, and anything kept during the day joins Today.
    - Posts you passed before go first, then the oldest never seen.
    - Bringing something back from the Box puts it first.
-2. **Flick up = not now.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
+2. **Flick up = Next.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
 3. **Pull down = into your Shoebox.** Done, kept and searchable in the Box.
 4. **Every action is instant, with Undo for 5 seconds.** No confirm dialogs, except Delete everything.
 5. **Dated posts** come back on their own 5 days before, 1 day before and on the day, at 8 AM. Every save is read for the date it is about (section 4.2). The nearest event comes first. Once the day has gone by, the post moves to Kept on its own (never deleted) and stays searchable.

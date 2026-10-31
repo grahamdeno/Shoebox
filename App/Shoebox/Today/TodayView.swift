@@ -47,11 +47,12 @@ struct TodayView: View {
 
     static let upDistance: CGFloat = 100
     static let downDistance: CGFloat = 160
-    static let stripHeight: CGFloat = 110
+    static let stripHeight: CGFloat = 120
 
     private var now: Date { Date() }
     private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
-    private var boxCount: Int { rules.kept(all).count + rules.away(all, now: now).count }
+    /// Everything in the Shoebox that is not put away.
+    private var boxCount: Int { rules.library(all, now: now).count }
     private var anyKept: Bool { all.contains { $0.deletedAt == nil } }
     private var moreWaiting: [Save] { rules.queue(all, now: now).filter { !pickIds.contains($0.id.uuidString) } }
     private var moving: Bool { drag != 0 || fly != 0 }
@@ -107,11 +108,13 @@ struct TodayView: View {
                 save: save,
                 onClose: { opened = nil },
                 onNotNow: { opened = nil; notNow(save) },
-                onPutAway: { opened = nil; putAway(save) }
+                onPutAway: { opened = nil; putAway(save) },
+                onBringBack: { opened = nil; bringBack(save) },
+                onDelete: { opened = nil; deleteSave(save) }
             )
         }
         .sheet(isPresented: $showBox) {
-            BoxView(planner: planner, onBringBack: { bringBack($0) })
+            BoxView(planner: planner, onBringBack: { bringBack($0) }, onHandOff: { if toast == nil { show($0) } })
                 .presentationDetents([.large])
                 .presentationCornerRadius(Metrics.sheetRadius)
         }
@@ -193,8 +196,9 @@ struct TodayView: View {
             Spacer()
             ZStack(alignment: .top) {
                 // Smoked glass: the photo blurs through, so the box belongs to every post.
+                // Smoked glass in the same warm grey in light, dark and over any photo.
                 Color.clear
-                    .glassEffect(.regular.tint(Theme.onyx.opacity(0.55)), in: Rectangle())
+                    .glassEffect(.regular.tint(Theme.boxGlass.opacity(0.88)), in: Rectangle())
                     .padding(.top, 16)
                     .ignoresSafeArea(edges: .bottom)
                 HStack(alignment: .center, spacing: 12) {
@@ -209,7 +213,7 @@ struct TodayView: View {
                 }
                 .foregroundStyle(Theme.boxBody)
                 .padding(.horizontal, 24)
-                .padding(.top, 50)
+                .padding(.top, 68)
                 lid(ready: ready)
             }
             .frame(height: Self.stripHeight + growth)
@@ -245,12 +249,12 @@ struct TodayView: View {
         // the sides, and a shadow cast down onto the box so it sits over it.
         RoundedRectangle(cornerRadius: 7, style: .continuous)
             .fill(LinearGradient(stops: [.init(color: Theme.lid, location: 0),
-                                         .init(color: Theme.lid, location: 0.72),
-                                         .init(color: Theme.lidLip, location: 0.78),
+                                         .init(color: Theme.lid, location: 0.80),
+                                         .init(color: Theme.lidLip, location: 0.85),
                                          .init(color: Theme.lidLip, location: 1)],
                                  startPoint: .top, endPoint: .bottom)
                 .shadow(.inner(color: .white.opacity(0.55), radius: 1, x: 0, y: 1.5)))
-            .frame(height: 34)
+            .frame(height: 54)
             .padding(.horizontal, -8)
             .shadow(color: .black.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
             .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
@@ -349,20 +353,11 @@ struct TodayView: View {
             Spacer()
             HStack {
                 Spacer()
-                HStack(spacing: 2) {
-                    Text(toast.text).opacity(0.8).padding(.leading, 16)
-                    Button("Undo") {
-                        toast.undo()
-                        withAnimation(.snappy) { self.toast = nil }
-                        refreshPick()
-                    }
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: Metrics.touchMin)
+                UndoPill(text: toast.text) {
+                    toast.undo()
+                    withAnimation(.snappy) { self.toast = nil }
+                    refreshPick()
                 }
-                .font(.system(size: 14))
-                .foregroundStyle(Theme.ground)
-                .background(Theme.ink, in: Capsule())
             }
             .padding(.trailing, 16)
             .padding(.bottom, Self.stripHeight + 14)
@@ -447,10 +442,19 @@ struct TodayView: View {
     // MARK: Actions
 
     private func perform(_ text: String, on save: Save, _ change: (Save) -> Void) {
+        perform(on: save) { change($0); return text }
+    }
+
+    /// Makes the change, keeps it, and shows Undo for 5 seconds. The change returns the words for the message.
+    private func perform(on save: Save, _ change: (Save) -> String) {
         let snapshot = SaveSnapshot(save)
-        change(save)
+        let text = change(save)
         try? context.save()
-        let new = Toast(text: text, undo: { snapshot.restore(save); try? context.save() })
+        show(Toast(text: text, undo: { snapshot.restore(save); try? context.save() }))
+    }
+
+    /// Shows Undo for 5 seconds.
+    private func show(_ new: Toast) {
         withAnimation(.snappy) { toast = new }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(5))
@@ -458,15 +462,15 @@ struct TodayView: View {
         }
     }
 
-    /// Not now: back when your why says (a weekday, the weekend, tonight), else tomorrow.
+    /// Next: back when your why says (a weekday, the weekend, tonight), else tomorrow.
     /// Dated posts keep their own schedule of reminders.
     private func notNow(_ save: Save) {
-        if save.eventDate == nil, let when = planner.match(words: save.note, now: now) {
-            let label = when.label == "Tomorrow" ? "tomorrow" : when.label
-            perform("Back \(label)", on: save) { actions.later($0, until: when.date, now: now) }
-        } else {
-            perform(save.eventDate == nil ? "Back tomorrow" : "Back before the date", on: save) { actions.pass($0, now: now) }
-        }
+        perform(on: save) { actions.next($0, planner: planner, now: now) }
+    }
+
+    /// Delete: gone from every list, kept in backups, and Undo for 5 seconds.
+    private func deleteSave(_ save: Save) {
+        perform("Deleted", on: save) { actions.letGo($0, now: now) }
     }
 
     /// Into the box: done, kept and searchable.

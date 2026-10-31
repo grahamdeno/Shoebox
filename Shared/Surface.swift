@@ -137,3 +137,28 @@ struct LineField<Field: View>: View {
 func formPrompt(_ s: String) -> Text {
     Text(s).foregroundStyle(Theme.formQuiet.opacity(0.8))
 }
+
+
+/// A small pill with a message and, when there is one, a word to act on it ("Undo").
+/// Used for Undo after a move and for "Saved" after an edit.
+struct UndoPill: View {
+    let text: String
+    var action: String? = "Undo"
+    var onAction: () -> Void = {}
+
+    var body: some View {
+        HStack(spacing: 2) {
+            Text(text).opacity(0.85).padding(.leading, 16).padding(.trailing, action == nil ? 16 : 0)
+            if let action {
+                Button(action, action: onAction)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: Metrics.touchMin)
+            }
+        }
+        .font(.system(size: 14))
+        .frame(minHeight: action == nil ? 40 : 0)
+        .foregroundStyle(Theme.ground)
+        .background(Theme.ink, in: Capsule())
+    }
+}
