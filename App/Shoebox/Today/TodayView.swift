@@ -47,7 +47,7 @@ struct TodayView: View {
 
     static let upDistance: CGFloat = 100
     static let downDistance: CGFloat = 160
-    static let stripHeight: CGFloat = 92
+    static let stripHeight: CGFloat = 104
 
     private var now: Date { Date() }
     private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
@@ -192,10 +192,10 @@ struct TodayView: View {
         return VStack(spacing: 0) {
             Spacer()
             ZStack(alignment: .top) {
-                Rectangle()
-                    .fill(Theme.boxBody)
-                    .padding(.top, 8)
-                    .shadow(color: .black.opacity(0.28), radius: 14, y: -4)
+                // Smoked glass: the photo blurs through, so the box belongs to every post.
+                Color.clear
+                    .glassEffect(.regular.tint(Theme.onyx.opacity(0.55)), in: Rectangle())
+                    .padding(.top, 12)
                     .ignoresSafeArea(edges: .bottom)
                 HStack(alignment: .center, spacing: 12) {
                     AppLogo(size: 30, tile: false)
@@ -205,11 +205,11 @@ struct TodayView: View {
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxBodyQuiet)
+                        .foregroundStyle(Theme.boxBody.opacity(0.65))
                 }
-                .foregroundStyle(Theme.lidInk)
+                .foregroundStyle(Theme.boxBody)
                 .padding(.horizontal, 24)
-                .padding(.top, 34)
+                .padding(.top, 44)
                 lid(ready: ready)
             }
             .frame(height: Self.stripHeight + growth)
@@ -241,14 +241,21 @@ struct TodayView: View {
     /// The Nectarine lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
     /// Bumped, it knocks against the box.
     private func lid(ready: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(Theme.lid
-                .shadow(.inner(color: .white.opacity(0.5), radius: 1, x: 0, y: 1.5)))
-            .frame(height: 16)
+        // A shoebox top: lit along its top edge, a slightly deeper lip where it folds down over
+        // the sides, and a shadow cast down onto the box so it sits over it.
+        RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(LinearGradient(stops: [.init(color: Theme.lid, location: 0),
+                                         .init(color: Theme.lid, location: 0.72),
+                                         .init(color: Theme.lidLip, location: 0.78),
+                                         .init(color: Theme.lidLip, location: 1)],
+                                 startPoint: .top, endPoint: .bottom)
+                .shadow(.inner(color: .white.opacity(0.55), radius: 1, x: 0, y: 1.5)))
+            .frame(height: 26)
             .padding(.horizontal, -8)
-            .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.18), radius: ready ? 10 : 4, y: ready ? 0 : 2)
-            .rotationEffect(.degrees(ready ? -4 : -0.8), anchor: .leading)
-            .offset(y: ready ? -4 : 0)
+            .shadow(color: .black.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
+            .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
+            .rotationEffect(.degrees(ready ? -4 : -0.6), anchor: .leading)
+            .offset(y: ready ? -6 : 0)
             .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
                 content.rotationEffect(.degrees(v.angle), anchor: .leading).offset(y: v.lift)
             } keyframes: { _ in

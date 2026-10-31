@@ -37,7 +37,7 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 ### 2.2 Your Shoebox (the bottom box)
 
-A Wheat box across the bottom in both modes, with the Nectarine lid on top, hinged at the left like the logo. Inside: the logo, "Your Shoebox" and the count.
+A smoked-glass box across the bottom (dark glass the photo blurs through), under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Inside: the logo, "Your Shoebox" and the count.
 
 - It grows a little as a post is pulled toward it.
 - Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
@@ -152,11 +152,11 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 | Hairlines (fields) | `#D9CCB6` | `#24363C` |
 | Your reason | pale Nectarine `#FFD7AA` | Nectarine at 28% |
 | Action word (Keep, Next) | Onyx | Nectarine `#FFBD76` |
-| Bottom box | Wheat `#FFF6E9`, text Onyx, lid Nectarine | same |
+| Bottom box | smoked glass (Onyx 55% tint), text Wheat, lid Nectarine with a `#E9A35C` lip | same |
 | Logo box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
 
 Each color has one job:
-- Wheat and Onyx are the grounds, and Wheat is the box.
+- Wheat and Onyx are the grounds.
 - Nectarine is the lid, your reason, and the action word in dark mode.
 - Oceanic appears only in the logo and as a light soft-light tint on photos. Not as a surface.
 
