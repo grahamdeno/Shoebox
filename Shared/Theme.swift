@@ -28,6 +28,8 @@ enum Theme {
     static let ink = adaptive(light: 0x0A171D, dark: 0xFFF6E9)
     static let quiet = adaptive(light: 0x5A6B6E, dark: 0x93A4A6)
     static let line = adaptive(light: 0xEADFCC, dark: 0x1E3036)
+    /// A group's card: one step off the ground. Darker Wheat in light, lighter Onyx in dark. No outline.
+    static let card = adaptive(light: 0xF2E7D3, dark: 0x14252D)
 
     // Neumorphic light and shade. Light falls from the top left.
     static let lightSide = Color(UIColor { t in
