@@ -61,7 +61,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 
 ## 5. Design
 
-The design changed on October 31, 2026 to the stack: Scales' moves, full-screen graded photos with words on Liquid Glass, and a Wheat box with a Nectarine lid across the bottom. `docs/SPEC.md` sections 2 and 5 hold the detail and win over anything older here. The Nectarine bar, the Later list and neumorphic cards are retired.
+The design changed on October 31, 2026 to the stack: Scales' moves, full-screen graded photos with words on Liquid Glass, and a smoked-glass box under a Nectarine lid across the bottom. `docs/SPEC.md` sections 2 and 5 hold the detail and win over anything older here. The Nectarine bar, the Later list and neumorphic cards are retired.
 
 ## 6. Architecture
 
