@@ -40,6 +40,18 @@ enum Prefs {
     }
 
     /// How many come out of the box each day.
+    /// Dates have been read from the saves kept before dates were read for every save.
+    static var datesBackfilled: Bool {
+        get { d.bool(forKey: "datesBackfilled1") }
+        set { d.set(newValue, forKey: "datesBackfilled1") }
+    }
+
+    /// Find a stock picture for posts that have none. On unless turned off in Settings.
+    static var stockPictures: Bool {
+        get { d.object(forKey: "stockPictures") as? Bool ?? true }
+        set { d.set(newValue, forKey: "stockPictures") }
+    }
+
     /// How many come out each day. No limit unless one is chosen in Settings.
     static let noLimit = Int.max
     static var perDay: Int {
