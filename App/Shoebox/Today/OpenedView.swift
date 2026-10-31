@@ -53,7 +53,7 @@ struct OpenedView: View {
                             .foregroundStyle(Theme.lidInk)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 18).padding(.vertical, 10)
-                            .glassEffect(.regular.tint(Theme.lid.opacity(0.75)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .glassEffect(.regular.tint(Theme.lid.opacity(0.85)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
 
                     if let url = save.url {
@@ -63,20 +63,24 @@ struct OpenedView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
-                                .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .glassEffect(.regular.tint(Theme.onyx.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                     }
 
                     if !reading.characters.isEmpty {
                         Text(reading)
-                            .font(.system(size: 17))
-                            .lineSpacing(5)
+                            .font(.system(size: 18))
+                            .lineSpacing(6)
                             .foregroundStyle(.white)
                             .tint(.white)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(22)
-                            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+                            .glassEffect(.regular.tint(Theme.onyx.opacity(min(0.7, grade.glassTint + 0.2))), in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+                    }
+
+                    if save.imageSource == "stock", let credit = save.imageCredit {
+                        creditLine(credit)
                     }
                 }
                 .padding(.horizontal, 18)
@@ -95,9 +99,28 @@ struct OpenedView: View {
     /// The photo, full screen and still while the words scroll over it. Without one,
     /// Onyx lit warm from the top corner so the glass still has something to sit on.
     private var backdrop: some View {
-        PostPhoto(id: save.id, data: save.imageData)
-            .ignoresSafeArea()
+        GeometryReader { geo in
+            // The words start about 330 pt down, so the subject sits in the space above them.
+            PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: max(0, geo.size.height - 330))
+        }
+        .ignoresSafeArea()
     }
+
+    /// Pixabay's credit for a stock picture, small, under the words.
+    @ViewBuilder
+    private func creditLine(_ credit: String) -> some View {
+        let text = Text(credit)
+            .font(.system(size: 13))
+            .foregroundStyle(.white.opacity(0.75))
+            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+        if let s = save.imageCreditURL, let url = URL(string: s) {
+            Link(destination: url) { text.underline() }
+        } else {
+            text
+        }
+    }
+
+    private var grade: PhotoGrade { PhotoCache.grade(id: save.id, data: save.imageData) }
 
     private var closeButton: some View {
         VStack {

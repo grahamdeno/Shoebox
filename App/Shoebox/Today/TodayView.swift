@@ -496,18 +496,41 @@ struct TodayView: View {
     // MARK: The day's pick
 
     private func refreshPick() {
+        backfillDates()
+        if rules.retirePast(all, now: now) > 0 { try? context.save() }
         let ids = rules.pick(all, now: now, previousDay: Prefs.pickDay, previousIds: Prefs.pickIds, perDay: Prefs.perDay)
         Prefs.pickDay = rules.dayKey(now)
         Prefs.pickIds = ids
         if ids != pickIds { pickIds = ids }
     }
 
-    /// Fills in link previews for the post on screen and the next two.
+    /// Fills in link previews for the post on screen and the next two, then a stock picture
+    /// for any of them that still has none.
     private func enrichAhead() async {
         for s in queue.prefix(3) where s.enrichedAt == nil && s.url != nil {
             await Relay.enrich(s)
         }
         try? context.save()
+        for s in queue.prefix(3) where s.imageData == nil {
+            await StockPhoto.fill(s)
+        }
+        try? context.save()
+    }
+
+    /// Once, for the saves kept before dates were read for every save: read the date each one names.
+    /// Reading is relative to the day it was kept, so "October 30" in a post kept on October 26 is this year's.
+    private func backfillDates() {
+        guard !Prefs.datesBackfilled else { return }
+        for s in all where s.deletedAt == nil && s.status != .kept && s.eventDate == nil {
+            // Read as of today, so a date already gone by is never taken, and nothing is moved to Kept unseen.
+            guard DateReader.apply(to: s, asOf: now), let event = s.eventDate else { continue }
+            if s.status == .away, let due = s.returnDate,
+               let first = actions.reminders(for: event).first(where: { $0 > now }), first < due {
+                s.returnDate = first
+            }
+        }
+        try? context.save()
+        Prefs.datesBackfilled = true
     }
 
     /// Debug only: `-screen <name>` opens a screen for CI screenshots.
