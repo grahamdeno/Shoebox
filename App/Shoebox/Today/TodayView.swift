@@ -47,7 +47,7 @@ struct TodayView: View {
 
     static let upDistance: CGFloat = 100
     static let downDistance: CGFloat = 160
-    static let stripHeight: CGFloat = 110
+    static let stripHeight: CGFloat = 120
 
     private var now: Date { Date() }
     private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
@@ -196,8 +196,9 @@ struct TodayView: View {
             Spacer()
             ZStack(alignment: .top) {
                 // Smoked glass: the photo blurs through, so the box belongs to every post.
+                // Smoked glass in the same warm grey in light, dark and over any photo.
                 Color.clear
-                    .glassEffect(.regular.tint(Theme.onyx.opacity(0.55)), in: Rectangle())
+                    .glassEffect(.regular.tint(Theme.boxGlass.opacity(0.88)), in: Rectangle())
                     .padding(.top, 16)
                     .ignoresSafeArea(edges: .bottom)
                 HStack(alignment: .center, spacing: 12) {
@@ -212,7 +213,7 @@ struct TodayView: View {
                 }
                 .foregroundStyle(Theme.boxBody)
                 .padding(.horizontal, 24)
-                .padding(.top, 50)
+                .padding(.top, 68)
                 lid(ready: ready)
             }
             .frame(height: Self.stripHeight + growth)
@@ -248,12 +249,12 @@ struct TodayView: View {
         // the sides, and a shadow cast down onto the box so it sits over it.
         RoundedRectangle(cornerRadius: 7, style: .continuous)
             .fill(LinearGradient(stops: [.init(color: Theme.lid, location: 0),
-                                         .init(color: Theme.lid, location: 0.72),
-                                         .init(color: Theme.lidLip, location: 0.78),
+                                         .init(color: Theme.lid, location: 0.80),
+                                         .init(color: Theme.lidLip, location: 0.85),
                                          .init(color: Theme.lidLip, location: 1)],
                                  startPoint: .top, endPoint: .bottom)
                 .shadow(.inner(color: .white.opacity(0.55), radius: 1, x: 0, y: 1.5)))
-            .frame(height: 34)
+            .frame(height: 54)
             .padding(.horizontal, -8)
             .shadow(color: .black.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
             .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
