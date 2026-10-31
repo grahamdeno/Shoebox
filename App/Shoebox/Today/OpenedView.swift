@@ -93,7 +93,7 @@ struct OpenedView: View {
     }
 
     /// The photo, full screen and still while the words scroll over it. Without one,
-    /// a deep Oceanic to Onyx wash so the glass still has something to sit on.
+    /// Onyx lit warm from the top corner so the glass still has something to sit on.
     private var backdrop: some View {
         PostPhoto(id: save.id, data: save.imageData)
             .ignoresSafeArea()

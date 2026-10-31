@@ -83,7 +83,7 @@ private enum PhotoCache {
 /// The picture behind a post, full bleed. It is graded (toned down when bright, lifted
 /// when dark or flat), washed with a little Onyx and Oceanic so every photo belongs to
 /// the same app, and shaded top and bottom so the status bar and the glass stay readable.
-/// With no picture it is a deep Oceanic to Onyx wash.
+/// With no picture it is Onyx lit warm from the top corner.
 struct PostPhoto: View {
     let id: UUID
     let data: Data?
@@ -109,8 +109,12 @@ struct PostPhoto: View {
                 RadialGradient(colors: [.clear, .black.opacity(0.32)],
                                center: .center, startRadius: 160, endRadius: 560)
             } else {
-                LinearGradient(colors: [Theme.oceanic, Theme.onyx],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                // No picture: Onyx lit warm from the top corner, so the words have something to sit on.
+                ZStack {
+                    Theme.onyx
+                    RadialGradient(colors: [Theme.lid.opacity(0.30), Theme.lid.opacity(0.06), .clear],
+                                   center: .topLeading, startRadius: 0, endRadius: 620)
+                }
             }
             LinearGradient(colors: [.black.opacity(0.30), .clear, .clear, .black.opacity(0.58)],
                            startPoint: .top, endPoint: .bottom)
