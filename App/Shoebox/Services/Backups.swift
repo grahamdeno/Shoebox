@@ -3,54 +3,92 @@ import ShoeboxCore
 import SwiftData
 
 /// Bringing saves in (Shoebox 1 backups and this app's own) and keeping a copy safe.
-/// Nothing here deletes a backup, and importing the same file twice adds nothing.
+/// Imports only add, and importing the same file twice adds nothing. Daily copies keep the last 7 and the biggest.
 @MainActor
 enum Backups {
     static let cloudId = "iCloud.com.grahamdeno.shoebox"
 
-    /// Documents/Backups here, and the same folder in iCloud Drive.
+    /// The iCloud container, looked up once off the main thread (the lookup can block for seconds).
+    private static var cloudRoot: URL?
+    private static var cloudResolved = false
+
+    static func resolveCloud() async {
+        guard !cloudResolved else { return }
+        let id = cloudId
+        cloudRoot = await Task.detached { FileManager.default.url(forUbiquityContainerIdentifier: id) }.value
+        cloudResolved = true
+    }
+
+    /// Documents/Backups here, and the same folder in iCloud Drive once it's known.
     static var folders: [URL] {
         var places: [URL] = []
         if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             places.append(docs.appending(path: "Backups", directoryHint: .isDirectory))
         }
-        if let cloud = FileManager.default.url(forUbiquityContainerIdentifier: cloudId) {
-            places.append(cloud.appending(path: "Documents/Backups", directoryHint: .isDirectory))
+        if let cloudRoot {
+            places.append(cloudRoot.appending(path: "Documents/Backups", directoryHint: .isDirectory))
         }
         return places
     }
 
-    /// The newest Shoebox 1 backup (`shoebox-backup-YYYY-MM-DD.json`) in either folder.
-    static func newestOldBackup() -> URL? {
-        var found: [(name: String, url: URL)] = []
-        for dir in folders {
-            if dir.path().contains("Mobile Documents") {
-                try? FileManager.default.startDownloadingUbiquitousItem(at: dir)
-            }
-            let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path())) ?? []
-            for n in names where n.hasPrefix("shoebox-backup-") && n.hasSuffix(".json") {
-                found.append((n, dir.appending(path: n)))
-            }
-        }
-        return found.max { $0.name < $1.name }?.url
+    /// A Shoebox 1 backup name from a folder listing. iCloud lists files that aren't downloaded
+    /// yet as ".shoebox-backup-2026-10-01.json.icloud"; those count too.
+    nonisolated static func oldBackupName(_ listed: String) -> String? {
+        var n = listed
+        if n.hasPrefix("."), n.hasSuffix(".icloud") { n = String(n.dropFirst().dropLast(".icloud".count)) }
+        return n.hasPrefix("shoebox-backup-") && n.hasSuffix(".json") ? n : nil
     }
 
+    /// The newest Shoebox 1 backup (`shoebox-backup-YYYY-MM-DD.json`) in these folders, read.
+    /// Runs off the main thread: a coordinated read waits for iCloud to download the file.
+    nonisolated static func readNewestOldBackup(in dirs: [URL]) -> Data? {
+        var found: [(name: String, url: URL)] = []
+        for dir in dirs {
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path())) ?? []
+            for listed in names {
+                guard let n = oldBackupName(listed) else { continue }
+                let url = dir.appending(path: n)
+                if listed != n { try? FileManager.default.startDownloadingUbiquitousItem(at: url) }
+                found.append((n, url))
+            }
+        }
+        guard let newest = found.max(by: { $0.name < $1.name })?.url else { return nil }
+        return coordinatedRead(newest)
+    }
+
+    nonisolated static func coordinatedRead(_ url: URL) -> Data? {
+        var data: Data?
+        var err: NSError?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &err) { data = try? Data(contentsOf: $0) }
+        return data ?? (try? Data(contentsOf: url))
+    }
+
+    private static var inFlight: Task<String?, Never>?
+
     /// First launch: bring Shoebox 1's saves over if a backup is on this phone or in iCloud Drive.
-    static func autoImport(_ context: ModelContext) -> String? {
-        guard !Prefs.importChecked else { return nil }
-        guard let url = newestOldBackup(), let report = try? importFile(url, context) else { return nil }
-        Prefs.importChecked = true
-        Prefs.importReport = report
-        return report
+    /// Tries again on later launches until one is found. Callers at the same moment share one run.
+    static func autoImport(_ context: ModelContext) async -> String? {
+        if Prefs.importChecked { return Prefs.importReport }
+        if let inFlight { return await inFlight.value }
+        let task = Task<String?, Never> { @MainActor in
+            await resolveCloud()
+            let dirs = folders
+            guard let data = await Task.detached(operation: { readNewestOldBackup(in: dirs) }).value,
+                  let report = try? importData(data, context) else { return nil }
+            Prefs.importChecked = true
+            Prefs.importReport = report
+            return report
+        }
+        inFlight = task
+        let result = await task.value
+        inFlight = nil
+        return result
     }
 
     static func importFile(_ url: URL, _ context: ModelContext) throws -> String {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        var coordinated: Data?
-        var err: NSError?
-        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &err) { coordinated = try? Data(contentsOf: $0) }
-        guard let data = coordinated ?? (try? Data(contentsOf: url)) else { throw BackupImporter.Failure.notABackup }
+        guard let data = coordinatedRead(url) else { throw BackupImporter.Failure.notABackup }
         return try importData(data, context)
     }
 
@@ -221,12 +259,31 @@ enum Backups {
             if (try? data.write(to: dir.appending(path: name), options: .atomic)) != nil { wrote = true }
             let mine = ((try? FileManager.default.contentsOfDirectory(atPath: dir.path())) ?? [])
                 .filter { $0.hasPrefix("shoebox-native-backup-") }.sorted()
-            for old in mine.dropLast(7) { try? FileManager.default.removeItem(at: dir.appending(path: old)) }
+            // Keep the last 7, and always the biggest one, so a store that shrank by accident
+            // can't push the good copies out after a week.
+            let biggest = mine.max { size(dir.appending(path: $0)) < size(dir.appending(path: $1)) }
+            for old in mine.dropLast(7) where old != biggest {
+                try? FileManager.default.removeItem(at: dir.appending(path: old))
+            }
         }
         if wrote {
             AppGroup.defaults.set(key, forKey: "lastBackup")
             AppGroup.defaults.set(Date(), forKey: "lastBackupAt")
         }
+    }
+
+    private static func size(_ url: URL) -> Int {
+        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+    }
+
+    /// Writes one copy to every backup folder. True only if at least one copy landed.
+    static func writeCopy(_ data: Data, named name: String) -> Bool {
+        var wrote = false
+        for dir in folders {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            if (try? data.write(to: dir.appending(path: name), options: .atomic)) != nil { wrote = true }
+        }
+        return wrote
     }
 
     static var lastBackupAt: Date? { AppGroup.defaults.object(forKey: "lastBackupAt") as? Date }

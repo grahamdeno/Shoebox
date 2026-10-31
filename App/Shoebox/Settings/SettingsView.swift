@@ -207,12 +207,12 @@ struct SettingsView: View {
     }
 
     private func deleteEverything() {
-        if let data = Backups.export(context) {
-            // One last copy first, so this can be undone from Files.
-            for dir in Backups.folders {
-                try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-                try? data.write(to: dir.appending(path: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json"))
-            }
+        // One last copy first, so this can be undone from Files. No copy, no delete.
+        guard let data = Backups.export(context),
+              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
+            importNote = "Couldn't save a backup first, so nothing was deleted."
+            confirmDelete = false
+            return
         }
         for s in all { context.delete(s) }
         try? context.save()

@@ -35,8 +35,8 @@ struct Onboarding: View {
             default: break
             }
             #endif
-            if report == nil { report = Backups.autoImport(context) }
         }
+        .task { if report == nil { report = await Backups.autoImport(context) } }
     }
 
     private func next() { withAnimation(.snappy) { step += 1 } }

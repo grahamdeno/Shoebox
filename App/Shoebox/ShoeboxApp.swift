@@ -63,7 +63,8 @@ struct RootView: View {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "demo") { return }
         #endif
-        _ = Backups.autoImport(context)
+        await Backups.resolveCloud()
+        _ = await Backups.autoImport(context)
         await Inbox.collect(context)
         await Notifier.schedule(context)
     }
