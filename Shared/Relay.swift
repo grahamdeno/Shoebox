@@ -78,6 +78,8 @@ enum Relay {
             if let data = await picture(picURL) {
                 save.imageData = data
                 save.imageSource = "page"
+                save.imageCredit = nil
+                save.imageCreditURL = nil
             }
         }
         Capture.adoptDates(save, now: Date())

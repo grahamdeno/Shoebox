@@ -34,6 +34,8 @@ enum StockPhoto {
         s.imageData = data
         s.imageURL = choice.url
         s.imageSource = "stock"
+        s.imageCredit = choice.by.map { "Photo by \($0) on Pixabay" } ?? "Photo from Pixabay"
+        s.imageCreditURL = choice.page
         s.updatedAt = Date()
     }
 

@@ -78,6 +78,10 @@ struct OpenedView: View {
                             .padding(22)
                             .glassEffect(.regular.tint(Theme.onyx.opacity(min(0.7, grade.glassTint + 0.2))), in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
                     }
+
+                    if save.imageSource == "stock", let credit = save.imageCredit {
+                        creditLine(credit)
+                    }
                 }
                 .padding(.horizontal, 18)
                 .padding(.bottom, 32)
@@ -100,6 +104,20 @@ struct OpenedView: View {
             PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: max(0, geo.size.height - 330))
         }
         .ignoresSafeArea()
+    }
+
+    /// Pixabay's credit for a stock picture, small, under the words.
+    @ViewBuilder
+    private func creditLine(_ credit: String) -> some View {
+        let text = Text(credit)
+            .font(.system(size: 13))
+            .foregroundStyle(.white.opacity(0.75))
+            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+        if let s = save.imageCreditURL, let url = URL(string: s) {
+            Link(destination: url) { text.underline() }
+        } else {
+            text
+        }
     }
 
     private var grade: PhotoGrade { PhotoCache.grade(id: save.id, data: save.imageData) }

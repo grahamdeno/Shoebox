@@ -52,6 +52,9 @@ final class Save {
 
     /// Where the picture came from: "page" (the link's own), "photo" (yours) or "stock" (found for you).
     var imageSource: String?
+    /// For a stock picture: who took it and where to see it, shown under the words.
+    var imageCredit: String?
+    var imageCreditURL: String?
     /// When a stock picture was last looked for, so a miss is retried tomorrow and not every launch.
     var stockTriedAt: Date?
 
