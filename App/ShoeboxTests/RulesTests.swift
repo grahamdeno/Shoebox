@@ -136,6 +136,15 @@ final class RulesTests: XCTestCase {
         XCTAssertTrue(rules.today([a, b], ids: again, now: now).isEmpty)
     }
 
+    func testNoLimitShowsEverythingAndPicksUpNewSavesTheSameDay() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let first = rules.pick(pile, now: now, previousDay: nil, previousIds: [], perDay: .max)
+        XCTAssertEqual(first.count, 9)
+        let late = Save(title: "late", createdAt: date(2026, 10, 30, 7))
+        let again = rules.pick(pile + [late], now: now, previousDay: rules.dayKey(now), previousIds: first, perDay: .max)
+        XCTAssertEqual(rules.today(pile + [late], ids: again, now: now).last?.title, "late")
+    }
+
     func testBylineReadsLikeAPerson() {
         let s = Save(title: "Trail", origin: "Safari", createdAt: date(2026, 10, 16))
         XCTAssertEqual(s.byline(now: date(2026, 10, 30, 12)), "You, 2 weeks ago, from Safari")

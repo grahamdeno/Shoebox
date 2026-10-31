@@ -64,6 +64,15 @@ enum Theme {
     // The box in the logo. Oceanic, and a lighter Oceanic on Onyx so it shows.
     static let logoBox = adaptive(light: 0x003F47, dark: 0x2F7E88)
     static let logoLid = Color(UIColor(hex: 0xFFBD76))
+    static let logoCards = adaptive(light: 0x5A6B6E, dark: 0xB8C4BF)
+
+    // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
+    // hairline fields, words for actions. Laid out like Scales.
+    static let formGround = ground
+    static let formInk = ink
+    static let formQuiet = quiet
+    static let formLine = adaptive(light: 0xD9CCB6, dark: 0x24363C)
+    static let formAction = adaptive(light: 0x0A171D, dark: 0xFFBD76)
 }
 
 enum Metrics {

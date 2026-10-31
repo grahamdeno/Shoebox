@@ -11,14 +11,9 @@ struct PostCard: View {
     /// Room left at the bottom for the box.
     var bottomRoom: CGFloat
 
-    private var image: UIImage? { save.imageData.flatMap(UIImage.init(data:)) }
-
     var body: some View {
         ZStack(alignment: .bottom) {
-            backdrop
-            LinearGradient(colors: [.black.opacity(0.28), .clear, .clear, .black.opacity(0.55)],
-                           startPoint: .top, endPoint: .bottom)
-                .accessibilityHidden(true)
+            PostPhoto(id: save.id, data: save.imageData)
             words
                 .padding(.horizontal, 12)
                 .padding(.bottom, insets.bottom + bottomRoom + 16)
@@ -26,20 +21,6 @@ struct PostCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.onyx)
         .environment(\.colorScheme, .dark)
-    }
-
-    @ViewBuilder
-    private var backdrop: some View {
-        if let image {
-            // The picture sits in an overlay so its size never changes the size of the card.
-            Color.clear
-                .overlay { Image(uiImage: image).resizable().scaledToFill() }
-                .clipped()
-                .accessibilityHidden(true)
-        } else {
-            LinearGradient(colors: [Theme.oceanic, Theme.onyx], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .accessibilityHidden(true)
-        }
     }
 
     private var words: some View {
@@ -50,7 +31,7 @@ struct PostCard: View {
                     .foregroundStyle(Theme.lid)
             }
             Text(save.headline)
-                .font(.system(size: image == nil ? 34 : 30, weight: .bold))
+                .font(.system(size: save.imageData == nil ? 34 : 30, weight: .bold))
                 .tracking(-0.6)
                 .foregroundStyle(.white)
                 .lineLimit(5)

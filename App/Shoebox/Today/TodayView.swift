@@ -190,26 +190,27 @@ struct TodayView: View {
         return VStack(spacing: 0) {
             Spacer()
             ZStack(alignment: .top) {
-                UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22, style: .continuous)
-                    .fill(Theme.box)
+                Color.clear
+                    .glassEffect(.regular, in: UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22, style: .continuous))
                     .ignoresSafeArea(edges: .bottom)
                 Rectangle()
-                    .fill(ready ? Theme.lid : Theme.boxLid)
+                    .fill(ready ? Theme.lid : Theme.ink.opacity(0.22))
                     .frame(height: ready ? 4 : 3)
                     .shadow(color: ready ? Theme.lid.opacity(0.7) : .clear, radius: 8)
                     .padding(.top, ready ? 6 : 12)
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center, spacing: 12) {
+                    AppLogo(size: 30)
                     Text(ready ? "Let go to put it away" : "Your Shoebox")
                         .font(.system(size: 17, weight: .semibold))
                     Spacer()
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxQuiet)
+                        .foregroundStyle(Theme.quiet)
                 }
-                .foregroundStyle(Theme.boxInk)
+                .foregroundStyle(Theme.ink)
                 .padding(.horizontal, 24)
-                .padding(.top, 32)
+                .padding(.top, 26)
             }
             .frame(height: Self.stripHeight + growth)
             .contentShape(Rectangle())
