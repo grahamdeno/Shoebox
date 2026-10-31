@@ -9,7 +9,6 @@ struct OpenedView: View {
     var onNotNow: () -> Void
     var onPutAway: () -> Void
 
-    private var image: UIImage? { save.imageData.flatMap(UIImage.init(data:)) }
 
     /// The full text with links made tappable: the email, the note, or the page's text.
     private var reading: AttributedString {
@@ -32,7 +31,7 @@ struct OpenedView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     // The photo shows through first; the words sit low, like a poster.
-                    Color.clear.frame(height: image == nil ? 120 : 330)
+                    Color.clear.frame(height: save.imageData == nil ? 120 : 330)
 
                     VStack(spacing: 8) {
                         Text(save.headline)
@@ -96,20 +95,8 @@ struct OpenedView: View {
     /// The photo, full screen and still while the words scroll over it. Without one,
     /// a deep Oceanic to Onyx wash so the glass still has something to sit on.
     private var backdrop: some View {
-        ZStack {
-            if let image {
-                Color.clear
-                    .overlay { Image(uiImage: image).resizable().scaledToFill() }
-                    .clipped()
-                LinearGradient(colors: [.black.opacity(0.25), .clear, .black.opacity(0.55)],
-                               startPoint: .top, endPoint: .bottom)
-            } else {
-                LinearGradient(colors: [Color(UIColor(hex: 0x003F47)), Color(UIColor(hex: 0x0A171D))],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
-        }
-        .ignoresSafeArea()
-        .accessibilityHidden(true)
+        PostPhoto(id: save.id, data: save.imageData)
+            .ignoresSafeArea()
     }
 
     private var closeButton: some View {
