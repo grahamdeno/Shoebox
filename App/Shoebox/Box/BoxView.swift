@@ -60,9 +60,7 @@ struct BoxView: View {
 
             TextField("Search everything you kept", text: $search)
                 .font(.system(size: 16))
-                .padding(14)
-                .background(Theme.sheet, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+                .well()
                 .padding(.horizontal, 24)
                 .submitLabel(.search)
 

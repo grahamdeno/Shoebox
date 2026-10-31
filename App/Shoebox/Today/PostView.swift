@@ -12,33 +12,48 @@ struct PostView: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            if image == nil { Spacer(minLength: 0) }
+            card
+            Spacer(minLength: 0)
+            if image == nil { Spacer(minLength: 0) }
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+    }
+
+    /// The post as a raised card. A photo sits pressed into it, inset by the card's padding,
+    /// so the photo's corners run parallel to the card's.
+    private var card: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let image {
                 // The picture sits in an overlay so its size never changes the width of the screen.
                 Color.clear
                     .frame(maxWidth: .infinity)
-                    .frame(height: 300)
+                    .frame(height: 280)
                     .overlay {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFill()
                     }
                     .clipShape(RoundedRectangle(cornerRadius: Metrics.photoRadius, style: .continuous))
-                    .padding(.top, 20)
-                    .padding(.bottom, 26)
+                    .recessedRim(Metrics.photoRadius)
+                    .padding(Metrics.cardInset)
                     .accessibilityHidden(true)
-                details(titleSize: 30, snippetLines: 3)
-                Spacer(minLength: 0)
+                details(titleSize: 28, snippetLines: 3)
+                    .padding(.horizontal, 22)
+                    .padding(.top, 10)
+                    .padding(.bottom, 26)
             } else {
-                Spacer(minLength: 0)
-                details(titleSize: 38, snippetLines: 6)
-                Spacer(minLength: 0)
-                Spacer(minLength: 0)
+                details(titleSize: 36, snippetLines: 6)
+                    .padding(.horizontal, 26)
+                    .padding(.vertical, 34)
             }
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .raised(Metrics.cardRadius)
     }
 
     private func details(titleSize: CGFloat, snippetLines: Int) -> some View {
@@ -52,10 +67,10 @@ struct PostView: View {
                 Text(save.note)
                     .font(.system(size: 16))
                     .foregroundStyle(Theme.noteInk)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .inset(10, fill: Theme.noteFill)
+                    .padding(.bottom, 14)
             }
             Text(save.headline)
                 .font(.system(size: titleSize, weight: .semibold))
@@ -71,7 +86,6 @@ struct PostView: View {
                     .foregroundStyle(Theme.quiet)
                     .lineSpacing(3)
                     .lineLimit(snippetLines)
-                    .padding(.trailing, 40)
             }
             if let event = save.eventDate {
                 Text(comesBack(event))

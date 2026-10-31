@@ -18,10 +18,10 @@ The pictures are in `docs/design/screens/` and on the "Shoebox 2.0 screens" desi
 
 | # | Screen | Picture |
 |---|---|---|
-| 1 | Today, a photo post, the lid at rest | `01-main.png` |
+| 1 | Today, a photo post, the bar | `01-main.png` |
 | 2 | Today, a dated text post | `02-todaytext.png` |
-| 3 | Tap the lid: the Later list | `03-lidopen.png` |
-| 4 | Flick out of the lid: the opened post | `04-opened.png` |
+| 3 | Tap Later: the Later list | `03-lidopen.png` |
+| 4 | Tap Open: the opened post | `04-opened.png` |
 | 5 | Box | `05-box.png` |
 | 6 | + Keep something | `06-add.png` |
 | 7 | Today's clear | `07-clear.png` |
@@ -34,32 +34,33 @@ The pictures are in `docs/design/screens/` and on the "Shoebox 2.0 screens" desi
 
 The whole app, almost. Full screen, one post per screen, like Scales. No stack of cards, no list, no second sort screen.
 
-- **Top bar, all words:** Box (left), "5 left today" (plain information, not a button), + (right).
-- **A post:** a byline ("You, 2 weeks ago, from Safari"), your reason as a Nectarine-tint highlight, the headline, and a short snippet. A photo sits above when the post has a good one, 300 pt tall with 18 pt corners. Text posts (emails, notes) are type only, with a larger headline set lower on the screen.
+- **Top bar:** Box (left, a word), "5 left today" (plain information, not a button), + (right, a small raised circle).
+- **A post:** a raised neumorphic card in the ground color (34 pt corners). Inside: a byline ("You, 2 weeks ago, from Safari"), your reason pressed into the card in a Nectarine tint, the headline, and a short snippet. A photo sits pressed into the top of the card when the post has a good one, 280 pt tall, inset 12 pt with 22 pt corners (outer radius = inner radius + padding). Text posts (emails, notes) are type only, with a larger headline, the card centered on the screen.
 - **Dated posts** add one line: "Comes back Nov 7, Nov 11 and Nov 12 on its own".
-- **Bottom left:** "Swipe up for the next one", in quiet text.
-- **Bottom right:** the box top (section 2.2).
+- **Above the bar:** "Swipe up for the next one", in quiet text.
+- **The bar** (section 2.2) across the bottom.
 - **Lots of white space.** No avatars, no badges, no icons.
 
-### 2.2 The box top
+### 2.2 The bar
 
-The brand made into a control: a Nectarine lid (`#FFBD76`) with an Oceanic lip (a 9 pt band along its top edge), the same lid as the app icon. It is the one colored control on screen.
+A full-width Nectarine (`#FFBD76`) bar across the bottom, top corners 28 pt, running under the home indicator. Words on each end, nothing else. It is the one colored control on screen. On Today: **Later** on the left, **Open** on the right.
 
-- **At rest:** about 128 by 92 pt, in the bottom-right thumb corner, 20 pt from the edge, with one word: **Later**. It is only slightly smaller than its open size.
-- **Tap it:** it grows up from the corner into the Later list:
+- **Tap Later:** the Later list rises from the bar:
   - "Bring it back" heading
-  - the suggestion, highlighted `#FFDBB4`, with its reason ("Suggested, it's a weekend trip")
+  - the suggestion, pressed in `#FFDBB4`, with its reason ("Suggested, it's a weekend trip")
   - This weekend
-  - Next week
+  - Next week (left out when it is the suggestion)
   - Pick a date
   - Let go and Close, set apart at the bottom
-- **Flick out of it** (drag more than 40 pt): the post opens full screen.
+- **Tap Open, or tap the post:** the post opens full screen.
 
 ### 2.3 The opened post
 
-- The photo runs edge to edge at the top, with Close top left.
-- Then the byline, headline, your reason, "Open the page on example.com", and the full text with links tappable.
-- **The strip:** the lid comes with the post and becomes a full-width Nectarine strip along the bottom, with **Later** on the left and **Done** on the right. Later raises the same list from the strip.
+- The photo fills the whole screen and stays still while the words scroll over it. Without a photo, a deep Oceanic to Onyx wash.
+- Close sits top left on Liquid Glass.
+- The headline, large and centered in white, sits low over the photo with the byline under it.
+- Your reason on Nectarine-tinted glass, "Open the page on example.com" on glass, then the full text on a large glass panel, links tappable.
+- **The bar:** **Later** on the left and **Done** on the right. Later raises the same list.
 - Done appears only here. Opening a post is dealing with it.
 
 ### 2.4 Box
@@ -74,24 +75,24 @@ The brand made into a control: a Nectarine lid (`#FFBD76`) with an Oceanic lip (
 
 - A sheet with two fields: "Link or note" ("Paste a link or write a note") and "Why are you keeping it? (optional)" ("Before the trip").
 - "Keep a photo instead" opens Photos.
-- Cancel on the left, the lid as a Keep button on the right.
+- The bar along the bottom of the sheet: Cancel on the left, Keep on the right. Fields are pressed into the sheet.
 - The note under the fields: "Your why decides when it comes back. Say nothing and it comes back tomorrow."
 - Several links pasted together become several saves. A link that's already kept isn't kept twice.
 
 ### 2.6 Today's clear
 
-The box mark (an Oceanic box, the Nectarine lid ajar), then "Today's clear." and "6 things are waiting in the Box. The next ones come out tomorrow."
+The box mark (an Oceanic box, the Nectarine lid ajar) on a raised tile, then "Today's clear." and "6 things are waiting in the Box. The next ones come out tomorrow."
 
 With nothing kept yet, it says "Nothing kept yet." and how to start: share a page from Safari or any app, or tap +.
 
 ### 2.7 First run
 
-One idea per screen, one clear choice, the lid as the button in the thumb corner. Graham loved the old onboarding because it was seamless: easy choices, clear actions and clear results. Keep it that way.
+One idea per screen, one clear choice, the bar along the bottom. Graham loved the old onboarding because it was seamless: easy choices, clear actions and clear results. Keep it that way.
 
-1. **Welcome.** The box mark, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint ("214 saves and your email address came over from Shoebox 1."). Lid: Start.
-2. **Save from anywhere.** Three numbered steps (Tap Share, Tap Shoebox, Say why and tap Keep), then "Or forward email". It shows your Shoebox address, or a first-name field and "Get my address". Skip on the left, lid: Next.
-3. **When should they come out?** A time wheel and one line about the single daily notification. Not now on the left, lid: Turn on (asks for notification permission).
-4. **Three moves. That's the whole app.** Swipe up; Tap the lid; Flick out of the lid. The lid pulses where it will be, labeled "Try it", and it lands on Today.
+1. **Welcome.** The box mark, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint ("214 saves and your email address came over from Shoebox 1."). Bar: Start.
+2. **Save from anywhere.** Three numbered steps (Tap Share, Tap Shoebox, Say why and tap Keep), then "Or forward email". It shows your Shoebox address, or a first-name field and "Get my address". Bar: Skip on the left, Next on the right.
+3. **When should they come out?** A time wheel and one line about the single daily notification. Bar: Not now on the left, Turn on on the right (asks for notification permission).
+4. **Three moves. That's the whole app.** Swipe up; Tap Later; Tap the post. The bar says "Try it", and it lands on Today.
 
 Settings has "Show the three moves again".
 
@@ -160,28 +161,31 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 
 | Job | Light | Dark |
 |---|---|---|
-| Surface | Wheat `#FFF6E9` | Oceanic `#003F47` (never black) |
-| Sheet | `#FFFCF7` | `#144E54` |
+| Surface | Wheat `#FFF6E9` | Onyx `#0A171D` |
+| Sheet | `#FFF9F0` | `#111F26` |
 | Text | Onyx `#0A171D` | Wheat `#FFF6E9` |
-| Quiet (dates, sources) | `#5A6B6E` | `#B8C4BF` |
-| Lines | `#EADFCC` | `#295C61` |
-| Your reason | pale Nectarine `#FFD7AA`, text Onyx | Nectarine at 30%, text `#FFE2BD` |
-| Box top | Nectarine `#FFBD76`, text Onyx, suggestion `#FFDBB4` | same |
-| Box top lip | Oceanic `#003F47` | Onyx `#0A171D` |
+| Quiet (dates, sources) | `#5A6B6E` | `#93A4A6` |
+| Lines | `#EADFCC` | `#1E3036` |
+| Light edge (neumorphic) | white 90% | `#1C3038` 90% |
+| Shade (neumorphic) | `#7A5A36` 22% | black 75% |
+| Your reason | pale Nectarine `#FFD7AA`, text Onyx | Nectarine at 28%, text `#FFE2BD` |
+| The bar | Nectarine `#FFBD76`, text Onyx, suggestion `#FFDBB4` | same |
 | Logo box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
 
 Each color has one job:
-- Wheat is the ground, Onyx is the text.
+- Wheat is the light ground; Onyx is the dark ground and the light text.
 - The pale Nectarine tint is your own words, and nothing else.
-- Oceanic is the box in the logo, the lid lip, and the dark ground.
-- Nectarine is the box top: put away, open, done.
+- Oceanic is the box in the logo, and the wash behind an opened post with no photo.
+- Nectarine is the bar: put away, open, done.
+
+Depth comes from paired shadows on the ground color, not from more colors: raised for the post and the + button, pressed in for photos, fields and your reason.
 
 ### 5.2 Type and shape
 
 - SF Pro throughout.
 - Headline 30 pt semibold on photo posts, 38 pt on text posts, tracking about -0.7.
 - Snippet 17 pt, quiet. Byline 14 pt, quiet.
-- Photo corners 18 pt; sheets 24 pt top corners; the lid 18 pt.
+- Card corners 34 pt, photos inset 12 pt with 22 pt corners; sheets and the bar 28 pt top corners; fields 16 pt.
 - Touch targets at least 44 pt.
 - Actions are words: never pills, never icon-only buttons.
 
@@ -191,7 +195,7 @@ Shoebox 1's layered Liquid Glass icon (`App/Shoebox/AppIcon.icon`: lid, box and 
 
 | Layer | Light | Dark |
 |---|---|---|
-| Ground | Wheat `#FFF6E9` | Oceanic `#003F47` |
+| Ground | Wheat `#FFF6E9` | Onyx `#0A171D` |
 | Box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
 | Cards | `#5A6B6E` | `#B8C4BF` |
 | Lid | Nectarine `#FFBD76` | Nectarine `#FFBD76` |

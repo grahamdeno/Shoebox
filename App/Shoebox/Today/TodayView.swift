@@ -60,9 +60,11 @@ struct TodayView: View {
                     Text("Swipe up for the next one")
                         .font(.system(size: 13))
                         .foregroundStyle(Theme.quiet)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 24)
-                        .padding(.bottom, 44)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 18)
+                        .padding(.bottom, 14)
+                    BottomBar(leading: "Later", onLeading: { withAnimation(.snappy) { lidOpen = true } },
+                              trailing: "Open", onTrailing: { opened = OpenedPost(save: current) })
                 } else {
                     clearState
                 }
@@ -124,9 +126,11 @@ struct TodayView: View {
             }
             Spacer()
             Button { showAdd = true } label: {
-                Text("+").font(.system(size: 28))
-                    .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
+                Text("+").font(.system(size: 26, weight: .regular))
+                    .frame(width: 46, height: 46)
+                    .raised(23, depth: 0.45)
             }
+            .buttonStyle(.plain)
             .foregroundStyle(Theme.ink)
             .accessibilityLabel("Keep something")
         }
@@ -134,44 +138,32 @@ struct TodayView: View {
         .padding(.top, 8)
     }
 
+    /// The Later list, risen from the bar.
     @ViewBuilder
     private func lidLayer(for current: Save) -> some View {
         if lidOpen {
             Color.black.opacity(0.001)
                 .ignoresSafeArea()
                 .onTapGesture { withAnimation(.snappy) { lidOpen = false } }
-        }
-        VStack {
-            Spacer()
-            HStack {
+            VStack {
                 Spacer()
-                if lidOpen {
-                    LaterList(
-                        suggestion: planner.suggestion(for: current, now: now),
-                        options: planner.fixedOptions(now: now),
-                        onPick: { lidOpen = false; later(current, $0) },
-                        onPickDate: { lidOpen = false; datingSave = current; pickingDate = true },
-                        onLetGo: { lidOpen = false; letGo(current) },
-                        onClose: { withAnimation(.snappy) { lidOpen = false } }
-                    )
-                    .frame(width: 236)
-                    .transition(.scale(scale: 0.5, anchor: .bottomTrailing).combined(with: .opacity))
-                } else {
-                    BoxTop(
-                        onTap: { withAnimation(.snappy) { lidOpen = true } },
-                        onFlick: { opened = OpenedPost(save: current) }
-                    )
-                }
+                LaterList(
+                    suggestion: planner.suggestion(for: current, now: now),
+                    options: planner.fixedOptions(now: now),
+                    onPick: { lidOpen = false; later(current, $0) },
+                    onPickDate: { lidOpen = false; datingSave = current; pickingDate = true },
+                    onLetGo: { lidOpen = false; letGo(current) },
+                    onClose: { withAnimation(.snappy) { lidOpen = false } }
+                )
             }
-            .padding(.trailing, Metrics.lidInset)
-            .padding(.bottom, Metrics.lidBottom)
+            .transition(.move(edge: .bottom))
         }
     }
 
     private var clearState: some View {
         VStack(alignment: .leading, spacing: 28) {
             Spacer()
-            BoxMark()
+            LogoTile(size: 128)
             VStack(alignment: .leading, spacing: 12) {
                 Text(anyKept ? "Today's clear." : "Nothing kept yet.")
                     .font(.system(size: 38, weight: .semibold))
@@ -210,8 +202,8 @@ struct TodayView: View {
             .padding(.horizontal, 16)
             .background(Theme.ink, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .padding(.leading, 16)
-            .padding(.trailing, 16 + (queue.isEmpty ? 0 : Metrics.lidRestWidth + 8))
-            .padding(.bottom, 24)
+            .padding(.trailing, 16)
+            .padding(.bottom, queue.isEmpty ? 24 : 96)
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
@@ -226,7 +218,12 @@ struct TodayView: View {
                 .datePickerStyle(.graphical)
                 .tint(Theme.ink)
                 .labelsHidden()
-            LidButton(title: "Put it away", width: 200, height: 56) {
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 24)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BottomBar(leading: "Cancel", leadingQuiet: true, onLeading: { pickingDate = false; datingSave = nil },
+                      trailing: "Put it away") {
                 pickingDate = false
                 if let save = datingSave ?? queue.first {
                     let start = Calendar.current.startOfDay(for: pickedDate)
@@ -235,13 +232,9 @@ struct TodayView: View {
                 }
                 datingSave = nil
             }
-            Button("Cancel") { pickingDate = false; datingSave = nil }
-                .foregroundStyle(Theme.quiet)
-                .frame(minHeight: Metrics.touchMin)
         }
-        .padding(.horizontal, 24)
         .presentationDetents([.large])
-        .background(Theme.sheet)
+        .background(Theme.sheet.ignoresSafeArea())
     }
 
     // MARK: The day's pick

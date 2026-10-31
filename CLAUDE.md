@@ -19,6 +19,8 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 ## Design rules (short form)
 
 - One full-screen feed, Today, one post per screen. Swipe up = gone until tomorrow (no quiet rule). Box holds what's put away.
-- The box top: a Nectarine `#FFBD76` lid with an Oceanic lip in the bottom-right corner, one word, Later. Tap it for the Later list; flick out of it to open the post. Opened posts get a full-width Nectarine strip with Later and Done.
-- Four colors: Wheat `#FFF6E9` is the app background, Onyx `#0A171D` is text, Oceanic `#003F47` is the logo box and the dark ground (never black), Nectarine `#FFBD76` is the box top. Your own words get a pale Nectarine tint `#FFD7AA`. Full table in `docs/PLAN.md` section 5.4.
+- The bar: a full-width Nectarine `#FFBD76` bar across the bottom, words on each end. Today: Later and Open. Opened post: Later and Done. Sheets and first run use it too. Later raises the Later list from the bar. No box-top lid on screen.
+- Four colors: Wheat `#FFF6E9` is the light background, Onyx `#0A171D` is the dark background and the light text, Oceanic `#003F47` is the logo box, Nectarine is the bar. Your own words get a pale Nectarine tint `#FFD7AA`. Full table in `docs/SPEC.md` section 5.1.
+- Depth is neumorphic: the post is a raised card in the ground color, photos and fields are pressed in. Outer radius = inner radius + padding.
+- The opened post is a full-screen photo with the words on Liquid Glass panels.
 - SF Pro throughout. Actions are words, never pills or icon-only buttons.

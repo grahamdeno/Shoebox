@@ -1,7 +1,7 @@
 import SwiftData
 import SwiftUI
 
-/// First run. One idea per screen, one clear choice, the lid as the button.
+/// First run. One idea per screen, one clear choice, the bar across the bottom.
 /// 1 Welcome (and what came over from Shoebox 1) · 2 Save from anywhere · 3 When it comes out · 4 The three moves.
 struct Onboarding: View {
     @Environment(\.modelContext) private var context
@@ -51,7 +51,7 @@ struct Onboarding: View {
 
     private var welcome: some View {
         page(button: "Start", action: next) {
-            BoxMark(size: 132).padding(.bottom, 12)
+            LogoTile(size: 132).padding(.bottom, 16)
             title("Keep it.\nIt comes back to you.")
             para("Save the things you mean to come back to. Each morning a few come out of the box, with your reason on top. Swipe past, put away, or deal with it.")
             if let report {
@@ -127,28 +127,17 @@ struct Onboarding: View {
 
     private func page<Content: View>(button: String, action: @escaping () -> Void, quiet: (String, () -> Void)? = nil,
                                      @ViewBuilder _ content: () -> Content) -> some View {
-        ZStack(alignment: .bottomTrailing) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 26) { content() }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 80)
-                    .padding(.bottom, 160)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            HStack(alignment: .center) {
-                if let quiet {
-                    Button(quiet.0, action: quiet.1)
-                        .font(.system(size: 17))
-                        .foregroundStyle(Theme.quiet)
-                        .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .leading)
-                }
-                Spacer()
-                LidButton(title: button, width: Metrics.lidRestWidth, height: Metrics.lidRestHeight, action: action)
-            }
-            .padding(.leading, 32)
-            .padding(.trailing, Metrics.lidInset)
-            .padding(.bottom, Metrics.lidBottom)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) { content() }
+                .padding(.horizontal, 32)
+                .padding(.top, 80)
+                .padding(.bottom, 40)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BottomBar(leading: quiet?.0, leadingQuiet: true, onLeading: quiet?.1 ?? {},
+                      trailing: button, onTrailing: action)
         }
     }
 
@@ -182,9 +171,9 @@ struct NumberedStep: View {
         HStack(alignment: .top, spacing: 16) {
             Text("\(n)")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Theme.lidInk)
                 .frame(width: 36, height: 36)
-                .background(Circle().fill(Theme.noteSolid))
+                .foregroundStyle(Theme.ink)
+                .raised(18, depth: 0.35)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(head).font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)
@@ -195,61 +184,28 @@ struct NumberedStep: View {
     }
 }
 
-/// "Three moves. That's the whole app." The lid pulses in the corner where it will be.
+/// "Three moves. That's the whole app."
 struct ThreeMoves: View {
     let button: String
     var onDone: () -> Void
 
-    @State private var glow = false
-
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Theme.ground.ignoresSafeArea()
-            VStack(alignment: .leading, spacing: 34) {
-                Text("Three moves.\nThat's the whole app.")
-                    .font(.system(size: 34, weight: .semibold))
-                    .tracking(-0.8)
-                    .foregroundStyle(Theme.ink)
-                NumberedStep(n: 1, head: "Swipe up", text: "Next one. What you passed comes back tomorrow.")
-                NumberedStep(n: 2, head: "Tap the lid", text: "Put it away until a better time. One tap takes the suggestion.")
-                NumberedStep(n: 3, head: "Flick out of the lid", text: "Lift it out and open it. Done is waiting at the bottom.")
-                Spacer()
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 80)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-
-            LidButton(title: button, width: Metrics.lidRestWidth, height: Metrics.lidRestHeight, action: onDone)
-                .background(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Theme.lid.opacity(glow ? 0.45 : 0.15))
-                        .padding(-6)
-                )
-                .overlay(alignment: .topLeading) { FlickArrow().offset(x: -6, y: -84) }
-                .padding(.trailing, Metrics.lidInset)
-                .padding(.bottom, Metrics.lidBottom)
-                .onAppear { withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glow = true } }
+        VStack(alignment: .leading, spacing: 34) {
+            Text("Three moves.\nThat's the whole app.")
+                .font(.system(size: 34, weight: .semibold))
+                .tracking(-0.8)
+                .foregroundStyle(Theme.ink)
+            NumberedStep(n: 1, head: "Swipe up", text: "Next one. What you passed comes back tomorrow.")
+            NumberedStep(n: 2, head: "Tap Later", text: "Put it away until a better time. One tap takes the suggestion.")
+            NumberedStep(n: 3, head: "Tap the post", text: "Open it full screen. Done is waiting at the bottom.")
+            Spacer()
         }
-    }
-}
-
-/// The dashed arrow above the lid on the three-moves screen: lift it out.
-private struct FlickArrow: View {
-    var body: some View {
-        ZStack {
-            Path { p in
-                p.move(to: CGPoint(x: 72, y: 70))
-                p.addQuadCurve(to: CGPoint(x: 12, y: 12), control: CGPoint(x: 62, y: 22))
-            }
-            .stroke(Theme.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 5]))
-            Path { p in
-                p.move(to: CGPoint(x: 26, y: 10))
-                p.addLine(to: CGPoint(x: 12, y: 12))
-                p.addLine(to: CGPoint(x: 18, y: 25))
-            }
-            .stroke(Theme.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        .padding(.horizontal, 32)
+        .padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.ground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BottomBar(trailing: button, onTrailing: onDone)
         }
-        .frame(width: 80, height: 76)
-        .accessibilityHidden(true)
     }
 }
