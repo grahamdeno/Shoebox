@@ -41,9 +41,7 @@ struct AddSheet: View {
                         .font(.system(size: 17))
                         .lineLimit(1...5)
                         .focused($focus, equals: .text)
-                        .padding(14)
-                        .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+                        .well()
                         .onChange(of: text) { _, _ in error = "" }
                 }
             }
@@ -54,9 +52,7 @@ struct AddSheet: View {
                     .font(.system(size: 17))
                     .focused($focus, equals: .why)
                     .submitLabel(.done)
-                    .padding(14)
-                    .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+                    .well()
             }
 
             if !error.isEmpty {
@@ -80,19 +76,15 @@ struct AddSheet: View {
                 }
             }
 
-            HStack {
-                Button("Cancel") { dismiss() }
-                    .foregroundStyle(Theme.quiet)
-                    .font(.system(size: 17))
-                    .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .leading)
-                Spacer()
-                LidButton(title: "Keep", action: keep)
-            }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
         .background(Theme.sheet.ignoresSafeArea())
-        .presentationDetents([.large])
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BottomBar(leading: "Cancel", leadingQuiet: true, onLeading: { dismiss() },
+                      trailing: "Keep", onTrailing: keep)
+        }
+        .presentationDetents([.height(520)])
         .presentationCornerRadius(Metrics.sheetRadius)
         .onAppear { focus = .text }
         .onChange(of: photo) { _, item in

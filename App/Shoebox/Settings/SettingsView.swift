@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var exportURL: URL?
     @State private var confirmDelete = false
     @State private var showMoves = false
+    @State private var pickingTime = false
     @State private var copied = false
 
     var body: some View {
@@ -51,13 +52,20 @@ struct SettingsView: View {
                 row {
                     Text("A notification at").foregroundStyle(Theme.ink)
                     Spacer()
+                    // A word, not the system's gray time capsule. Tap it for the wheel.
+                    Button(time.formatted(date: .omitted, time: .shortened)) {
+                        withAnimation(.snappy) { pickingTime.toggle() }
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.ink)
+                    .underline(pickingTime)
+                    .frame(minHeight: Metrics.touchMin)
+                }
+                if pickingTime {
                     DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
                         .labelsHidden()
-                        .tint(Theme.ink)
-                        .onChange(of: time) { _, t in
-                            Prefs.dailyMinute = DailyTime.minute(of: t)
-                            Task { await Notifier.schedule(context) }
-                        }
+                        .frame(maxWidth: .infinity)
                 }
                 row {
                     Text(notificationsOn ? "Notifications are on" : "Notifications are off").foregroundStyle(Theme.ink)
@@ -169,6 +177,10 @@ struct SettingsView: View {
             .padding(.bottom, 40)
         }
         .background(Theme.ground.ignoresSafeArea())
+        .onChange(of: time) { _, t in
+            Prefs.dailyMinute = DailyTime.minute(of: t)
+            Task { await Notifier.schedule(context) }
+        }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
             switch result {
             case .success(let url):
@@ -195,12 +207,12 @@ struct SettingsView: View {
     }
 
     private func deleteEverything() {
-        if let data = Backups.export(context) {
-            // One last copy first, so this can be undone from Files.
-            for dir in Backups.folders {
-                try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-                try? data.write(to: dir.appending(path: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json"))
-            }
+        // One last copy first, so this can be undone from Files. No copy, no delete.
+        guard let data = Backups.export(context),
+              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
+            importNote = "Couldn't save a backup first, so nothing was deleted."
+            confirmDelete = false
+            return
         }
         for s in all { context.delete(s) }
         try? context.save()

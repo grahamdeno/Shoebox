@@ -14,6 +14,11 @@ struct OpenedPost: Identifiable {
     let save: Save
 }
 
+/// Today: one post at a time, full screen, with the same moves as Scales.
+/// Swipe up past 100 pt: the next one, and this one comes back when your why says, or tomorrow.
+/// Pull down past 160 pt (further, so it is never an accident): into the box, done and kept.
+/// A quick tap opens it. The post follows the finger 1:1 for 40 pt, then at half speed, and springs
+/// back short of a threshold. Crossing a threshold ticks. Both moves can be undone for 5 seconds.
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var phase
@@ -23,56 +28,70 @@ struct TodayView: View {
     @State private var showBox = false
     @State private var showAdd = false
     @State private var opened: OpenedPost?
-    @State private var lidOpen = false
-    @State private var pickingDate = false
-    @State private var pickedDate = Date().addingTimeInterval(86_400)
     @State private var toast: Toast?
-    @State private var dragOffset: CGFloat = 0
-    @State private var datingSave: Save?
+
+    // The gesture
+    @State private var drag: CGFloat = 0
+    @State private var dragStart = Date()
+    @State private var dragging = false
+    @State private var crossed = 0          // 1 past Next, -1 past Put away
+    @State private var fly: CGFloat = 0
+    @State private var flyScale: CGFloat = 1
+    @State private var flyOpacity: Double = 1
+    @State private var busy = false
 
     private let rules = TodayRules()
     private let actions = SaveActions()
     private let planner = LaterPlanner()
 
+    static let upDistance: CGFloat = 100
+    static let downDistance: CGFloat = 160
+    static let stripHeight: CGFloat = 92
+
     private var now: Date { Date() }
     private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
-    private var awayCount: Int { rules.away(all, now: now).count }
+    private var boxCount: Int { rules.kept(all).count + rules.away(all, now: now).count }
     private var anyKept: Bool { all.contains { $0.deletedAt == nil } }
+    private var moreWaiting: [Save] { rules.queue(all, now: now).filter { !pickIds.contains($0.id.uuidString) } }
+    private var moving: Bool { drag != 0 || fly != 0 }
 
     var body: some View {
-        ZStack {
-            Theme.ground.ignoresSafeArea()
+        GeometryReader { geo in
+            let height = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
+            ZStack {
+                Theme.ground.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                topBar
                 if let current = queue.first {
-                    PostView(save: current, planner: planner, now: now)
+                    if moving, let next = queue.dropFirst().first {
+                        card(next, geo)
+                            .scaleEffect(0.94)
+                            .opacity(0.6)
+                            .accessibilityHidden(true)
+                    }
+                    card(current, geo)
+                        .scaleEffect(cardScale, anchor: .bottom)
+                        .offset(y: resisted(drag) + fly)
+                        .opacity(flyOpacity)
                         .id(current.id)
-                        .offset(y: dragOffset)
-                        .opacity(1 - Double(min(abs(dragOffset), 200)) / 400)
-                        .gesture(swipe(for: current))
-                        .onTapGesture { opened = OpenedPost(save: current) }
+                        .gesture(cardGesture(current, height: height))
+                        .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isButton)
                         .accessibilityHint("Opens this post")
-                        .accessibilityAction(named: "Next one") { pass(current) }
+                        .accessibilityAction(named: "Next one") { goNext(current, height: height) }
+                        .accessibilityAction(named: "Put away") { goAway(current, height: height) }
                         .task(id: current.id) { await enrichAhead() }
-                    Text("Swipe up for the next one")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.quiet)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 24)
-                        .padding(.bottom, 44)
+                    hints
+                    topBar(onPhoto: true)
                 } else {
-                    clearState
+                    stopScreen
+                    topBar(onPhoto: false)
                 }
-            }
 
-            if let current = queue.first {
-                lidLayer(for: current)
-            }
+                strip
 
-            if let toast {
-                toastView(toast)
+                if let toast {
+                    toastView(toast)
+                }
             }
         }
         .onAppear {
@@ -85,159 +104,330 @@ struct TodayView: View {
             let save = item.save
             OpenedView(
                 save: save,
-                planner: planner,
                 onClose: { opened = nil },
-                onDone: { opened = nil; done(save) },
-                onLater: { choice in opened = nil; later(save, choice) },
-                onPickDate: { opened = nil; datingSave = save; pickingDate = true },
-                onLetGo: { opened = nil; letGo(save) }
+                onNotNow: { opened = nil; notNow(save) },
+                onPutAway: { opened = nil; putAway(save) }
             )
         }
         .sheet(isPresented: $showBox) {
             BoxView(planner: planner, onBringBack: { bringBack($0) })
+                .presentationDetents([.large])
+                .presentationCornerRadius(Metrics.sheetRadius)
         }
         .sheet(isPresented: $showAdd) {
             AddSheet()
-        }
-        .sheet(isPresented: $pickingDate) {
-            datePicker
         }
     }
 
     // MARK: Layout
 
-    private var topBar: some View {
-        HStack {
-            Button("Box") { showBox = true }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Theme.ink)
-                .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
-            Spacer()
-            if !queue.isEmpty {
-                Text("\(queue.count) left today")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.quiet)
-            }
-            Spacer()
-            Button { showAdd = true } label: {
-                Text("+").font(.system(size: 28))
-                    .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
-            }
-            .foregroundStyle(Theme.ink)
-            .accessibilityLabel("Keep something")
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
+    /// A full-screen post. Square while it rests, rounded while it moves, like a card lifted off the stack.
+    private func card(_ save: Save, _ geo: GeometryProxy) -> some View {
+        PostCard(save: save, now: now, insets: geo.safeAreaInsets, bottomRoom: Self.stripHeight)
+            .ignoresSafeArea()
+            .clipShape(RoundedRectangle(cornerRadius: moving ? 44 : 0, style: .continuous))
+            .ignoresSafeArea()
     }
 
-    @ViewBuilder
-    private func lidLayer(for current: Save) -> some View {
-        if lidOpen {
-            Color.black.opacity(0.001)
-                .ignoresSafeArea()
-                .onTapGesture { withAnimation(.snappy) { lidOpen = false } }
-        }
+    private var cardScale: CGFloat {
+        let pull = drag > 0 ? 1 - min(0.06, drag / Self.downDistance * 0.06) : 1
+        return pull * flyScale
+    }
+
+    private func topBar(onPhoto: Bool) -> some View {
         VStack {
-            Spacer()
             HStack {
+                Button { showAdd = true } label: {
+                    Text("+ New")
+                        .font(.system(size: 16, weight: .medium))
+                        .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Keep something new")
                 Spacer()
-                if lidOpen {
-                    LaterList(
-                        suggestion: planner.suggestion(for: current, now: now),
-                        options: planner.fixedOptions(now: now),
-                        onPick: { lidOpen = false; later(current, $0) },
-                        onPickDate: { lidOpen = false; datingSave = current; pickingDate = true },
-                        onLetGo: { lidOpen = false; letGo(current) },
-                        onClose: { withAnimation(.snappy) { lidOpen = false } }
-                    )
-                    .frame(width: 236)
-                    .transition(.scale(scale: 0.5, anchor: .bottomTrailing).combined(with: .opacity))
-                } else {
-                    BoxTop(
-                        onTap: { withAnimation(.snappy) { lidOpen = true } },
-                        onFlick: { opened = OpenedPost(save: current) }
-                    )
+                if !queue.isEmpty {
+                    Text("\(max(1, pickIds.count - queue.count + 1)) of \(pickIds.count)")
+                        .font(.system(size: 15))
+                        .monospacedDigit()
+                        .opacity(0.8)
                 }
             }
-            .padding(.trailing, Metrics.lidInset)
-            .padding(.bottom, Metrics.lidBottom)
+            .foregroundStyle(onPhoto ? Color.white : Theme.ink)
+            .shadow(color: onPhoto ? .black.opacity(0.35) : .clear, radius: 6)
+            .padding(.horizontal, 24)
+            .padding(.top, 4)
+            .opacity(drag > 0 ? max(0.35, 1 - drag / Self.downDistance) : 1)
+            Spacer()
         }
     }
 
-    private var clearState: some View {
-        VStack(alignment: .leading, spacing: 28) {
+    /// "Next" fades in as the post moves up, bold once it is far enough. Pulling down, the box itself
+    /// says "Let go to put it away", so there is no second hint over the post.
+    private var hints: some View {
+        let up = max(0, -drag) / Self.upDistance
+        return VStack {
+            hint("Next", progress: up).padding(.top, 64)
             Spacer()
-            BoxMark()
-            VStack(alignment: .leading, spacing: 12) {
-                Text(anyKept ? "Today's clear." : "Nothing kept yet.")
-                    .font(.system(size: 38, weight: .semibold))
-                    .tracking(-0.9)
-                    .foregroundStyle(Theme.ink)
-                Text(clearSubtitle)
-                    .font(.system(size: 18))
-                    .foregroundStyle(Theme.quiet)
-                    .lineSpacing(3)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func hint(_ text: String, progress p: CGFloat) -> some View {
+        Text(text)
+            .font(.system(size: 15, weight: p >= 1 ? .bold : .medium))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.45), radius: 6)
+            .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
+    }
+
+    /// Your Shoebox, across the bottom. It rises a little as a post is pulled toward it, and its lid
+    /// line lifts and turns Nectarine once the post is far enough to drop in. Tap it or pull it up to open the Box.
+    private var strip: some View {
+        let ready = crossed == -1
+        let growth = drag > 0 ? min(40, drag * 0.25) : 0
+        return VStack(spacing: 0) {
+            Spacer()
+            ZStack(alignment: .top) {
+                UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22, style: .continuous)
+                    .fill(Theme.box)
+                    .ignoresSafeArea(edges: .bottom)
+                Rectangle()
+                    .fill(ready ? Theme.lid : Theme.boxLid)
+                    .frame(height: ready ? 4 : 3)
+                    .shadow(color: ready ? Theme.lid.opacity(0.7) : .clear, radius: 8)
+                    .padding(.top, ready ? 6 : 12)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(ready ? "Let go to put it away" : "Your Shoebox")
+                        .font(.system(size: 17, weight: .semibold))
+                    Spacer()
+                    Text("\(boxCount)")
+                        .font(.system(size: 17))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.boxQuiet)
+                }
+                .foregroundStyle(Theme.boxInk)
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
             }
-            Spacer()
+            .frame(height: Self.stripHeight + growth)
+            .contentShape(Rectangle())
+            .onTapGesture { showBox = true }
+            .gesture(DragGesture(minimumDistance: 12).onEnded { v in
+                if v.translation.height < -40 { showBox = true }
+            })
+            .animation(.snappy, value: ready)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Opens everything you kept")
+        }
+    }
+
+    /// The day's end: a message, not a post, set high, with its choices as rows.
+    private var stopScreen: some View {
+        let more = moreWaiting
+        let head: String
+        let sub: String
+        if !anyKept {
+            head = "Nothing kept yet."
+            sub = "Share a page to Shoebox from Safari or any app, or tap New."
+        } else if !more.isEmpty {
+            head = "That's \(pickIds.count) for today."
+            sub = "Keep going as long as you like."
+        } else {
+            head = "That's all for today."
+            sub = nextBackText
+        }
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(head)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+            Text(sub)
+                .font(.system(size: 16))
+                .foregroundStyle(Theme.quiet)
+            VStack(spacing: 0) {
+                if !more.isEmpty { row("Keep going") { keepGoing() } }
+                row("Keep something") { showAdd = true }
+            }
+            .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+            .padding(.top, 28)
             Spacer()
         }
         .padding(.horizontal, 32)
+        .padding(.top, 150)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var clearSubtitle: String {
-        if !anyKept { return "Share a page to Shoebox from Safari or any app, or tap + to keep something. Say why, and it comes back when it helps." }
-        if awayCount == 0 { return "The next ones come out tomorrow." }
-        let noun = awayCount == 1 ? "thing is" : "things are"
-        return "\(awayCount) \(noun) waiting in the Box. The next ones come out tomorrow."
+    private func row(_ text: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(text).font(.system(size: 17, weight: .medium)).foregroundStyle(Theme.ink)
+                Spacer()
+                Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+            }
+            .frame(minHeight: 52)
+            .contentShape(Rectangle())
+            .overlay(alignment: .top) { Rectangle().fill(Theme.line).frame(height: 1) }
+        }
+        .buttonStyle(.plain)
     }
 
+    private var nextBackText: String {
+        guard let next = rules.away(all, now: now).first?.returnDate else { return "Everything is put away." }
+        let label = planner.label(for: next, now: now)
+        return label == "Tomorrow" ? "Next one back tomorrow." : "Next one back \(label)."
+    }
+
+    /// Undo: small, at the right above the box, clear of the post and of the thumb's swipe path.
     private func toastView(_ toast: Toast) -> some View {
         VStack {
             Spacer()
             HStack {
-                Text(toast.text).font(.system(size: 15))
                 Spacer()
-                Button("Undo") { toast.undo(); self.toast = nil; refreshPick() }
-                    .font(.system(size: 15, weight: .semibold))
+                HStack(spacing: 2) {
+                    Text(toast.text).opacity(0.8).padding(.leading, 16)
+                    Button("Undo") {
+                        toast.undo()
+                        withAnimation(.snappy) { self.toast = nil }
+                        refreshPick()
+                    }
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 14)
                     .frame(minHeight: Metrics.touchMin)
+                }
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.ground)
+                .background(Theme.ink, in: Capsule())
             }
-            .foregroundStyle(Theme.ground)
-            .padding(.horizontal, 16)
-            .background(Theme.ink, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .padding(.leading, 16)
-            .padding(.trailing, 16 + (queue.isEmpty ? 0 : Metrics.lidRestWidth + 8))
-            .padding(.bottom, 24)
+            .padding(.trailing, 16)
+            .padding(.bottom, Self.stripHeight + 14)
         }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
-    private var datePicker: some View {
-        VStack(spacing: 16) {
-            Text("Bring it back on")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Theme.ink)
-                .padding(.top, 24)
-            DatePicker("Date", selection: $pickedDate, in: Date()..., displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .tint(Theme.ink)
-                .labelsHidden()
-            LidButton(title: "Put it away", width: 200, height: 56) {
-                pickingDate = false
-                if let save = datingSave ?? queue.first {
-                    let start = Calendar.current.startOfDay(for: pickedDate)
-                    let eight = Calendar.current.date(byAdding: .hour, value: 8, to: start) ?? start
-                    later(save, LaterSuggestion(date: eight, label: planner.label(for: eight, now: now), reason: ""))
+    // MARK: The gesture
+
+    private func resisted(_ v: CGFloat) -> CGFloat {
+        let a = abs(v)
+        let s: CGFloat = v < 0 ? -1 : 1
+        return s * (a <= 40 ? a : 40 + (a - 40) * 0.5)
+    }
+
+    private func cardGesture(_ current: Save, height: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { v in
+                guard !busy else { return }
+                if !dragging { dragging = true; dragStart = Date() }
+                let dy = v.translation.height
+                if abs(dy) < 6 && abs(v.translation.width) < 6 { return }
+                drag = dy
+                let c = -dy >= Self.upDistance ? 1 : (dy >= Self.downDistance ? -1 : 0)
+                if c != crossed {
+                    if c != 0 { UISelectionFeedbackGenerator().selectionChanged() }
+                    crossed = c
                 }
-                datingSave = nil
             }
-            Button("Cancel") { pickingDate = false; datingSave = nil }
-                .foregroundStyle(Theme.quiet)
-                .frame(minHeight: Metrics.touchMin)
+            .onEnded { v in
+                guard !busy else { return }
+                dragging = false
+                crossed = 0
+                let dy = v.translation.height
+                let moved = abs(dy) >= 6 || abs(v.translation.width) >= 6
+                if !moved && Date().timeIntervalSince(dragStart) < 0.35 {
+                    drag = 0
+                    opened = OpenedPost(save: current)
+                    return
+                }
+                if dy <= -Self.upDistance { goNext(current, height: height) }
+                else if dy >= Self.downDistance { goAway(current, height: height) }
+                else { withAnimation(.spring(response: 0.4, dampingFraction: 0.72)) { drag = 0 } }
+            }
+    }
+
+    /// Flies the post off, then makes the change and brings the next one in.
+    private func flyOff(up: Bool, height: CGFloat, then change: @escaping () -> Void) {
+        busy = true
+        withAnimation(.easeIn(duration: 0.3)) {
+            if up {
+                fly = -height * 1.1
+            } else {
+                fly = height * 0.6
+                flyScale = 0.9
+            }
+            flyOpacity = 0
         }
-        .padding(.horizontal, 24)
-        .presentationDetents([.large])
-        .background(Theme.sheet)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            change()
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) {
+                drag = 0; fly = 0; flyScale = 1; flyOpacity = 1
+            }
+            busy = false
+        }
+    }
+
+    private func goNext(_ save: Save, height: CGFloat) {
+        flyOff(up: true, height: height) { notNow(save) }
+    }
+
+    private func goAway(_ save: Save, height: CGFloat) {
+        // Set down firmly, then it fades away.
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) {
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        }
+        flyOff(up: false, height: height) { putAway(save) }
+    }
+
+    // MARK: Actions
+
+    private func perform(_ text: String, on save: Save, _ change: (Save) -> Void) {
+        let snapshot = SaveSnapshot(save)
+        change(save)
+        try? context.save()
+        let new = Toast(text: text, undo: { snapshot.restore(save); try? context.save() })
+        withAnimation(.snappy) { toast = new }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            if toast?.id == new.id { withAnimation { toast = nil } }
+        }
+    }
+
+    /// Not now: back when your why says (a weekday, the weekend, tonight), else tomorrow.
+    /// Dated posts keep their own schedule of reminders.
+    private func notNow(_ save: Save) {
+        if save.eventDate == nil, let when = planner.match(words: save.note, now: now) {
+            let label = when.label == "Tomorrow" ? "tomorrow" : when.label
+            perform("Back \(label)", on: save) { actions.later($0, until: when.date, now: now) }
+        } else {
+            perform(save.eventDate == nil ? "Back tomorrow" : "Back before the date", on: save) { actions.pass($0, now: now) }
+        }
+    }
+
+    /// Into the box: done, kept and searchable.
+    private func putAway(_ save: Save) {
+        perform("Put away", on: save) { actions.done($0, now: now) }
+    }
+
+    private func bringBack(_ save: Save) {
+        showBox = false
+        perform("Back on Today", on: save) { actions.bringBack($0, now: now) }
+        var ids = Prefs.pickIds.filter { $0 != save.id.uuidString }
+        ids.insert(save.id.uuidString, at: 0)
+        Prefs.pickIds = ids
+        Prefs.pickDay = rules.dayKey(now)
+        pickIds = ids
+    }
+
+    /// Past the day's pile: the next few come out.
+    private func keepGoing() {
+        let ids = pickIds + moreWaiting.prefix(Prefs.perDay).map(\.id.uuidString)
+        Prefs.pickIds = ids
+        Prefs.pickDay = rules.dayKey(now)
+        pickIds = ids
+        UISelectionFeedbackGenerator().selectionChanged()
     }
 
     // MARK: The day's pick
@@ -261,73 +451,13 @@ struct TodayView: View {
     private func showScreenForScreenshots() {
         #if DEBUG
         switch UserDefaults.standard.string(forKey: "screen") {
-        case "lid": lidOpen = true
+        case "up": drag = -110; crossed = 1
+        case "away": drag = 170; crossed = -1
         case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
         case "box", "settings": showBox = true
         case "add": showAdd = true
         default: break
         }
         #endif
-    }
-
-    // MARK: Gestures and actions
-
-    private func swipe(for current: Save) -> some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onChanged { value in
-                dragOffset = min(0, value.translation.height)
-            }
-            .onEnded { value in
-                if value.translation.height < -90 {
-                    withAnimation(.easeOut(duration: 0.15)) { dragOffset = -240 }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        pass(current)
-                        dragOffset = 0
-                    }
-                } else {
-                    withAnimation(.snappy) { dragOffset = 0 }
-                }
-            }
-    }
-
-    private func perform(_ text: String, on save: Save, _ change: (Save) -> Void) {
-        let snapshot = SaveSnapshot(save)
-        change(save)
-        try? context.save()
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        let new = Toast(text: text, undo: { snapshot.restore(save); try? context.save() })
-        withAnimation(.snappy) { toast = new }
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(4))
-            if toast?.id == new.id { withAnimation { toast = nil } }
-        }
-    }
-
-    private func pass(_ save: Save) {
-        perform(save.eventDate == nil ? "Back tomorrow" : "Back before the date", on: save) { actions.pass($0, now: now) }
-    }
-
-    private func done(_ save: Save) {
-        perform("Done. Kept in the Box", on: save) { actions.done($0, now: now) }
-    }
-
-    private func later(_ save: Save, _ choice: LaterSuggestion) {
-        perform("Back \(choice.label.lowercased())", on: save) {
-            actions.later($0, until: choice.date, now: now)
-        }
-    }
-
-    private func letGo(_ save: Save) {
-        perform("Let go", on: save) { actions.letGo($0, now: now) }
-    }
-
-    private func bringBack(_ save: Save) {
-        showBox = false
-        perform("Back on Today", on: save) { actions.bringBack($0, now: now) }
-        var ids = Prefs.pickIds.filter { $0 != save.id.uuidString }
-        ids.insert(save.id.uuidString, at: 0)
-        Prefs.pickIds = ids
-        Prefs.pickDay = rules.dayKey(now)
-        pickIds = ids
     }
 }

@@ -185,28 +185,24 @@ struct ShareSheet: View {
                             .focused($focused)
                             .submitLabel(.done)
                             .onSubmit { model.keep() }
-                            .padding(14)
-                            .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
+                            .well()
                     }
                     Text("Your why decides when it comes back. Say nothing and it comes back tomorrow.")
                         .font(.system(size: 14))
                         .foregroundStyle(Theme.quiet)
-                    HStack {
-                        Button("Cancel", action: model.onClose)
-                            .font(.system(size: 17))
-                            .foregroundStyle(Theme.quiet)
-                            .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .leading)
-                        Spacer()
-                        LidButton(title: "Keep", action: model.keep)
-                    }
                 }
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
             .padding(.bottom, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.sheet)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius))
+            if !model.kept {
+                BottomBar(leading: "Cancel", leadingQuiet: true, onLeading: model.onClose,
+                          trailing: "Keep", onTrailing: model.keep)
+                    .background(Theme.sheet)
+            }
         }
         .onAppear { focused = true }
     }
