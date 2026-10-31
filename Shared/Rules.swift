@@ -7,6 +7,7 @@ struct TodayRules {
     func isOnToday(_ s: Save, now: Date) -> Bool {
         if s.deletedAt != nil { return false }
         if let seen = s.seenOn, calendar.isDate(seen, inSameDayAs: now) { return false }
+        if isPast(s, now: now) { return false }
         switch s.status {
         case .kept: return false
         case .today: return true
@@ -16,10 +17,32 @@ struct TodayRules {
         }
     }
 
-    /// Returning and dated saves first, then the rest, oldest first.
+    /// The day of its event has gone by.
+    func isPast(_ s: Save, now: Date) -> Bool {
+        guard let event = s.eventDate else { return false }
+        return calendar.startOfDay(for: event) < calendar.startOfDay(for: now)
+    }
+
+    /// A dated save whose day has gone by is done: it moves to Kept (never deleted), searchable in the Box.
+    /// Returns how many moved.
+    @discardableResult
+    func retirePast(_ all: [Save], now: Date) -> Int {
+        var n = 0
+        for s in all where s.deletedAt == nil && s.status != .kept && isPast(s, now: now) {
+            s.status = .kept
+            s.returnDate = nil
+            s.updatedAt = now
+            n += 1
+        }
+        return n
+    }
+
+    /// Dated saves first, the nearest event soonest, then the rest coming back, then the rest, oldest first.
     func queue(_ all: [Save], now: Date) -> [Save] {
         let due = all.filter { isOnToday($0, now: now) }
-        let returning = due.filter { $0.returnDate != nil }.sorted { ($0.returnDate ?? now) < ($1.returnDate ?? now) }
+        let returning = due.filter { $0.returnDate != nil }.sorted {
+            ($0.eventDate ?? $0.returnDate ?? now) < ($1.eventDate ?? $1.returnDate ?? now)
+        }
         let fresh = due.filter { $0.returnDate == nil }.sorted { $0.createdAt < $1.createdAt }
         return returning + fresh
     }

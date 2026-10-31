@@ -45,6 +45,15 @@ final class Save {
     /// For dated saves (school emails, events): comes back 5 days before,
     /// 1 day before and on the day.
     var eventDate: Date?
+    /// True when the event date carries a time of day ("4:00 PM"), not just a day.
+    var eventHasTime: Bool = false
+    /// Other dates named in the words (a deadline, a second day), as epoch seconds, comma separated.
+    var otherDatesRaw: String = ""
+
+    /// Where the picture came from: "page" (the link's own), "photo" (yours) or "stock" (found for you).
+    var imageSource: String?
+    /// When a stock picture was last looked for, so a miss is retried tomorrow and not every launch.
+    var stockTriedAt: Date?
 
     /// Link preview: when it was fetched, and how many times it failed.
     var enrichedAt: Date?
@@ -87,6 +96,11 @@ final class Save {
         self.eventDate = eventDate
         self.createdAt = createdAt
         self.updatedAt = createdAt
+    }
+
+    var otherDates: [Date] {
+        get { otherDatesRaw.split(separator: ",").compactMap { Double($0) }.map { Date(timeIntervalSince1970: $0) } }
+        set { otherDatesRaw = newValue.map { String(Int($0.timeIntervalSince1970)) }.joined(separator: ",") }
     }
 
     var status: SaveStatus {

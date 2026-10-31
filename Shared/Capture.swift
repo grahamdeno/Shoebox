@@ -53,10 +53,34 @@ enum Capture {
         return s
     }
 
-    /// A new save is put away until your reason says, or tomorrow morning.
+    /// A new save is put away until your reason says, or tomorrow morning. A save whose words name a date
+    /// still ahead is dated: it comes back 5 days before, 1 day before and on the day, unless your reason names a time.
     static func place(_ s: Save, note: String, now: Date) {
+        let planner = LaterPlanner()
+        DateReader.apply(to: s)
+        if let event = s.eventDate, planner.match(words: note, now: now) == nil {
+            if let first = SaveActions().reminders(for: event).first(where: { $0 > now }) {
+                s.status = .away
+                s.returnDate = first
+            } else {
+                s.status = .today        // the day is here
+                s.returnDate = nil
+            }
+            return
+        }
         s.status = .away
-        s.returnDate = LaterPlanner().firstReturn(note: note, now: now)
+        s.returnDate = planner.firstReturn(note: note, now: now)
+    }
+
+    /// A page's own text arrived after the save was made: read its dates now. A save that is waiting
+    /// comes back before the date; one that is on screen stays where it is.
+    static func adoptDates(_ s: Save, now: Date) {
+        guard s.deletedAt == nil, s.status != .kept, DateReader.apply(to: s), let event = s.eventDate else { return }
+        guard s.status == .away, let due = s.returnDate, due > now,
+              LaterPlanner().match(words: s.note, now: now) == nil,
+              let first = SaveActions().reminders(for: event).first(where: { $0 > now }), first < due else { return }
+        s.returnDate = first
+        s.updatedAt = now
     }
 
     /// Same link already kept and not let go: don't keep it twice.

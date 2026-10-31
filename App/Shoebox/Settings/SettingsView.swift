@@ -9,6 +9,7 @@ struct SettingsView: View {
 
     @State private var perDay = Prefs.perDay
     @State private var appearance = Prefs.appearance
+    @State private var stock = Prefs.stockPictures
     @State private var time = DailyTime.date(fromMinute: Prefs.dailyMinute)
     @State private var notificationsOn = Prefs.notificationsOn
     @State private var address = Prefs.inboxAddress
@@ -100,6 +101,18 @@ struct SettingsView: View {
                 }
                 }
 
+                section("Pictures")
+                card {
+                    row {
+                        Text("A picture for posts without one").foregroundStyle(Theme.ink)
+                        Spacer()
+                        Button(stock ? "On" : "Off") { stock.toggle(); Prefs.stockPictures = stock }
+                            .fontWeight(.semibold).foregroundStyle(Theme.ink)
+                            .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin)
+                    }
+                    note("Your phone writes a few generic words about the post, never names or your text, and Shoebox's server finds a stock photo. Posts about health, money or legal matters are never looked up.")
+                }
+
                 section("Your Shoebox email")
                 card {
                 if let address {
@@ -169,7 +182,7 @@ struct SettingsView: View {
 
                 section("Privacy")
                 card {
-                note("Your saves stay on this phone. No account, no ads, no tracking. Link previews and your Shoebox email pass through Shoebox's server and aren't kept there once your phone collects them.")
+                note("Your saves stay on this phone. No account, no ads, no tracking. Link previews, stock photo searches (a few generic words only) and your Shoebox email pass through Shoebox's server and aren't kept there.")
                 }
 
                 section("Everything")

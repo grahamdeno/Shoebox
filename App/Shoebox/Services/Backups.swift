@@ -207,6 +207,8 @@ enum Backups {
             var kind: String; var url: String?; var imageURL: String?; var image: Data?
             var status: String; var returnDate: Date?; var seenOn: Date?; var eventDate: Date?
             var emailFrom: String?; var emailSubject: String?; var emailReceivedAt: Date?; var oldId: String?
+            // Added later; older backups don't have them.
+            var eventHasTime: Bool?; var otherDates: String?; var imageSource: String?
         }
     }
 
@@ -217,7 +219,8 @@ enum Backups {
                         title: s.title, snippet: s.snippet, body: s.body, note: s.note, origin: s.origin, source: s.source,
                         kind: s.kindRaw, url: s.urlString, imageURL: s.imageURL, image: s.imageData,
                         status: s.statusRaw, returnDate: s.returnDate, seenOn: s.seenOn, eventDate: s.eventDate,
-                        emailFrom: s.emailFrom, emailSubject: s.emailSubject, emailReceivedAt: s.emailReceivedAt, oldId: s.oldId)
+                        emailFrom: s.emailFrom, emailSubject: s.emailSubject, emailReceivedAt: s.emailReceivedAt, oldId: s.oldId,
+                        eventHasTime: s.eventHasTime, otherDates: s.otherDatesRaw, imageSource: s.imageSource)
         }
         let e = Export(saves: items, inboxKey: Prefs.inboxKey, inboxAddress: Prefs.inboxAddress)
         return try? JSONEncoder.shoebox.encode(e)
@@ -235,6 +238,9 @@ enum Backups {
             s.id = i.id; s.updatedAt = i.updatedAt; s.deletedAt = i.deletedAt; s.seenOn = i.seenOn
             s.imageURL = i.imageURL; s.oldId = i.oldId
             s.emailFrom = i.emailFrom; s.emailSubject = i.emailSubject; s.emailReceivedAt = i.emailReceivedAt
+            s.eventHasTime = i.eventHasTime ?? false
+            s.otherDatesRaw = i.otherDates ?? ""
+            s.imageSource = i.imageSource
             s.enrichedAt = Date()
             context.insert(s)
             added += 1

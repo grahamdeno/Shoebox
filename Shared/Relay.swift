@@ -72,10 +72,15 @@ enum Relay {
             save.body = String(text.prefix(20_000))
         }
         if save.origin.isEmpty, let site = p.site, !site.isEmpty { save.origin = site }
-        if save.imageData == nil, let src = p.image ?? save.imageURL, let picURL = URL(string: src, relativeTo: url) {
+        // The page's own picture replaces a stock one found earlier.
+        if (save.imageData == nil || save.imageSource == "stock"), let src = p.image ?? save.imageURL, let picURL = URL(string: src, relativeTo: url) {
             save.imageURL = picURL.absoluteString
-            save.imageData = await picture(picURL)
+            if let data = await picture(picURL) {
+                save.imageData = data
+                save.imageSource = "page"
+            }
         }
+        Capture.adoptDates(save, now: Date())
         save.enrichedAt = Date()
         save.updatedAt = Date()
     }
