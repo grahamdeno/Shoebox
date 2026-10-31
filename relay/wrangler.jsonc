@@ -1,5 +1,5 @@
 {
-  // Shoebox relay (Cloudflare Worker). Same settings as the live deploy of version 91ae1328.
+  // Shoebox relay (Cloudflare Worker). Same settings as the live deploys (bdba0fc9, 91ae1328).
   // Deploy from this folder: npx wrangler deploy -c wrangler.jsonc
   "name": "shoebox-relay",
   "main": "perplexity-relay.js",

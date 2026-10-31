@@ -29,7 +29,8 @@
  *   POST /beta          an iPhone beta request from the front page: kept,
  *                       read by Claude for fit, and posted to the owner's
  *                       Shoebox with a suggestion (invite, maybe or pass)
- *   GET  /photo?q=&n=   Pixabay photo search for a few generic words (inmyshoebox.com
+ *   GET  /photo?q=      Openverse photo search (Shoebox 1, edition src/app.js)
+ *   GET  /stock?q=&n=   Pixabay photo search for a few generic words (inmyshoebox.com
  *                       only; PIXABAY_API_KEY secret): up to 8 portrait photos,
  *                       cached 24 hours per phrase, about 60 searches an hour per
  *                       network. The words, addresses and key are never logged.
@@ -119,7 +120,8 @@ const RELAY = {
     if (request.method === "GET" && pathname === "/image") return image(searchParams.get("url"), cors);
     if (request.method === "GET" && pathname === "/file") return fileAt(searchParams.get("url"), cors);
     if (pathname === "/push/key" || pathname === "/push/test" || pathname.startsWith("/remind")) return pushRoute(request, env, pathname, searchParams, cors);
-    if (request.method === "GET" && pathname === "/photo") return photo(request, env, searchParams, cors, origin);
+    if (request.method === "GET" && pathname === "/photo") return photo(searchParams.get("q"), cors);
+    if (request.method === "GET" && pathname === "/stock") return stock(request, env, searchParams, cors, origin);
     if (request.method !== "POST" || !PATHS.has(pathname)) return json(404, "Not found.", cors);
     const auth = request.headers.get("authorization");
     if (!auth) return json(401, "No Perplexity key was sent.", cors);
@@ -294,16 +296,34 @@ export function pageText(html) {
  * Returns up to 8 candidates, largest-usable first, each with its credit and
  * licence so the card can show them as the licence asks.
  */
-/* ---- Photo search (Pixabay) ----
- * GET /photo?q=<a few generic words>&n=6. Only https://inmyshoebox.com may ask.
+async function photo(q, cors) {
+  const out = (status, body) => new Response(JSON.stringify(body), { status, headers: { ...cors, "content-type": "application/json", "cache-control": "public, max-age=86400" } });
+  const query = String(q || "").trim().slice(0, 100);
+  if (!query) return out(400, { error: { message: "No search words." } });
+  let res;
+  try {
+    res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=20&mature=false`, {
+      headers: { "user-agent": "EditionRelay/1.0 (personal reading app)", accept: "application/json" },
+      cf: { cacheTtl: 86400, cacheEverything: true },
+      signal: AbortSignal.timeout(8000), // a slow photo service shouldn't hold the app up
+    });
+  } catch {
+    return out(200, { photos: [] });
+  }
+  const data = await res.json().catch(() => ({}));
+  return out(200, { photos: pickPhotos(data.results || []) });
+}
+
+/* ---- Stock photo search (Pixabay) ----
+ * GET /stock?q=<a few generic words>&n=6. For the new Shoebox app; /photo above stays Openverse for Shoebox 1. Only https://inmyshoebox.com may ask.
  * Privacy: the search words, the caller's address and the outbound URL (it holds
  * the key) are never logged or put in an error message. The rate counter keeps
  * only a salted hash of the address. Pixabay asks for results to be cached 24 hours.
  */
-const PHOTO_ORIGIN = "https://inmyshoebox.com";
+const STOCK_ORIGIN = "https://inmyshoebox.com";
 const PIXABAY = "https://pixabay.com";
-const PHOTO_CACHE_SECONDS = 86400;
-const PHOTO_HOURLY = 60;
+const STOCK_CACHE_SECONDS = 86400;
+const STOCK_HOURLY = 60;
 
 function pixabayBase(env) {
   // Local testing only: a mock Pixabay on localhost. Anything else uses the real address.
@@ -311,11 +331,11 @@ function pixabayBase(env) {
   return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(b) ? b : PIXABAY;
 }
 
-async function photo(request, env, params, cors, origin) {
+async function stock(request, env, params, cors, origin) {
   const headers = { ...cors, "content-type": "application/json", "access-control-expose-headers": "retry-after, x-cache" };
   const out = (status, body, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, "cache-control": status === 200 ? "public, max-age=86400" : "no-store", ...extra } });
   try {
-    if (origin !== PHOTO_ORIGIN) return out(403, { error: { message: "This relay only serves Shoebox." } });
+    if (origin !== STOCK_ORIGIN) return out(403, { error: { message: "This relay only serves Shoebox." } });
     const query = String(params.get("q") || "").trim().replace(/\s+/g, " ");
     if (!query || query.length > 80) return out(400, { error: { message: "Send 1 to 80 characters of search words." } });
     const asked = parseInt(params.get("n") || "", 10);
@@ -323,7 +343,7 @@ async function photo(request, env, params, cors, origin) {
 
     // One cache entry per phrase (lowercased, trimmed) and count. The key holds no address, origin or API key.
     const cache = typeof caches !== "undefined" ? caches.default : null;
-    const cacheKey = new Request(`https://photo-cache.shoebox.invalid/v2?n=${n}&q=${encodeURIComponent(query.toLowerCase())}`);
+    const cacheKey = new Request(`https://stock-cache.shoebox.invalid/v1?n=${n}&q=${encodeURIComponent(query.toLowerCase())}`);
     const hit = cache ? await cache.match(cacheKey) : null;
     if (hit) return out(200, await hit.json(), { "x-cache": "HIT" });
 
@@ -332,9 +352,9 @@ async function photo(request, env, params, cors, origin) {
     if (kv) {
       const ip = request.headers.get("cf-connecting-ip") || "unknown";
       const hour = Math.floor(Date.now() / 3600e3);
-      const rk = `pxr:${(await sha256(`photo:${ip}`)).slice(0, 32)}:${hour}`;
+      const rk = `stk:${(await sha256(`stock:${ip}`)).slice(0, 32)}:${hour}`;
       const used = await spent(kv, rk);
-      const limit = parseInt(env.PHOTO_HOURLY_LIMIT, 10) || PHOTO_HOURLY;
+      const limit = parseInt(env.STOCK_HOURLY_LIMIT, 10) || STOCK_HOURLY;
       if (used >= limit) {
         const wait = String(Math.max(1, (hour + 1) * 3600 - Math.floor(Date.now() / 1000)));
         return out(429, { photos: [], error: { message: "Too many photo searches from this network. Try again in an hour." } }, { "retry-after": wait });
@@ -356,7 +376,7 @@ async function photo(request, env, params, cors, origin) {
     if (!data || typeof data !== "object" || !Array.isArray(data.hits)) return out(502, { photos: [] });
     const body = { photos: pixabayPhotos(data.hits, n) };
     if (cache) {
-      const keep = new Response(JSON.stringify(body), { headers: { "content-type": "application/json", "cache-control": `public, max-age=${PHOTO_CACHE_SECONDS}` } });
+      const keep = new Response(JSON.stringify(body), { headers: { "content-type": "application/json", "cache-control": `public, max-age=${STOCK_CACHE_SECONDS}` } });
       await cache.put(cacheKey, keep).catch(() => {});
     }
     return out(200, body, { "x-cache": "MISS" });
