@@ -49,6 +49,8 @@ enum Theme {
 
     // The bottom bar. Same Nectarine in both modes.
     static let lid = Color(UIColor(hex: 0xFFBD76))
+    /// The lid's folded-down edge, a step deeper than the top.
+    static let lidLip = Color(UIColor(hex: 0xE9A35C))
     static let lidSuggested = Color(UIColor(hex: 0xFFDBB4))
     static let lidInk = Color(UIColor(hex: 0x0A171D))
     static let lidQuiet = Color(UIColor(hex: 0x534938))

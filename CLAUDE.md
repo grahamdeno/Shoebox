@@ -18,9 +18,13 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 
 ## Design rules (short form)
 
-- One full-screen feed, Today, one post per screen. Swipe up = gone until tomorrow (no quiet rule). Box holds what's put away.
-- The bar: a full-width Nectarine `#FFBD76` bar across the bottom, words on each end. Today: Later and Open. Opened post: Later and Done. Sheets and first run use it too. Later raises the Later list from the bar. No box-top lid on screen.
-- Four colors: Wheat `#FFF6E9` is the light background, Onyx `#0A171D` is the dark background and the light text, Oceanic `#003F47` is the logo box, Nectarine is the bar. Your own words get a pale Nectarine tint `#FFD7AA`. Full table in `docs/SPEC.md` section 5.1.
-- Depth is neumorphic: the post is a raised card in the ground color, photos and fields are pressed in. Outer radius = inner radius + padding.
-- The opened post is a full-screen photo with the words on Liquid Glass panels.
-- SF Pro throughout. Actions are words, never pills or icon-only buttons.
+- Today: one full-screen post at a time, Scales' moves. Flick up = not now (back when the why says, or tomorrow). Pull down = into your Shoebox (done, kept). Tap = open. Undo 5 s.
+- A post is a full-bleed graded photo with its words on one Liquid Glass panel. No photo: Onyx lit warm with Nectarine.
+- Your Shoebox across the bottom: a smoked-glass box under a tall Nectarine lid that casts a shadow down onto it, like a shoebox top over the sides. It rattles (shake plus rustling haptic) on every flick up and drop in.
+- Photos are framed on their subject (faces, then saliency, on the phone) and shaded by how bright they are where the words sit. Posts without one get a stock picture chosen on the phone with Apple Intelligence first; only generic words leave the phone, never names, and health, money and legal posts are never looked up.
+- Every save is read for the date it is about (event day and time, deadlines). Past events move to Kept on their own.
+- Writing screens (Keep something, share) are laid out like Scales: full screen on the ground, Cancel and Keep at the top, hairline fields. Nothing rides the keyboard.
+- Colors: Wheat `#FFF6E9` light ground, Onyx `#0A171D` dark ground and light text, Nectarine `#FFBD76` the lid and your reason, Oceanic `#003F47` only in the logo. Never Oceanic as a surface. Full table in `docs/SPEC.md` section 5.1.
+- Settings: groups as cards one step off the ground, no outline, small-caps labels above.
+- SF Pro throughout. Actions are words, never pills or icon-only buttons. No neumorphism.
+- Iterate fast: batch changes, build once when Graham asks. Don't run screenshots or watch CI for every small change.

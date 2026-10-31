@@ -173,7 +173,7 @@ struct NumberedStep: View {
                 .font(.system(size: 17, weight: .semibold))
                 .frame(width: 36, height: 36)
                 .foregroundStyle(Theme.ink)
-                .raised(18, depth: 0.35)
+                .background(Theme.card, in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(head).font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)

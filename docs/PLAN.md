@@ -59,40 +59,9 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |
 | The bar | Full-width Nectarine bar across the bottom, words on each end | October 30, replacing the box-top lid in the corner. The one colored control on screen. |
 
-## 5. Design: Today, Box, Onyx and Wheat
+## 5. Design
 
-Decided October 30 after an interview with Graham. Screens and the design system board: the "Shoebox 2.0 screens" design canvas (https://claude.ai/artifact/3NW2ZEMrxsbH1UeQsaQn95). Tokens: `design/tokens.json`. The Daily Issue, Midnight Gold and Plum and Peach directions are retired; their files in `docs/design/` are history only.
-
-### 5.1 Today (the whole app, almost)
-
-- Full screen, one post per screen. Swipe up for the next post.
-- A post shows: a photo when it has a good one, the headline, a short snippet, and your note as a Nectarine-tint highlight. Lots of white space. No avatar, no badges.
-- Text posts (emails, notes, dates) are type only: a large headline, a snippet, and "Comes back Nov 7 on its own" when dated.
-- Top of the screen, all words: **Box** (left), "3 left today" (plain information, not a button), **+** (right).
-- When Today is empty: "Today's clear," then the screen rests.
-
-### 5.2 The bar
-
-A full-width Nectarine bar across the bottom replaced the box-top lid on October 30. Words on each end. Details in SPEC section 2.2.
-
-- **Today:** Later on the left, Open on the right. Later raises the Later list: the suggested time (with its reason), This weekend, Next week, Pick a date, and Let go set apart at the bottom.
-- **Opened post:** full-screen photo, words on Liquid Glass, the bar with **Later** and **Done**.
-
-| You | What happens |
-|---|---|
-| Swipe up | Gone until tomorrow. |
-| Tap Later | Later list; one tap on the suggestion puts it away. |
-| Tap Open or the post | Opens the post full screen. |
-| Done (opened post) | Kept in the archive, searchable. |
-| Let go (in the Later list) | Removed, with Undo. |
-
-### 5.3 Box
-
-Put-away posts grouped by when they come back (Tomorrow, This weekend, Nov 12), then Kept, then search.
-
-### 5.4 Onyx, Wheat, Oceanic, Nectarine
-
-Moved to `docs/SPEC.md` section 5.1, which is the source of truth. Short form: Wheat light, Onyx dark, Oceanic logo box, Nectarine bar, pale Nectarine for your words. Depth is neumorphic. The opened post is a full-screen photo with Liquid Glass panels.
+The design changed on October 31, 2026 to the stack: Scales' moves, full-screen graded photos with words on Liquid Glass, and a smoked-glass box under a Nectarine lid across the bottom. `docs/SPEC.md` sections 2 and 5 hold the detail and win over anything older here. The Nectarine bar, the Later list and neumorphic cards are retired.
 
 ## 6. Architecture
 
