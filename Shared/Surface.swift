@@ -87,41 +87,6 @@ struct BarShape: View {
     }
 }
 
-/// The logo box set into a raised tile.
-struct LogoTile: View {
-    var size: CGFloat = 132
-
-    var body: some View {
-        BoxMark(size: size * 0.62)
-            .frame(width: size, height: size)
-            .raised(size * 0.28)
-    }
-}
-
-/// The box from the logo, drawn: an Oceanic box with the Nectarine lid ajar.
-struct BoxMark: View {
-    var size: CGFloat = 112
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.05)
-                .fill(Theme.logoBox)
-                .frame(width: size * 0.86, height: size * 0.5)
-                .offset(y: size * 0.18)
-            VStack(spacing: 0) {
-                Theme.lidInk.frame(height: size * 0.055)
-                Theme.logoLid
-            }
-            .frame(width: size, height: size * 0.24)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.05))
-            .rotationEffect(.degrees(-9))
-            .offset(y: -size * 0.14)
-        }
-        .frame(width: size, height: size * 0.8)
-        .accessibilityHidden(true)
-    }
-}
-
 /// A text field: flat, a hairline edge, no shadows.
 struct WellField: ViewModifier {
     func body(content: Content) -> some View {
@@ -134,4 +99,54 @@ struct WellField: ViewModifier {
 
 extension View {
     func well() -> some View { modifier(WellField()) }
+}
+
+/// The top of a writing screen: a quiet word on the left, the action on the right.
+/// It sits at the top so it never has to move for the keyboard.
+struct FormTopBar: View {
+    var leading = "Cancel"
+    var onLeading: () -> Void
+    var trailing: String
+    var trailingEnabled = true
+    var onTrailing: () -> Void
+
+    var body: some View {
+        HStack {
+            Button(leading, action: onLeading)
+                .font(.system(size: 17))
+                .foregroundStyle(Theme.formInk)
+                .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
+                .contentShape(Rectangle())
+            Spacer()
+            Button(trailing, action: onTrailing)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(trailingEnabled ? Theme.formAction : Theme.formQuiet)
+                .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
+                .contentShape(Rectangle())
+        }
+    }
+}
+
+/// A label over a hairline, the field below it. No box.
+struct LineField<Field: View>: View {
+    var label: String
+    @ViewBuilder var field: Field
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(label)
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.formQuiet)
+            Rectangle().fill(Theme.formLine).frame(height: 1)
+            field
+                .font(.system(size: 19))
+                .foregroundStyle(Theme.formInk)
+                .tint(Theme.formAction)
+        }
+    }
+}
+
+/// Placeholder text in the quiet form color.
+func formPrompt(_ s: String) -> Text {
+    Text(s).foregroundStyle(Theme.formQuiet.opacity(0.8))
 }

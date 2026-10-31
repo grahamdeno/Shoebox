@@ -31,16 +31,11 @@ struct TodayRules {
     }
 
     /// Today's pick. Everything coming back (put away until now, dated steps) always comes out.
-    /// The pile fills the rest up to `perDay`: posts passed before come first (back tomorrow means
+    /// The pile fills the rest up to `perDay` (Int.max for no limit): posts passed before come first (back tomorrow means
     /// back tomorrow), then the oldest never seen. The pick is kept for the day so the count only goes down.
     func pick(_ all: [Save], now: Date, previousDay: String?, previousIds: [String], perDay: Int) -> [String] {
         let due = all.filter { isOnToday($0, now: now) }
         let returning = due.filter { $0.status == .away }.sorted { ($0.returnDate ?? now) < ($1.returnDate ?? now) }
-        if previousDay == dayKey(now) {
-            var ids = previousIds
-            for s in returning where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
-            return ids
-        }
         let pile = due.filter { $0.status == .today }.sorted { a, b in
             switch (a.seenOn, b.seenOn) {
             case let (x?, y?): return x < y
@@ -48,6 +43,15 @@ struct TodayRules {
             case (nil, .some): return false
             case (nil, nil): return a.createdAt < b.createdAt
             }
+        }
+        if previousDay == dayKey(now) {
+            var ids = previousIds
+            for s in returning where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
+            // With no daily limit, anything kept since the morning joins the pile too.
+            if perDay == Int.max {
+                for s in pile where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
+            }
+            return ids
         }
         let room = max(0, perDay - returning.count)
         return returning.map(\.id.uuidString) + pile.prefix(room).map(\.id.uuidString)

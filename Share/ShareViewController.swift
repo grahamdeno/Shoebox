@@ -27,6 +27,11 @@ final class ShareViewController: UIViewController {
         model.onClose = { [weak self] in self?.extensionContext?.completeRequest(returningItems: nil) }
         let host = UIHostingController(rootView: ShareSheet(model: model))
         host.view.backgroundColor = .clear
+        switch Prefs.appearance {
+        case 1: host.overrideUserInterfaceStyle = .light
+        case 2: host.overrideUserInterfaceStyle = .dark
+        default: break
+        }
         addChild(host)
         view.addSubview(host.view)
         host.view.translatesAutoresizingMaskIntoConstraints = false
@@ -164,46 +169,43 @@ struct ShareSheet: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-            VStack(alignment: .leading, spacing: 14) {
-                if model.kept {
-                    Text(model.keptLabel)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
-                } else {
-                    Text("Keep it")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                    found
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Why are you keeping it? (optional)").font(.system(size: 13)).foregroundStyle(Theme.quiet)
-                        TextField("Before the trip", text: $model.why, axis: .vertical)
-                            .font(.system(size: 17))
-                            .lineLimit(1...3)
-                            .focused($focused)
-                            .submitLabel(.done)
-                            .onSubmit { model.keep() }
-                            .well()
-                    }
-                    Text("Your why decides when it comes back. Say nothing and it comes back tomorrow.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.quiet)
+        // Laid out like Keep something: Cancel and Keep at the top, so nothing rides the keyboard.
+        VStack(alignment: .leading, spacing: 0) {
+            if model.kept {
+                Spacer()
+                Text(model.keptLabel)
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundStyle(Theme.formInk)
+                Spacer()
+            } else {
+                FormTopBar(onLeading: model.onClose, trailing: "Keep", onTrailing: model.keep)
+                    .padding(.top, 14)
+                Text("Keep it")
+                    .font(.system(size: 34, weight: .bold))
+                    .tracking(-0.6)
+                    .foregroundStyle(Theme.formInk)
+                    .padding(.top, 28)
+                found
+                    .padding(.top, 24)
+                LineField(label: "Why are you keeping it?") {
+                    TextField("", text: $model.why, prompt: formPrompt("Optional. Before the trip"), axis: .vertical)
+                        .lineLimit(1...3)
+                        .focused($focused)
+                        .submitLabel(.done)
+                        .onSubmit { model.keep() }
                 }
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 24)
-            .padding(.bottom, 20)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.sheet)
-            .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius))
-            if !model.kept {
-                BottomBar(leading: "Cancel", leadingQuiet: true, onLeading: model.onClose,
-                          trailing: "Keep", onTrailing: model.keep)
-                    .background(Theme.sheet)
+                .padding(.top, 28)
+                Text("Your why decides when it comes back. Say nothing and it comes back tomorrow.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.formQuiet)
+                    .padding(.top, 20)
+                Spacer(minLength: 0)
             }
         }
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.formGround.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .onAppear { focused = true }
     }
 
@@ -218,10 +220,10 @@ struct ShareSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.title)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(Theme.formInk)
                     .lineLimit(2)
                 if !model.site.isEmpty {
-                    Text(model.site).font(.system(size: 14)).foregroundStyle(Theme.quiet).lineLimit(1)
+                    Text(model.site).font(.system(size: 14)).foregroundStyle(Theme.formQuiet).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)

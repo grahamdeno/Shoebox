@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Query private var all: [Save]
 
     @State private var perDay = Prefs.perDay
+    @State private var appearance = Prefs.appearance
     @State private var time = DailyTime.date(fromMinute: Prefs.dailyMinute)
     @State private var notificationsOn = Prefs.notificationsOn
     @State private var address = Prefs.inboxAddress
@@ -41,8 +42,8 @@ struct SettingsView: View {
                 row {
                     Text("Coming out each day").foregroundStyle(Theme.ink)
                     Spacer()
-                    ForEach([3, 5, 8], id: \.self) { n in
-                        Button("\(n)") { perDay = n; Prefs.perDay = n }
+                    ForEach([5, 10, Prefs.noLimit], id: \.self) { n in
+                        Button(n == Prefs.noLimit ? "All" : "\(n)") { perDay = n; Prefs.perDay = n }
                             .font(.system(size: 17, weight: perDay == n ? .bold : .regular))
                             .foregroundStyle(perDay == n ? Theme.ink : Theme.quiet)
                             .underline(perDay == n)
@@ -80,6 +81,19 @@ struct SettingsView: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.ink)
                     .frame(minHeight: Metrics.touchMin)
+                }
+
+                section("Look")
+                row {
+                    Text("Appearance").foregroundStyle(Theme.ink)
+                    Spacer()
+                    ForEach([(0, "Auto"), (1, "Light"), (2, "Dark")], id: \.0) { value, name in
+                        Button(name) { appearance = value; Prefs.appearance = value }
+                            .font(.system(size: 17, weight: appearance == value ? .bold : .regular))
+                            .foregroundStyle(appearance == value ? Theme.ink : Theme.quiet)
+                            .underline(appearance == value)
+                            .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin)
+                    }
                 }
 
                 section("Your Shoebox email")
