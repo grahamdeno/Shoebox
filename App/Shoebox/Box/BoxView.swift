@@ -15,6 +15,8 @@ struct BoxView: View {
 
     let planner: LaterPlanner
     var onBringBack: (Save) -> Void
+    /// The Box is closing while its Undo is still showing: Today shows it instead, so it can still be undone.
+    var onHandOff: (Toast) -> Void = { _ in }
 
     private let rules = TodayRules()
     private let actions = SaveActions()
@@ -149,6 +151,7 @@ struct BoxView: View {
                 onDelete: { opened = nil; perform(on: save) { actions.letGo($0, now: now); return "Deleted" } }
             )
         }
+        .onDisappear { if let toast { onHandOff(toast) } }
         .onAppear {
             #if DEBUG
             if UserDefaults.standard.string(forKey: "screen") == "settings" { showSettings = true }

@@ -14,6 +14,13 @@ struct OpenedView: View {
 
     @State private var showEdit = false
     @State private var savedFlash = false
+    /// One move per opening. A second tap before the post closes would take its Undo copy after the first move,
+    /// and Undo would put it back to the wrong place.
+    @State private var acted = false
+
+    private func once(_ move: @escaping () -> Void) -> () -> Void {
+        { guard !acted else { return }; acted = true; move() }
+    }
 
     /// The full text with links made tappable: the email, the note, or the page's text.
     private var reading: AttributedString {
@@ -109,7 +116,7 @@ struct OpenedView: View {
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
         // Outside the dark override, so the edit screen follows the app's own look.
         .sheet(isPresented: $showEdit) {
-            EditSheet(save: save, onSaved: flashSaved, onDelete: onDelete)
+            EditSheet(save: save, onSaved: flashSaved, onDelete: once(onDelete))
         }
     }
 
@@ -191,15 +198,15 @@ struct OpenedView: View {
         HStack {
             if save.status == .kept {
                 Spacer()
-                Button(action: onBringBack) {
+                Button(action: once(onBringBack)) {
                     Text("Bring back").frame(minWidth: 88, minHeight: 52, alignment: .trailing).contentShape(Rectangle())
                 }
             } else {
-                Button(action: onNotNow) {
+                Button(action: once(onNotNow)) {
                     Text("Next").frame(minWidth: 88, minHeight: 52, alignment: .leading).contentShape(Rectangle())
                 }
                 Spacer()
-                Button(action: onPutAway) {
+                Button(action: once(onPutAway)) {
                     Text("Put away").frame(minWidth: 88, minHeight: 52, alignment: .trailing).contentShape(Rectangle())
                 }
             }

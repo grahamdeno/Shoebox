@@ -26,6 +26,14 @@ struct EditSheet: View {
     @State private var anySaved = false
     @State private var deleted = false
     @State private var pending: Task<Void, Never>?
+    /// What each field held when last written, so only what you changed is written. A page preview or a date
+    /// read in the background while the screen is open is never overwritten by the screen's older copy.
+    @State private var startTitle: String
+    @State private var startNote: String
+    @State private var startWords: String
+    @State private var startHasDate: Bool
+    @State private var startHasTime: Bool
+    @State private var startDate: Date
 
     private let hadDate: Bool
     private let dateFloor: Date
@@ -41,6 +49,12 @@ struct EditSheet: View {
         _hasDate = State(initialValue: save.eventDate != nil)
         _hasTime = State(initialValue: save.eventHasTime)
         _date = State(initialValue: save.eventDate ?? tomorrow)
+        _startTitle = State(initialValue: save.title)
+        _startNote = State(initialValue: save.note)
+        _startWords = State(initialValue: save.body)
+        _startHasDate = State(initialValue: save.eventDate != nil)
+        _startHasTime = State(initialValue: save.eventHasTime)
+        _startDate = State(initialValue: save.eventDate ?? tomorrow)
         hadDate = save.eventDate != nil
         dateFloor = Calendar.current.startOfDay(for: min(save.eventDate ?? Date(), Date()))
     }
@@ -186,23 +200,24 @@ struct EditSheet: View {
         var wrote = false
         var textChanged = false
 
-        if save.title != t { save.title = t; wrote = true; textChanged = true }
-        if save.note != n { save.note = n; wrote = true; textChanged = true }
-        if editsWords, save.body != w { save.body = w; wrote = true; textChanged = true }
+        if title != startTitle { save.title = t; startTitle = title; wrote = true; textChanged = true }
+        if note != startNote { save.note = n; startNote = note; wrote = true; textChanged = true }
+        if editsWords, words != startWords { save.body = w; startWords = words; wrote = true; textChanged = true }
 
-        let newEvent: Date? = hasDate ? (hasTime ? date : Calendar.current.startOfDay(for: date)) : nil
-        let newHasTime = hasDate && hasTime
-        if save.eventDate != newEvent || save.eventHasTime != newHasTime {
-            save.eventDate = newEvent
+        let dateEdited = hasDate != startHasDate || hasTime != startHasTime || (hasDate && date != startDate)
+        if dateEdited {
+            let newHasTime = hasDate && hasTime
+            save.eventDate = hasDate ? (newHasTime ? date : Calendar.current.startOfDay(for: date)) : nil
             save.eventHasTime = newHasTime
-            if newEvent == nil { save.otherDatesRaw = "" }
+            if !hasDate { save.otherDatesRaw = "" }
+            startHasDate = hasDate; startHasTime = hasTime; startDate = date
             comeBackBeforeTheDate()
             wrote = true
-        } else if textChanged, !hadDate, !hasDate, DateReader.apply(to: save) {
-            // New words that name a date, and you did not clear one: read it, as when a post is kept.
-            hasDate = true
-            hasTime = save.eventHasTime
-            if let e = save.eventDate { date = e }
+        } else if textChanged, !hadDate, !hasDate, save.eventDate == nil, DateReader.apply(to: save, asOf: Date()) {
+            // New words that name a date still ahead, and you did not clear one: read it, as when a post is kept.
+            let e = save.eventDate ?? date
+            startHasDate = true; startHasTime = save.eventHasTime; startDate = e
+            hasDate = true; hasTime = save.eventHasTime; date = e
             comeBackBeforeTheDate()
         }
 
@@ -225,6 +240,7 @@ struct EditSheet: View {
 
     /// The sure way out: saved, a tap you can feel, and the post says "Saved".
     private func keep() {
+        guard !deleted else { return }
         pending?.cancel()
         commit()
         anySaved = true
@@ -232,6 +248,8 @@ struct EditSheet: View {
     }
 
     private func delete() {
+        // Once only: a second tap would take its Undo copy after the delete, and Undo would do nothing.
+        guard !deleted else { return }
         pending?.cancel()
         deleted = true
         onDelete()

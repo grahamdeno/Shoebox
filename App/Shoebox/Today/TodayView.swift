@@ -114,7 +114,7 @@ struct TodayView: View {
             )
         }
         .sheet(isPresented: $showBox) {
-            BoxView(planner: planner, onBringBack: { bringBack($0) })
+            BoxView(planner: planner, onBringBack: { bringBack($0) }, onHandOff: { if toast == nil { show($0) } })
                 .presentationDetents([.large])
                 .presentationCornerRadius(Metrics.sheetRadius)
         }
@@ -449,7 +449,11 @@ struct TodayView: View {
         let snapshot = SaveSnapshot(save)
         let text = change(save)
         try? context.save()
-        let new = Toast(text: text, undo: { snapshot.restore(save); try? context.save() })
+        show(Toast(text: text, undo: { snapshot.restore(save); try? context.save() }))
+    }
+
+    /// Shows Undo for 5 seconds.
+    private func show(_ new: Toast) {
         withAnimation(.snappy) { toast = new }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(5))
