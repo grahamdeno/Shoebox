@@ -15,6 +15,8 @@ struct BoxView: View {
 
     let planner: LaterPlanner
     var onBringBack: (Save) -> Void
+    /// "Go through them one at a time": close the Shoebox and bring them out on Today.
+    var onBrowse: () -> Void = {}
     /// The Box is closing while its Undo is still showing: Today shows it instead, so it can still be undone.
     var onHandOff: (Toast) -> Void = { _ in }
 
@@ -34,16 +36,16 @@ struct BoxView: View {
     private var putAwayAll: [Save] { rules.kept(all) }
     private var putAway: [Save] { putAwayAll.filter(matches) }
 
-    /// The Shoebox list, grouped by when each post comes back. What is on Today now comes first.
-    private var groups: [(label: String, items: [Save])] {
-        var order: [String] = []
-        var map: [String: [Save]] = [:]
-        for s in rules.library(all, now: now) where matches(s) {
-            let label = rules.comesBack(s, now: now).map { planner.label(for: $0, now: now) } ?? "On Today"
-            if map[label] == nil { order.append(label) }
-            map[label, default: []].append(s)
-        }
-        return order.map { ($0, map[$0] ?? []) }
+    /// Posts with a date, soonest first. A fact about the post, not a guess.
+    private var comingUp: [Save] {
+        rules.library(all, now: now).filter { $0.eventDate != nil && matches($0) }
+            .sorted { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
+    }
+
+    /// Everything else not put away, newest first.
+    private var everythingElse: [Save] {
+        rules.library(all, now: now).filter { $0.eventDate == nil && matches($0) }
+            .sorted { $0.createdAt > $1.createdAt }
     }
 
     private var filterWord: String? {
@@ -93,30 +95,45 @@ struct BoxView: View {
                     .padding(.horizontal, 24)
                     .submitLabel(.search)
 
-                Text(showPutAway ? "Posts you are done with. Tap one to open it." : "Everything you are not done with. Tap one to open it.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.quiet)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 10)
-
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         if showPutAway {
                             if putAway.isEmpty { empty(searching ? "Nothing found." : "Nothing put away yet.") }
                             ForEach(putAway, id: \.id) { row($0, dim: true) }
                         } else {
-                            let g = groups
-                            if g.isEmpty && !(searching && !putAway.isEmpty) {
+                            let up = comingUp
+                            let rest = everythingElse
+                            if up.isEmpty && rest.isEmpty && !(searching && !putAway.isEmpty) {
                                 empty(searching ? "Nothing found." : "Nothing waiting. Everything is put away.")
                             }
-                            ForEach(g, id: \.label) { group in
-                                sectionTitle(group.label)
-                                ForEach(group.items, id: \.id) { row($0, dim: false) }
+                            if !up.isEmpty {
+                                sectionTitle("Coming up")
+                                ForEach(up, id: \.id) { row($0, dim: false, dated: true) }
+                            }
+                            if !rest.isEmpty {
+                                sectionTitle("Everything else")
+                                ForEach(rest, id: \.id) { row($0, dim: false) }
                             }
                             // Searching looks everywhere, so what you put away can still be found.
                             if searching && !putAway.isEmpty {
                                 sectionTitle("Put away")
                                 ForEach(putAway, id: \.id) { row($0, dim: true) }
+                            }
+                            if !searching && !(up.isEmpty && rest.isEmpty) {
+                                Button(action: onBrowse) {
+                                    HStack {
+                                        Text("Go through them one at a time")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(Theme.ink)
+                                        Spacer()
+                                        Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+                                    }
+                                    .frame(minHeight: 52)
+                                    .contentShape(Rectangle())
+                                    .overlay(alignment: .top) { Rectangle().fill(Theme.line).frame(height: 1) }
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.top, 26)
                             }
                         }
                     }
@@ -181,23 +198,73 @@ struct BoxView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 12, weight: .semibold))
+            .textCase(.uppercase)
+            .tracking(0.9)
             .foregroundStyle(Theme.quiet)
-            .padding(.top, 20)
-            .padding(.bottom, 2)
+            .padding(.top, 22)
+            .padding(.bottom, 4)
     }
 
-    private func row(_ s: Save, dim: Bool) -> some View {
+    /// One shape for every row: a date or a small picture, one line of title, one quiet line of where it came from.
+    private func row(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
         Button { opened = OpenedPost(save: s) } label: {
-            Text(s.headline)
-                .font(.system(size: 17))
-                .foregroundStyle(dim ? Theme.quiet : Theme.ink)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, minHeight: Metrics.touchMin, alignment: .leading)
-                .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+            HStack(spacing: 14) {
+                if dated, let day = s.eventDate {
+                    VStack(spacing: 2) {
+                        Text(day.formatted(.dateTime.month(.abbreviated)).uppercased())
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(0.8)
+                            .foregroundStyle(Theme.quiet)
+                        Text(day.formatted(.dateTime.day()))
+                            .font(.system(size: 21, weight: .semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(dim ? Theme.quiet : Theme.ink)
+                    }
+                    .frame(width: 42)
+                } else {
+                    thumb(s)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(s.headline)
+                        .font(.system(size: 16))
+                        .foregroundStyle(dim ? Theme.quiet : Theme.ink)
+                        .lineLimit(1)
+                    Text(meta(s))
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.quiet)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+            .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// "2 weeks ago, from Safari"
+    private func meta(_ s: Save) -> String {
+        s.byline().replacingOccurrences(of: "You, ", with: "")
+    }
+
+    /// The post's own picture, small; without one, the warm Onyx the post itself shows.
+    @ViewBuilder
+    private func thumb(_ s: Save) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+        if let data = s.imageData, let image = PhotoCache.entry(id: s.id, data: data)?.image {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 42, height: 42)
+                .clipShape(shape)
+        } else {
+            shape
+                .fill(Theme.card)
+                .overlay(RadialGradient(colors: [Theme.lid.opacity(0.45), .clear], center: .topLeading, startRadius: 0, endRadius: 46).clipShape(shape))
+                .frame(width: 42, height: 42)
+        }
     }
 }
