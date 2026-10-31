@@ -1,0 +1,36 @@
+name: screens
+# Simulator screenshots of every screen, pushed to the ci-screens branch.
+# Runs when a commit message contains [screens].
+on:
+  push:
+    branches-ignore: [main, testflight, ci-screens]
+
+jobs:
+  screens:
+    if: contains(github.event.head_commit.message, '[screens]')
+    runs-on: macos-26
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: Build for the simulator
+        run: |
+          brew install xcodegen && xcodegen generate
+          SIM=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS-26' in k for x in v if x['name'].startswith('iPhone 17 Pro')) if any('iOS-26' in k for k in d) else '')")
+          [ -z "$SIM" ] && SIM=$(xcrun simctl list devices available iPhone | grep -Eo '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
+          echo "SIM=$SIM" >> $GITHUB_ENV
+          set -o pipefail
+          xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -destination "id=$SIM" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
+            || { grep -E "error:" build.log | sort -u | head -30 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+      - name: Screenshots
+        run: Scripts/screens.sh "$SIM"
+      - name: Publish to the ci-screens branch
+        run: |
+          cd screens
+          git init -q && git checkout -q -b ci-screens
+          git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "Screens for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screens
+          echo "::notice::Screens for ${GITHUB_SHA::7}"

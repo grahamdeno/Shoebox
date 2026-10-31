@@ -24,6 +24,41 @@ struct TodayRules {
         return returning + fresh
     }
 
+    /// The key for a day's pick, like "2026-10-30".
+    func dayKey(_ date: Date) -> String {
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+
+    /// Today's pick. Everything coming back (put away until now, dated steps) always comes out.
+    /// The pile fills the rest up to `perDay`: posts passed before come first (back tomorrow means
+    /// back tomorrow), then the oldest never seen. The pick is kept for the day so the count only goes down.
+    func pick(_ all: [Save], now: Date, previousDay: String?, previousIds: [String], perDay: Int) -> [String] {
+        let due = all.filter { isOnToday($0, now: now) }
+        let returning = due.filter { $0.status == .away }.sorted { ($0.returnDate ?? now) < ($1.returnDate ?? now) }
+        if previousDay == dayKey(now) {
+            var ids = previousIds
+            for s in returning where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
+            return ids
+        }
+        let pile = due.filter { $0.status == .today }.sorted { a, b in
+            switch (a.seenOn, b.seenOn) {
+            case let (x?, y?): return x < y
+            case (.some, nil): return true
+            case (nil, .some): return false
+            case (nil, nil): return a.createdAt < b.createdAt
+            }
+        }
+        let room = max(0, perDay - returning.count)
+        return returning.map(\.id.uuidString) + pile.prefix(room).map(\.id.uuidString)
+    }
+
+    /// The posts on Today right now, in pick order.
+    func today(_ all: [Save], ids: [String], now: Date) -> [Save] {
+        let byId = Dictionary(all.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
+        return ids.compactMap { byId[$0] }.filter { isOnToday($0, now: now) }
+    }
+
     func away(_ all: [Save], now: Date) -> [Save] {
         all.filter { $0.deletedAt == nil && $0.status == .away && !isOnToday($0, now: now) }
             .sorted { ($0.returnDate ?? .distantFuture) < ($1.returnDate ?? .distantFuture) }

@@ -106,6 +106,42 @@ final class RulesTests: XCTestCase {
         let order = rules.queue([newer, returning, old], now: now).map(\.title)
         XCTAssertEqual(order, ["returning", "old", "newer"])
     }
+
+    // The day's pick: everything returning, then the pile up to the daily number.
+    func testPickCapsThePileButNotReturns() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let back1 = Save(title: "b1", status: .away, returnDate: date(2026, 10, 30, 8))
+        let back2 = Save(title: "b2", status: .away, returnDate: date(2026, 10, 30, 9))
+        let all = pile + [back1, back2]
+        let ids = rules.pick(all, now: now, previousDay: nil, previousIds: [], perDay: 5)
+        let titles = rules.today(all, ids: ids, now: now).map(\.title)
+        XCTAssertEqual(titles, ["b1", "b2", "p1", "p2", "p3"])
+    }
+
+    func testPassedPostsComeBackFirstTomorrow() {
+        let a = Save(title: "a", createdAt: date(2026, 10, 1))
+        let b = Save(title: "b", createdAt: date(2026, 10, 2))
+        let passed = Save(title: "passed", createdAt: date(2026, 10, 20))
+        passed.seenOn = date(2026, 10, 29, 9)
+        let ids = rules.pick([a, b, passed], now: now, previousDay: nil, previousIds: [], perDay: 2)
+        XCTAssertEqual(rules.today([a, b, passed], ids: ids, now: now).map(\.title), ["passed", "a"])
+    }
+
+    func testPickHoldsForTheDaySoTheCountOnlyGoesDown() {
+        let a = Save(title: "a", createdAt: date(2026, 10, 1))
+        let b = Save(title: "b", createdAt: date(2026, 10, 2))
+        let first = rules.pick([a, b], now: now, previousDay: nil, previousIds: [], perDay: 1)
+        actions.pass(a, now: now)
+        let again = rules.pick([a, b], now: now, previousDay: rules.dayKey(now), previousIds: first, perDay: 1)
+        XCTAssertTrue(rules.today([a, b], ids: again, now: now).isEmpty)
+    }
+
+    func testBylineReadsLikeAPerson() {
+        let s = Save(title: "Trail", origin: "Safari", createdAt: date(2026, 10, 16))
+        XCTAssertEqual(s.byline(now: date(2026, 10, 30, 12)), "You, 2 weeks ago, from Safari")
+        let e = Save(title: "Picture day", origin: "via your Shoebox email", createdAt: date(2026, 10, 29))
+        XCTAssertEqual(e.byline(now: date(2026, 10, 30, 12)), "You, yesterday, via your Shoebox email")
+    }
 }
 
 final class LaterPlannerTests: XCTestCase {
