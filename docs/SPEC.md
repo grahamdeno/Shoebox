@@ -21,7 +21,8 @@ Updated October 31, 2026 for the stack (PR #11 and #12). The moves are copied fr
 Full screen, one post per screen. No list, no second sort screen, no tab bar.
 
 - **A post:** the photo fills the whole screen, graded (section 5.3). The words sit low on one Liquid Glass panel: your reason in Nectarine, the headline (30 pt bold, 34 pt with no photo), a short snippet, a "Comes back ..." line for dated posts, and the byline ("You, 2 weeks ago, from Safari").
-- **No photo:** Onyx lit warm from the top corner with a Nectarine glow.
+- **No photo:** a stock picture is found for it (section 4.1). Until then, or when none is found, Onyx lit warm from the top corner with a Nectarine glow.
+- **Dated posts:** one line under the words, "Oct 30 at 4:00 PM. Back Oct 25, Oct 29 and Oct 30."
 - **Top left:** "+ New" opens Keep something.
 - **Your Shoebox** across the bottom (section 2.2).
 
@@ -110,7 +111,7 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
 2. **Flick up = not now.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
 3. **Pull down = into your Shoebox.** Done, kept and searchable in the Box.
 4. **Every action is instant, with Undo for 5 seconds.** No confirm dialogs, except Delete everything.
-5. **Dated posts** come back on their own 5 days before, 1 day before and on the day, at 8 AM.
+5. **Dated posts** come back on their own 5 days before, 1 day before and on the day, at 8 AM. Every save is read for the date it is about (section 4.2). The nearest event comes first. Once the day has gone by, the post moves to Kept on its own (never deleted) and stays searchable.
 6. **A new save** comes back when its reason says, or tomorrow.
 7. **Never delete on its own.** Shoebox never removes a save without you saying so.
 
@@ -136,6 +137,20 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 | Email | Forward to your Shoebox address. Each email is one post; your words above the forward are the reason. Ads are skipped unless you wrote a note. A date in the email makes it a dated post. The same email twice is kept once. Mail waits on the relay up to 30 days. |
 | Shoebox 1 | On first run, the newest Shoebox 1 backup (`shoebox-backup-*.json` in Files or iCloud Drive, Shoebox › Backups) is brought in. Importing twice adds nothing. The email address and its key come over too. |
 | Backups | Settings › Bring in a backup takes any Shoebox 1 or 2 file. |
+
+### 4.1 Pictures for posts without one
+
+- The phone does the thinking. Apple Intelligence turns the post into two to four generic words ("school gym string lights"), asks the relay for about six candidates, and picks the best by their captions. Without Apple Intelligence, a short list of plain keyword rules writes the words and the server's first candidate is used.
+- Only those generic words leave the phone: never names, your text or your reason. A guard drops any word that looks like a name from the post. Posts about health, money or legal matters are never looked up.
+- The relay's `/photo?q=&n=` endpoint asks Pexels (key kept on the relay) and returns candidates. Nothing about the post is logged.
+- A real picture from the page replaces a stock one. A miss is retried tomorrow. Settings > Pictures turns it off.
+
+### 4.2 Dates in the words
+
+- Read on the phone with plain rules (`Shared/DateReader.swift`): written dates ("October 30", "Nov 7, 2026"), "10/30", and weekdays within two weeks. A time of day is taken from the same sentence ("4:00 to 6:00" is 4 PM) or the one after.
+- Only dates still ahead of the day the post was kept count. A year-less date more than a week back means next year. Link digits are ignored. For web pages only the title, description and your note are read.
+- The event is the earliest date that isn't a deadline ("forms due Nov 3"); deadlines are kept as other dates. Your reason still wins when it names a time.
+- Done at capture, when a page's text arrives, and once for saves kept before this was added.
 
 **Link previews.** The relay reads the page and returns its title, description, best picture and readable text. The picture is shrunk to 1200 px and kept on the phone. Your own words are never replaced.
 
@@ -192,7 +207,7 @@ The Nectarine bar with Later and Open, the Later list and date picker, neumorphi
 
 1. Home Screen and Lock Screen widgets.
 2. Later and Open on the notification itself.
-3. A stock photo for posts with no picture (needs a photo service behind the relay).
+3. The relay's `/photo` endpoint deployed (Pexels key as a Worker secret). Until then, no stock pictures.
 4. School newsletters turned into short dated posts by AI, with the child's name masked as `{child}` (Core `NameMask` is ready).
 5. The richer return planner: Core rules R1 to R20 plus Foundation Models, and "before the meeting" from the calendar.
 6. Siri and Shortcuts: Keep, Find, Bring back.
