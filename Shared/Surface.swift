@@ -35,8 +35,8 @@ extension View {
     }
 }
 
-/// The bar across the bottom: Nectarine, full width, words on each end.
-/// Used on Today (Later, Open), an opened post (Later, Done), sheets and first run.
+/// The words along the bottom of first run: a quiet word on the left, the action on the right,
+/// straight on the ground with no bar behind them. Same as Scales.
 struct BottomBar: View {
     var leading: String?
     var leadingQuiet = false
@@ -49,8 +49,7 @@ struct BottomBar: View {
             if let leading {
                 Button(action: onLeading) {
                     Text(leading)
-                        .fontWeight(leadingQuiet ? .regular : .semibold)
-                        .foregroundStyle(leadingQuiet ? Theme.lidQuiet : Theme.lidInk)
+                        .foregroundStyle(Theme.quiet)
                         .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .leading)
                         .contentShape(Rectangle())
                 }
@@ -59,33 +58,21 @@ struct BottomBar: View {
             Button(action: onTrailing) {
                 Text(trailing)
                     .fontWeight(.semibold)
-                    .foregroundStyle(Theme.lidInk)
+                    .foregroundStyle(Theme.formAction)
                     .frame(minWidth: 64, minHeight: Metrics.touchMin, alignment: .trailing)
                     .contentShape(Rectangle())
             }
         }
-        .font(.system(size: 18))
+        .font(.system(size: 19))
         .buttonStyle(.plain)
-        .padding(.horizontal, 28)
-        .padding(.top, 16)
+        .padding(.horizontal, 32)
+        .padding(.top, 12)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
-        .background(BarShape())
+        .background(Theme.ground)
     }
 }
 
-/// The bar's surface: Nectarine with rounded top corners, a lit top edge and a soft lift,
-/// running under the home indicator.
-struct BarShape: View {
-    var body: some View {
-        UnevenRoundedRectangle(topLeadingRadius: Metrics.barRadius, topTrailingRadius: Metrics.barRadius, style: .continuous)
-            .fill(Theme.lid
-                .shadow(.inner(color: .white.opacity(0.55), radius: 1.5, x: 0, y: 2))
-                .shadow(.inner(color: Color(UIColor(hex: 0xB97A3A)).opacity(0.35), radius: 10, x: 0, y: -6)))
-            .shadow(color: Theme.shadeSide, radius: 18, x: 0, y: -6)
-            .ignoresSafeArea(edges: .bottom)
-    }
-}
 
 /// A text field: flat, a hairline edge, no shadows.
 struct WellField: ViewModifier {
