@@ -162,14 +162,13 @@ struct TodayView: View {
         }
     }
 
-    /// "Next" and "Put away" fade in as the post moves toward them, bold once it is far enough.
+    /// "Next" fades in as the post moves up, bold once it is far enough. Pulling down, the box itself
+    /// says "Let go to put it away", so there is no second hint over the post.
     private var hints: some View {
         let up = max(0, -drag) / Self.upDistance
-        let down = max(0, drag) / Self.downDistance
         return VStack {
             hint("Next", progress: up).padding(.top, 64)
             Spacer()
-            hint("Put away", progress: down).padding(.bottom, Self.stripHeight + 56)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)

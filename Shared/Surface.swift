@@ -122,12 +122,13 @@ struct BoxMark: View {
     }
 }
 
-/// A text field pressed into the surface.
+/// A text field: flat, a hairline edge, no shadows.
 struct WellField: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(14)
-            .inset(Metrics.fieldRadius)
+            .background(Theme.ground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
     }
 }
 
