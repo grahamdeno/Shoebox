@@ -66,6 +66,9 @@ enum Theme {
     // The box in the logo. Oceanic, and a lighter Oceanic on Onyx so it shows.
     static let logoBox = adaptive(light: 0x003F47, dark: 0x2F7E88)
     static let logoLid = Color(UIColor(hex: 0xFFBD76))
+    /// The bottom box: Wheat in both modes, with the Nectarine lid on top.
+    static let boxBody = Color(UIColor(hex: 0xFFF6E9))
+    static let boxBodyQuiet = Color(UIColor(hex: 0x5A6B6E))
     static let logoCards = adaptive(light: 0x5A6B6E, dark: 0xB8C4BF)
 
     // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
