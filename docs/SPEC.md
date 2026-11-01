@@ -76,7 +76,7 @@ A glass box across the bottom, tinted from the ground (one tint lighter than Ony
 Laid out like Scales: full screen on the app's own ground (Wheat or Onyx), **Cancel** top left and **Keep** top right, a large title, then fields as a label over a hairline with no box.
 
 - Fields: "Link or note" and "Why are you keeping it?" ("Optional. Before the trip"). The share sheet shows what was found (title, site, picture) in place of the first field.
-- "Keep a photo instead" opens Photos.
+- Under the field: "Or add" Photos, Files, Camera (the camera opens in the lower half). Then the why, and an optional "Start showing it on" day: until then it waits in the Shoebox. The scroll stops at the keyboard so every field can be reached.
 - "Your why decides when it comes back. Say nothing and it comes back tomorrow."
 - Nothing rides up with the keyboard, and one swipe down closes it.
 - Several links pasted together become several saves. A link that's already kept isn't kept twice.

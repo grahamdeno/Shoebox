@@ -117,7 +117,7 @@ struct EditSheet: View {
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.formGround.ignoresSafeArea())
-        .ignoresSafeArea(.keyboard)
+        // The scroll stops at the keyboard so every field can be reached; Delete stays put behind it.
         .overlay(alignment: .bottomLeading) {
             // Within the thumb's reach, away from Keep at the top.
             Button(action: delete) {
@@ -131,6 +131,7 @@ struct EditSheet: View {
             }
             .buttonStyle(.plain)
             .padding(.bottom, 6)
+            .ignoresSafeArea(.keyboard)
         }
         .presentationDetents([.large])
         .presentationBackground(Theme.formGround)
