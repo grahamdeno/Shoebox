@@ -25,7 +25,11 @@ struct TodayView: View {
     @Query(sort: \Save.createdAt) private var all: [Save]
 
     @State private var pickIds: [String] = Prefs.pickIds
-    @State private var showBox = false
+    /// How far the Shoebox sheet is out from behind the box: 0 hidden, 1 fully open. It follows the thumb.
+    @State private var boxProgress: CGFloat = 0
+    @State private var boxMounted = false
+    @State private var boxDragging = false
+    @State private var boxStart: CGFloat = 0
     @State private var showAdd = false
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
@@ -102,7 +106,16 @@ struct TodayView: View {
                     topBar(onPhoto: false)
                 }
 
+                // The Shoebox slides out from behind the box, at the pace of the thumb.
+                if boxMounted {
+                    Color.black.opacity(0.4 * boxProgress).ignoresSafeArea().allowsHitTesting(false)
+                    boxSheet(height: height, top: geo.safeAreaInsets.top)
+                }
+
                 strip
+                    .opacity(1 - Double(min(1, max(0, (boxProgress - 0.55) / 0.45))))
+                    .allowsHitTesting(boxProgress < 0.98 || boxDragging)
+                    .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
 
                 if let toast {
                     toastView(toast)
@@ -126,13 +139,71 @@ struct TodayView: View {
                 onDelete: { opened = nil; deleteSave(save) }
             )
         }
-        .sheet(isPresented: $showBox) {
-            BoxView(planner: planner, onBringBack: { bringBack($0) }, onBrowse: { showBox = false; startBrowsing() }, onHandOff: { if toast == nil { show($0) } })
-                .presentationDetents([.large])
-                .presentationCornerRadius(Metrics.sheetRadius)
-        }
         .sheet(isPresented: $showAdd) {
             AddSheet()
+        }
+    }
+
+    // MARK: The Shoebox sheet
+
+    private static let boxSpring = Animation.spring(response: 0.38, dampingFraction: 0.86)
+
+    /// Where the top of the sheet sits: hidden behind the box, and fully open just under the status bar.
+    private func boxTops(_ height: CGFloat, _ top: CGFloat) -> (closed: CGFloat, open: CGFloat) {
+        (height - Self.stripHeight + 40, top + 10)
+    }
+
+    private func boxSheet(height: CGFloat, top: CGFloat) -> some View {
+        let tops = boxTops(height, top)
+        let y = tops.closed + (tops.open - tops.closed) * boxProgress
+        return VStack(spacing: 0) {
+            // The handle: pull it down to close, like any sheet.
+            Capsule().fill(Theme.quiet.opacity(0.45)).frame(width: 38, height: 5)
+                .frame(maxWidth: .infinity, minHeight: 26)
+                .contentShape(Rectangle())
+                .gesture(boxPull(height: height, top: top))
+            BoxView(planner: planner, onClose: { closeBox() }, onBringBack: { bringBack($0) },
+                    onBrowse: { closeBox(); startBrowsing() }, onHandOff: { if toast == nil { show($0) } })
+        }
+        .frame(height: height - tops.open)
+        .background(Theme.ground)
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius, style: .continuous))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .offset(y: y)
+        .ignoresSafeArea()
+    }
+
+    /// One drag opens and closes the sheet: it follows the thumb one to one, and on release it settles open
+    /// or closed by where it is and how fast you were going.
+    private func boxPull(height: CGFloat, top: CGFloat) -> some Gesture {
+        let tops = boxTops(height, top)
+        let travel = max(1, tops.closed - tops.open)
+        return DragGesture(minimumDistance: 6)
+            .onChanged { v in
+                if !boxDragging { boxDragging = true; boxStart = boxProgress; boxMounted = true }
+                boxProgress = min(1, max(0, boxStart - v.translation.height / travel))
+            }
+            .onEnded { v in
+                boxDragging = false
+                let predicted = boxStart - v.predictedEndTranslation.height / travel
+                if predicted > 0.5 { settleBox(open: true) } else { settleBox(open: false) }
+            }
+    }
+
+    private func openBox() {
+        boxMounted = true
+        DispatchQueue.main.async { settleBox(open: true) }
+    }
+
+    private func closeBox() { settleBox(open: false) }
+
+    private func settleBox(open: Bool) {
+        if open { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
+        withAnimation(Self.boxSpring) { boxProgress = open ? 1 : 0 }
+        if !open {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if boxProgress == 0 && !boxDragging { boxMounted = false }
+            }
         }
     }
 
@@ -231,10 +302,7 @@ struct TodayView: View {
             }
             .frame(height: Self.stripHeight + growth)
             .contentShape(Rectangle())
-            .onTapGesture { showBox = true }
-            .gesture(DragGesture(minimumDistance: 12).onEnded { v in
-                if v.translation.height < -40 { showBox = true }
-            })
+            .onTapGesture { openBox() }
             .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
                 content.offset(x: v.dx)
             } keyframes: { _ in
@@ -507,7 +575,7 @@ struct TodayView: View {
     }
 
     private func bringBack(_ save: Save) {
-        showBox = false
+        closeBox()
         perform("Back on Today", on: save) { actions.bringBack($0, now: now) }
         var ids = Prefs.pickIds.filter { $0 != save.id.uuidString }
         ids.insert(save.id.uuidString, at: 0)
@@ -570,7 +638,7 @@ struct TodayView: View {
         case "up": drag = -110; crossed = 1
         case "away": drag = 170; crossed = -1
         case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
-        case "box", "settings": showBox = true
+        case "box", "settings": boxMounted = true; boxProgress = 1
         case "add": showAdd = true
         default: break
         }
