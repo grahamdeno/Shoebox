@@ -37,6 +37,10 @@ final class Save {
     /// The page's picture on the web. The picture itself is kept in `imageData` once fetched.
     var imageURL: String?
     @Attribute(.externalStorage) var imageData: Data?
+    /// A file you kept (a PDF, a document): the file itself, its name and its type, so it can be opened again.
+    @Attribute(.externalStorage) var fileData: Data?
+    var fileName: String?
+    var fileType: String?
 
     var statusRaw: String = SaveStatus.today.rawValue
     var returnDate: Date?

@@ -212,10 +212,14 @@ enum Backups {
             // Added later; older backups don't have them.
             var eventHasTime: Bool?; var otherDates: String?; var imageSource: String?
             var imageCredit: String?; var imageCreditURL: String?
+            var file: Data?; var fileName: String?; var fileType: String?
         }
     }
 
-    static func export(_ context: ModelContext) -> Data? {
+    /// The backup as JSON. Kept files are big, so they ride along only when `files` is true (the copy taken
+    /// before Delete everything). Daily and shared copies leave them out; `keepFiles` stores each one once,
+    /// beside the backups, and restore finds them there.
+    static func export(_ context: ModelContext, files: Bool = false) -> Data? {
         let all = (try? context.fetch(FetchDescriptor<Save>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []
         let items = all.map { s in
             Export.Item(id: s.id, createdAt: s.createdAt, updatedAt: s.updatedAt, deletedAt: s.deletedAt,
@@ -224,7 +228,8 @@ enum Backups {
                         status: s.statusRaw, returnDate: s.returnDate, seenOn: s.seenOn, eventDate: s.eventDate,
                         emailFrom: s.emailFrom, emailSubject: s.emailSubject, emailReceivedAt: s.emailReceivedAt, oldId: s.oldId,
                         eventHasTime: s.eventHasTime, otherDates: s.otherDatesRaw, imageSource: s.imageSource,
-                        imageCredit: s.imageCredit, imageCreditURL: s.imageCreditURL)
+                        imageCredit: s.imageCredit, imageCreditURL: s.imageCreditURL,
+                        file: files && s.deletedAt == nil ? s.fileData : nil, fileName: s.fileName, fileType: s.fileType)
         }
         let e = Export(saves: items, inboxKey: Prefs.inboxKey, inboxAddress: Prefs.inboxAddress)
         return try? JSONEncoder.shoebox.encode(e)
@@ -247,6 +252,8 @@ enum Backups {
             s.imageSource = i.imageSource
             s.imageCredit = i.imageCredit
             s.imageCreditURL = i.imageCreditURL
+            s.fileData = i.file ?? (i.fileName != nil ? keptFile(i.id) : nil)
+            s.fileName = i.fileName; s.fileType = i.fileType
             s.enrichedAt = Date()
             context.insert(s)
             added += 1
@@ -264,6 +271,7 @@ enum Backups {
         guard AppGroup.defaults.string(forKey: "lastBackup") != key else { return }
         let count = (try? context.fetchCount(FetchDescriptor<Save>())) ?? 0
         guard count > 0, let data = export(context) else { return }
+        keepFiles(context)
         let name = "shoebox-native-backup-\(key).json"
         var wrote = false
         for dir in folders {
@@ -282,6 +290,40 @@ enum Backups {
             AppGroup.defaults.set(key, forKey: "lastBackup")
             AppGroup.defaults.set(Date(), forKey: "lastBackupAt")
         }
+    }
+
+    /// Each kept file, once, in Backups/Files/<id>/<name>, so the daily copy stays small. Files of posts
+    /// that are gone are removed.
+    static func keepFiles(_ context: ModelContext) {
+        var live = FetchDescriptor<Save>(predicate: #Predicate { $0.deletedAt == nil && $0.fileName != nil })
+        live.propertiesToFetch = [\.id, \.fileName]
+        let posts = (try? context.fetch(live)) ?? []
+        let ids = Set(posts.map(\.id.uuidString))
+        let fm = FileManager.default
+        for dir in folders {
+            let root = dir.appending(path: "Files", directoryHint: .isDirectory)
+            for p in posts {
+                let folder = root.appending(path: p.id.uuidString, directoryHint: .isDirectory)
+                let url = folder.appending(path: FileKeeper.safeName(p.fileName))
+                guard !fm.fileExists(atPath: url.path()), let data = p.fileData else { continue }
+                try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+                try? data.write(to: url, options: .atomic)
+            }
+            for name in (try? fm.contentsOfDirectory(atPath: root.path())) ?? [] where !ids.contains(name) && UUID(uuidString: name) != nil {
+                try? fm.removeItem(at: root.appending(path: name))
+            }
+        }
+    }
+
+    /// A kept file from Backups/Files, here or in iCloud Drive.
+    static func keptFile(_ id: UUID) -> Data? {
+        let fm = FileManager.default
+        for dir in folders {
+            let folder = dir.appending(path: "Files/\(id.uuidString)", directoryHint: .isDirectory)
+            guard let name = ((try? fm.contentsOfDirectory(atPath: folder.path())) ?? []).first(where: { !$0.hasPrefix(".") }) else { continue }
+            if let data = coordinatedRead(folder.appending(path: name)) { return data }
+        }
+        return nil
     }
 
     private static func size(_ url: URL) -> Int {
