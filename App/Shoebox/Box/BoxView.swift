@@ -42,15 +42,23 @@ struct BoxView: View {
     private var putAwayAll: [Save] { rules.kept(all) }
     private var putAway: [Save] { putAwayAll.filter(matches) }
 
-    /// Posts with a date, soonest first. A fact about the post, not a guess.
+    /// How far ahead Coming up looks. Anything dated later waits in Everything else until it's close.
+    private var horizon: Date { Calendar.current.date(byAdding: .month, value: 2, to: now) ?? now }
+
+    private func isComingUp(_ s: Save) -> Bool {
+        guard let day = s.eventDate else { return false }
+        return day <= horizon
+    }
+
+    /// Posts dated in the next two months, soonest first. A fact about the post, not a guess.
     private var comingUp: [Save] {
-        rules.library(all, now: now).filter { $0.eventDate != nil && matches($0) }
+        rules.library(all, now: now).filter { isComingUp($0) && matches($0) }
             .sorted { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
     }
 
     /// Everything else not put away, newest first.
     private var everythingElse: [Save] {
-        rules.library(all, now: now).filter { $0.eventDate == nil && matches($0) }
+        rules.library(all, now: now).filter { !isComingUp($0) && matches($0) }
             .sorted { $0.createdAt > $1.createdAt }
     }
 

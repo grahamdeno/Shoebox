@@ -67,6 +67,18 @@ struct AddSheet: View {
             }
             .padding(.top, 36)
 
+            // Right under the field they stand in for, so they sit above the keyboard.
+            if photoData == nil && pickedFile == nil {
+                HStack(spacing: 20) {
+                    Text("Or add").font(.system(size: 15)).foregroundStyle(Theme.formQuiet)
+                    PhotosPicker(selection: $photo, matching: .images) { addWord("Photos") }
+                    Button { focus = nil; showFiles = true } label: { addWord("Files") }
+                    Button { focus = nil; showCamera = true } label: { addWord("Camera") }
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
+            }
+
             LineField(label: "Why are you keeping it?") {
                 TextField("", text: $why, prompt: formPrompt("Optional. Before the trip"))
                     .focused($focus, equals: .why)
@@ -113,16 +125,6 @@ struct AddSheet: View {
                 .lineSpacing(2)
                 .padding(.top, 14)
 
-            if photoData == nil && pickedFile == nil {
-                HStack(spacing: 22) {
-                    PhotosPicker(selection: $photo, matching: .images) { addWord("Choose a photo") }
-                    Button { showFiles = true } label: { addWord("Choose a file") }
-                    Button { focus = nil; showCamera = true } label: { addWord("Take a photo") }
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 14)
-            }
-
                     Color.clear.frame(height: 40)
                 }
             }
@@ -132,8 +134,9 @@ struct AddSheet: View {
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // The scroll stops at the keyboard, so everything below can still be reached. Nothing rides it:
+        // Cancel and Keep are at the top.
         .background(Theme.formGround.ignoresSafeArea())
-        .ignoresSafeArea(.keyboard)
         .presentationDetents([.large])
         .presentationBackground(Theme.formGround)
         .onAppear { focus = .text }

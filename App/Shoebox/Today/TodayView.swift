@@ -16,7 +16,7 @@ struct OpenedPost: Identifiable {
 
 /// Today: one post at a time, full screen, with the same moves as Scales.
 /// Swipe up past 100 pt: the next one, and this one comes back when your why says, or tomorrow.
-/// Pull down past 160 pt (further, so it is never an accident): into the box, done and kept.
+/// Pull down past 160 pt (further, so it is never an accident): Put away, done and kept.
 /// A quick tap opens it. The post follows the finger 1:1 for 40 pt, then at half speed, and springs
 /// back short of a threshold. Crossing a threshold ticks. Both moves can be undone for 5 seconds.
 struct TodayView: View {
