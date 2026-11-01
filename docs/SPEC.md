@@ -63,7 +63,7 @@ A glass box across the bottom, tinted from the ground (one tint lighter than Ony
 
 - "Today" on the left and "Settings" on the right, a large "Shoebox" title, then search ("Search everything").
 - The list is everything you are not done with, in two calm sections with one row shape (a date or a small picture, one line of title, one quiet line of where it came from):
-  - **Coming up:** posts that have a date, soonest first, with the date block at the left.
+  - **Coming up:** posts dated in the next two months, soonest first, with the date block at the left. Posts dated later sit in Everything else until they are within two months.
   - **Everything else:** newest first, with the post's picture as a small tile (the warm Onyx tile when it has none).
 - The last row, **Go through them one at a time**, closes the Shoebox and brings the posts out on Today with the same moves.
 - One word at the top right, **Put away (41)**, shows only what you are done with, newest first. The title becomes "Put away" and the word becomes **Shoebox**. It does not show when nothing is put away.
@@ -146,7 +146,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 |---|---|
 | Share sheet | Safari or any app: Share, then Shoebox (section 2.5). Reads the page while you type. Pages, links, text and up to 10 photos. |
 | + New | Link, note or photo, with a reason (section 2.5). |
-| Email | Forward to your Shoebox address. Each email is one post; your words above the forward are the reason. Ads are skipped unless you wrote a note. A date in the email makes it a dated post. The same email twice is kept once. Mail waits on the relay up to 30 days. |
+| Email | Forward to your Shoebox address. Each email is one post; your words above the forward are the reason. The post is a short title and two or three sentences written on the phone from what matters in the email (Apple Intelligence; without it, the first few useful lines). The email itself is not kept. Ads are skipped unless you wrote a note. A date in the email makes it a dated post. The same email twice is kept once. Mail waits on the relay up to 30 days. |
 | Shoebox 1 | On first run, the newest Shoebox 1 backup (`shoebox-backup-*.json` in Files or iCloud Drive, Shoebox › Backups) is brought in. Importing twice adds nothing. The email address and its key come over too. |
 | Backups | Settings › Bring in a backup takes any Shoebox 1 or 2 file. |
 

@@ -3,7 +3,7 @@ import ShoeboxCore
 import SwiftData
 
 /// Your Shoebox email address. Mail waits on the relay up to 30 days until the app collects it.
-/// Each email becomes one post; your note above a forward is the reason; ads are skipped;
+/// Each email becomes one short post written from what matters in it (the email itself is not kept); your note above a forward is the reason; ads are skipped;
 /// a date in the email makes it come back on its own before that day.
 @MainActor
 enum Inbox {
@@ -82,9 +82,11 @@ enum Inbox {
             let body = EmailRules.stripAds(rawBody)
             let firstLines = body.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && !$0.hasPrefix("From:") && !$0.hasPrefix("Date:") && !$0.hasPrefix("Subject:") && !$0.hasPrefix("To:") && !$0.contains("Forwarded message") }
-            let s = Save(title: String((subject.isEmpty ? (firstLines.first ?? "An email") : subject).prefix(140)),
-                         snippet: String(firstLines.prefix(3).joined(separator: " ").prefix(240)),
-                         body: String(body.prefix(20_000)), note: reason,
+            // The post is what matters in the email, written on the phone. The email itself is not kept.
+            let written = await EmailPost.write(subject: subject, lines: firstLines)
+            let s = Save(title: String(written.title.prefix(140)),
+                         snippet: String(written.text.replacingOccurrences(of: "\n", with: " ").prefix(240)),
+                         body: written.text, note: reason,
                          origin: "via your Shoebox email", kind: .email, createdAt: received)
             s.urlString = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
             s.enrichedAt = now
