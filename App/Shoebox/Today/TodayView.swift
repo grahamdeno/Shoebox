@@ -26,10 +26,9 @@ struct TodayView: View {
 
     @State private var pickIds: [String] = Prefs.pickIds
     /// How far the Shoebox sheet is out from behind the box: 0 hidden, 1 fully open. It follows the thumb.
-    @State private var boxProgress: CGFloat = 0
-    @State private var boxMounted = false
-    @State private var boxDragging = false
-    @State private var boxStart: CGFloat = 0
+    @State private var pull = BoxPull()
+    @GestureState private var pulling = false
+    @State private var showSettings = false
     @State private var showAdd = false
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
@@ -107,14 +106,13 @@ struct TodayView: View {
                 }
 
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
-                if boxMounted {
-                    Color.black.opacity(0.4 * boxProgress).ignoresSafeArea().allowsHitTesting(false)
+                if pull.mounted {
+                    BoxDim(pull: pull)
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
                 }
 
                 strip
-                    .opacity(1 - Double(min(1, max(0, (boxProgress - 0.55) / 0.45))))
-                    .allowsHitTesting(boxProgress < 0.98 || boxDragging)
+                    .modifier(BoxStripFade(pull: pull))
                     .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
 
                 if let toast {
@@ -125,6 +123,15 @@ struct TodayView: View {
         .onAppear {
             refreshPick()
             showScreenForScreenshots()
+            // Build the Shoebox sheet once, out of sight, so the first pull has nothing to build.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { pull.mounted = true }
+        }
+        .onChange(of: pulling) { _, now in
+            // A drag the system cancelled (an edge swipe, a call) never ends: settle where it stopped.
+            if !now && pull.dragging {
+                pull.dragging = false
+                settleBox(open: pull.progress > 0.5)
+            }
         }
         .onChange(of: phase) { _, p in if p == .active { refreshPick() } }
         .onChange(of: all.count) { _, _ in refreshPick() }
@@ -142,11 +149,14 @@ struct TodayView: View {
         .sheet(isPresented: $showAdd) {
             AddSheet()
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 
     // MARK: The Shoebox sheet
 
-    private static let boxSpring = Animation.spring(response: 0.38, dampingFraction: 0.86)
+    private static let boxSpring = Animation.spring(response: 0.32, dampingFraction: 0.9)
 
     /// Where the top of the sheet sits: hidden behind the box, and fully open just under the status bar.
     private func boxTops(_ height: CGFloat, _ top: CGFloat) -> (closed: CGFloat, open: CGFloat) {
@@ -155,56 +165,58 @@ struct TodayView: View {
 
     private func boxSheet(height: CGFloat, top: CGFloat) -> some View {
         let tops = boxTops(height, top)
-        let y = tops.closed + (tops.open - tops.closed) * boxProgress
+        let drag = boxPull(height: height, top: top)
+        // On the header the drag must travel further before it takes over, so a tap on Today or Settings
+        // that wobbles a few points is still a tap.
+        let headerDrag = boxPull(height: height, top: top, minimum: 18)
         return VStack(spacing: 0) {
-            // The handle: pull it down to close, like any sheet.
+            // The handle: pull it down to close, like any sheet. The whole top of the Shoebox pulls too.
             Capsule().fill(Theme.quiet.opacity(0.45)).frame(width: 38, height: 5)
-                .frame(maxWidth: .infinity, minHeight: 26)
+                .frame(maxWidth: .infinity, minHeight: 28)
                 .contentShape(Rectangle())
-                .gesture(boxPull(height: height, top: top))
-            BoxView(planner: planner, onClose: { closeBox() }, onBringBack: { bringBack($0) },
-                    onBrowse: { closeBox(); startBrowsing() }, onHandOff: { if toast == nil { show($0) } })
+                .gesture(drag)
+            BoxView(planner: planner, pull: pull, onClose: { closeBox() }, onBringBack: { bringBack($0) },
+                    onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
+                    onHandOff: { if toast == nil { show($0) } },
+                    pullGesture: AnyGesture(headerDrag.map { _ in () }))
         }
         .frame(height: height - tops.open)
         .background(Theme.ground)
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius, style: .continuous))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .offset(y: y)
+        .modifier(BoxSheetOffset(pull: pull, closed: tops.closed, open: tops.open))
         .ignoresSafeArea()
     }
 
     /// One drag opens and closes the sheet: it follows the thumb one to one, and on release it settles open
-    /// or closed by where it is and how fast you were going.
-    private func boxPull(height: CGFloat, top: CGFloat) -> some Gesture {
+    /// or closed by where it is and how fast you were going. Measured on the screen, not on the sheet, because
+    /// the sheet moves under the finger and its own measure would shrink as it follows.
+    private func boxPull(height: CGFloat, top: CGFloat, minimum: CGFloat = 4) -> some Gesture {
         let tops = boxTops(height, top)
         let travel = max(1, tops.closed - tops.open)
-        return DragGesture(minimumDistance: 6)
+        return DragGesture(minimumDistance: minimum, coordinateSpace: .global)
+            .updating($pulling) { _, state, _ in state = true }
             .onChanged { v in
-                if !boxDragging { boxDragging = true; boxStart = boxProgress; boxMounted = true }
-                boxProgress = min(1, max(0, boxStart - v.translation.height / travel))
+                if !pull.dragging { pull.dragging = true; pull.start = pull.progress; pull.mounted = true }
+                pull.progress = min(1, max(0, pull.start - v.translation.height / travel))
             }
             .onEnded { v in
-                boxDragging = false
-                let predicted = boxStart - v.predictedEndTranslation.height / travel
-                if predicted > 0.5 { settleBox(open: true) } else { settleBox(open: false) }
+                pull.dragging = false
+                let predicted = pull.start - v.predictedEndTranslation.height / travel
+                settleBox(open: predicted > 0.5)
             }
     }
 
     private func openBox() {
-        boxMounted = true
-        DispatchQueue.main.async { settleBox(open: true) }
+        pull.mounted = true
+        settleBox(open: true)
     }
 
     private func closeBox() { settleBox(open: false) }
 
     private func settleBox(open: Bool) {
-        if open { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
-        withAnimation(Self.boxSpring) { boxProgress = open ? 1 : 0 }
-        if !open {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if boxProgress == 0 && !boxDragging { boxMounted = false }
-            }
-        }
+        if open { UIImpactFeedbackGenerator(style: .soft).impactOccurred() } else { pull.closedTick += 1 }
+        withAnimation(Self.boxSpring) { pull.progress = open ? 1 : 0 }
     }
 
     // MARK: Layout
@@ -638,7 +650,8 @@ struct TodayView: View {
         case "up": drag = -110; crossed = 1
         case "away": drag = 170; crossed = -1
         case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
-        case "box", "settings": boxMounted = true; boxProgress = 1
+        case "box": pull.mounted = true; pull.progress = 1
+        case "settings": pull.mounted = true; pull.progress = 1; showSettings = true
         case "add": showAdd = true
         default: break
         }
