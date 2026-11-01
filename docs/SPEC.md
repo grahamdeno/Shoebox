@@ -38,7 +38,7 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 ### 2.2 Your Shoebox (the bottom box)
 
-A smoked-glass box across the bottom (dark glass the photo blurs through), under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Inside: the logo, "Your Shoebox" and the count.
+A smoked-glass box across the bottom (dark glass the photo blurs through), under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
 
 - It grows a little as a post is pulled toward it.
 - Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
@@ -62,7 +62,10 @@ A smoked-glass box across the bottom (dark glass the photo blurs through), under
 ### 2.4 Shoebox (the library)
 
 - "Today" on the left and "Settings" on the right, a large "Shoebox" title, then search ("Search everything").
-- The list is everything you are not done with, in the order the stack will bring it: what is on Today first, then by when each comes back.
+- The list is everything you are not done with, in two calm sections with one row shape (a date or a small picture, one line of title, one quiet line of where it came from):
+  - **Coming up:** posts that have a date, soonest first, with the date block at the left.
+  - **Everything else:** newest first, with the post's picture as a small tile (the warm Onyx tile when it has none).
+- The last row, **Go through them one at a time**, closes the Shoebox and brings the posts out on Today with the same moves.
 - One word at the top right, **Put away (41)**, shows only what you are done with, newest first. The title becomes "Put away" and the word becomes **Shoebox**. It does not show when nothing is put away.
 - Search covers the headline, reason, snippet, full text and link, and always looks everywhere. Put away posts that match appear under their own "Put away" heading.
 - Tap a post to open it. Everything else (Next, Put away, Bring back, Edit, Delete) is on the opened post, so each is learned once.
@@ -80,7 +83,7 @@ Laid out like Scales: full screen on the app's own ground (Wheat or Onyx), **Can
 
 ### 2.6 Today's clear
 
-"That's N for today." with "Keep going" when more is waiting, or "That's all for today." with when the next one comes back. With nothing kept yet: "Nothing kept yet." and how to start. A "Keep something" row.
+"That's N for today." or "That's all for today." When posts remain in the Shoebox, one row: **Go through your Shoebox**. It brings the rest out one at a time, soonest first, each once, with Today's moves; when they are done the screen returns. When nothing remains it says when the next one comes back. With nothing kept yet: "Nothing kept yet." and how to start. No "Keep something" row (+ New is at the top).
 
 ### 2.7 First run
 

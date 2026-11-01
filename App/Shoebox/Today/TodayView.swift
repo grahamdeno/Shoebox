@@ -29,6 +29,9 @@ struct TodayView: View {
     @State private var showAdd = false
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
+    /// "Go through your Shoebox": the posts brought out after the day's stack, and the ones already gone through.
+    @State private var browseIds: [UUID] = []
+    @State private var browsedIds: Set<UUID> = []
 
     // The gesture
     @State private var drag: CGFloat = 0
@@ -50,11 +53,21 @@ struct TodayView: View {
     static let stripHeight: CGFloat = 120
 
     private var now: Date { Date() }
-    private var queue: [Save] { rules.today(all, ids: pickIds, now: now) }
+    private var queue: [Save] {
+        let today = rules.today(all, ids: pickIds, now: now)
+        guard !browseIds.isEmpty else { return today }
+        let byId = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let extra = browseIds.compactMap { byId[$0] }.filter { $0.deletedAt == nil && $0.status != .kept }
+        return today + extra
+    }
+    /// Posts in the Shoebox that are not on Today now and not yet gone through: what "Go through your Shoebox" brings out.
+    private var browsable: [Save] {
+        let onToday = Set(rules.today(all, ids: pickIds, now: now).map(\.id))
+        return rules.library(all, now: now).filter { !onToday.contains($0.id) && !browsedIds.contains($0.id) }
+    }
     /// Everything in the Shoebox that is not put away.
     private var boxCount: Int { rules.library(all, now: now).count }
     private var anyKept: Bool { all.contains { $0.deletedAt == nil } }
-    private var moreWaiting: [Save] { rules.queue(all, now: now).filter { !pickIds.contains($0.id.uuidString) } }
     private var moving: Bool { drag != 0 || fly != 0 }
 
     var body: some View {
@@ -114,7 +127,7 @@ struct TodayView: View {
             )
         }
         .sheet(isPresented: $showBox) {
-            BoxView(planner: planner, onBringBack: { bringBack($0) }, onHandOff: { if toast == nil { show($0) } })
+            BoxView(planner: planner, onBringBack: { bringBack($0) }, onBrowse: { showBox = false; startBrowsing() }, onHandOff: { if toast == nil { show($0) } })
                 .presentationDetents([.large])
                 .presentationCornerRadius(Metrics.sheetRadius)
         }
@@ -150,7 +163,7 @@ struct TodayView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Keep something new")
                 Spacer()
-                if !queue.isEmpty {
+                if !queue.isEmpty && browseIds.isEmpty {
                     Text("\(max(1, pickIds.count - queue.count + 1)) of \(pickIds.count)")
                         .font(.system(size: 15))
                         .monospacedDigit()
@@ -202,14 +215,14 @@ struct TodayView: View {
                     .padding(.top, 16)
                     .ignoresSafeArea(edges: .bottom)
                 HStack(alignment: .center, spacing: 12) {
-                    AppLogo(size: 30, tile: false)
-                    Text(ready ? "Let go to put it away" : "Your Shoebox")
+                    // Bare: the lid and the box say what it is. Only the drop hint speaks, and the count.
+                    Text(ready ? "Let go to put it away" : "")
                         .font(.system(size: 17, weight: .semibold))
                     Spacer()
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxBody.opacity(0.65))
+                        .foregroundStyle(Theme.boxBody.opacity(0.75))
                 }
                 .foregroundStyle(Theme.boxBody)
                 .padding(.horizontal, 24)
@@ -238,22 +251,28 @@ struct TodayView: View {
             .animation(.snappy, value: ready)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
-            .accessibilityHint("Opens everything you kept")
+            .accessibilityLabel("Your Shoebox, \(boxCount)")
+            .accessibilityHint("Opens everything you are not done with")
         }
     }
 
     /// The Nectarine lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
     /// Bumped, it knocks against the box.
     private func lid(ready: Bool) -> some View {
-        // A shoebox top: lit along its top edge, a slightly deeper lip where it folds down over
-        // the sides, and a shadow cast down onto the box so it sits over it.
-        RoundedRectangle(cornerRadius: 7, style: .continuous)
-            .fill(LinearGradient(stops: [.init(color: Theme.lid, location: 0),
-                                         .init(color: Theme.lid, location: 0.80),
-                                         .init(color: Theme.lidLip, location: 0.85),
-                                         .init(color: Theme.lidLip, location: 1)],
-                                 startPoint: .top, endPoint: .bottom)
-                .shadow(.inner(color: .white.opacity(0.55), radius: 1, x: 0, y: 1.5)))
+        // A shoebox top: lit along its top edge, a deeper lip where it folds down over the sides, and a shadow
+        // cast down onto the box. The lip and the highlight are their own shapes with soft vector edges: a hard
+        // colour stop inside a tilted gradient is not smoothed and shows as a stair-step line.
+        let shape = RoundedRectangle(cornerRadius: 7, style: .continuous)
+        return shape
+            .fill(Theme.lid)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Theme.lidLip).frame(height: 11)
+            }
+            .overlay(alignment: .top) {
+                Rectangle().fill(.white.opacity(0.5)).frame(height: 1.5)
+            }
+            .clipShape(shape)
+            .compositingGroup()
             .frame(height: 54)
             .padding(.horizontal, -8)
             .shadow(color: .black.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
@@ -292,17 +311,21 @@ struct TodayView: View {
         }
     }
 
-    /// The day's end: a message, not a post, set high, with its choices as rows.
+    /// The day's end: a message, not a post, set high, with one choice: keep going through your Shoebox.
+    /// (+ New is already at the top, so there is no second way to keep something here.)
     private var stopScreen: some View {
-        let more = moreWaiting
+        let more = browsable
         let head: String
         let sub: String
         if !anyKept {
             head = "Nothing kept yet."
             sub = "Share a page to Shoebox from Safari or any app, or tap New."
-        } else if !more.isEmpty {
+        } else if !pickIds.isEmpty && !more.isEmpty {
             head = "That's \(pickIds.count) for today."
-            sub = "Keep going as long as you like."
+            sub = "Got time? Go through your Shoebox and act on what you like."
+        } else if !more.isEmpty {
+            head = "That's all for today."
+            sub = "Got time? Go through your Shoebox and act on what you like."
         } else {
             head = "That's all for today."
             sub = nextBackText
@@ -314,12 +337,13 @@ struct TodayView: View {
             Text(sub)
                 .font(.system(size: 16))
                 .foregroundStyle(Theme.quiet)
-            VStack(spacing: 0) {
-                if !more.isEmpty { row("Keep going") { keepGoing() } }
-                row("Keep something") { showAdd = true }
+            if !more.isEmpty {
+                VStack(spacing: 0) {
+                    row("Go through your Shoebox") { startBrowsing() }
+                }
+                .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+                .padding(.top, 28)
             }
-            .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
-            .padding(.top, 28)
             Spacer()
         }
         .padding(.horizontal, 32)
@@ -447,6 +471,10 @@ struct TodayView: View {
 
     /// Makes the change, keeps it, and shows Undo for 5 seconds. The change returns the words for the message.
     private func perform(on save: Save, _ change: (Save) -> String) {
+        if let i = browseIds.firstIndex(of: save.id) {
+            browseIds.remove(at: i)
+            browsedIds.insert(save.id)
+        }
         let snapshot = SaveSnapshot(save)
         let text = change(save)
         try? context.save()
@@ -488,12 +516,10 @@ struct TodayView: View {
         pickIds = ids
     }
 
-    /// Past the day's pile: the next few come out.
-    private func keepGoing() {
-        let ids = pickIds + moreWaiting.prefix(Prefs.perDay).map(\.id.uuidString)
-        Prefs.pickIds = ids
-        Prefs.pickDay = rules.dayKey(now)
-        pickIds = ids
+    /// Past the day's stack: everything else in the Shoebox comes out one at a time, with the same moves as Today.
+    /// What is due soonest comes first. Each is gone through once.
+    private func startBrowsing() {
+        browseIds = browsable.map(\.id)
         UISelectionFeedbackGenerator().selectionChanged()
     }
 
