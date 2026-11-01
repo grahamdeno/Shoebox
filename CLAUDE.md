@@ -26,6 +26,6 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 - Every save is read for the date it is about (event day and time, deadlines). Past events move to Kept on their own.
 - Writing screens (Keep something, share) are laid out like Scales: full screen on the ground, Cancel and Keep at the top, hairline fields. Nothing rides the keyboard.
 - Colors: Wheat `#FFF6E9` light ground, Onyx `#0A171D` dark ground and light text, Nectarine `#FFBD76` the lid and your reason, Oceanic `#003F47` only in the logo. Never Oceanic as a surface. Full table in `docs/SPEC.md` section 5.1.
-- Settings: groups as cards one step off the ground, no outline, small-caps labels above.
+- Settings: no paragraphs. One short list in a card one step off the ground, each row showing its answer; a row opens one screen with a title and its choices as words. Privacy and Delete everything are quiet words below.
 - SF Pro throughout. Actions are words, never pills or icon-only buttons. No neumorphism.
 - Iterate fast: batch changes, build once when Graham asks. Don't run screenshots or watch CI for every small change.

@@ -98,15 +98,15 @@ Settings has "Show the three moves again".
 
 ### 2.8 Settings
 
-Reached from Box. Each group is a card one step off the ground (darker Wheat in light, lighter Onyx in dark), no outline, with its label in small caps above it.
+Reached from Today and the Box. No paragraphs. One short list in a card one step off the ground (darker Wheat in light, lighter Onyx in dark), no outline; each row shows its answer on the right. A row opens one small screen: a title, its question, the choices as words, at most one quiet line.
 
-- **Each day:** how many come out (5, 10 or All; default All); the notification time; notifications on or off.
+- **Each day:** How many (5, 10 or All; default All). Remind me (the time, or Off).
 - **Look:** Auto, Light or Dark. The share sheet follows it too.
-- **Your Shoebox email:** the address and Copy, or "Get my address".
-- **Backups:** Bring in a backup; Save a backup now; when the last automatic copy was made.
-- **Help:** Show the three moves again; how to put Shoebox in the share row.
-- **Privacy:** what stays on the phone and what passes through the relay.
-- **Everything:** Delete everything, two steps, with a final backup written to Files first.
+- **Pictures:** On or Off. "Your words stay on your phone."
+- **Email:** the address and Copy, or a first name and "Get address".
+- **Backups:** Last copy; Save a copy now; Bring one back (takes any Shoebox 1 or 2 file).
+- **How to use Shoebox:** The three moves; Share, then Shoebox.
+- Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first).
 - The version and build number.
 
 ### 2.9 The notification
