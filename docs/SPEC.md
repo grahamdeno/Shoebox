@@ -38,7 +38,7 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 ### 2.2 Your Shoebox (the bottom box)
 
-A smoked-glass box across the bottom (dark glass the photo blurs through), under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
+A glass box across the bottom, tinted from the ground (one tint lighter than Onyx in dark, one step deeper than Wheat in light) so it matches the Shoebox sheet that pulls out of it, under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
 
 - It grows a little as a post is pulled toward it.
 - Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
@@ -180,7 +180,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 | Hairlines (fields) | `#D9CCB6` | `#24363C` |
 | Your reason | pale Nectarine `#FFD7AA` | Nectarine at 28% |
 | Action word (Keep, Next) | Onyx | Nectarine `#FFBD76` |
-| Bottom box | smoked glass (Onyx 55% tint), text Wheat, lid Nectarine with a `#E9A35C` lip | same |
+| Bottom box | glass tinted `#EFE3CF`, text Onyx, lid Nectarine with a `#E9A35C` lip | glass tinted `#22363E`, text Wheat, same lid |
 | Logo box | Oceanic `#003F47` | lighter Oceanic `#2F7E88` |
 
 Each color has one job:

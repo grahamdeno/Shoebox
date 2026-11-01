@@ -143,8 +143,10 @@ struct AddSheet: View {
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.pdf, .image, .plainText, .rtf, .data],
                       allowsMultipleSelection: false) { result in
             guard case .success(let urls) = result, let url = urls.first else { return }
-            let (file, problem) = FileKeeper.read(url)
-            if let file { pickedFile = file; error = "" } else if let problem { error = problem }
+            Task {
+                let (file, problem) = await FileKeeper.read(url)
+                if let file { pickedFile = file; error = "" } else if let problem { error = problem }
+            }
         }
         .sheet(isPresented: $showCamera) {
             CameraSheet { data in photoData = data }
@@ -187,7 +189,14 @@ struct AddSheet: View {
         }
         // A start day you chose wins: it waits in the Shoebox, out of Today, until the morning of that day.
         if let day = startDate, let start = Calendar.current.date(byAdding: .hour, value: 8, to: Calendar.current.startOfDay(for: day)), start > now {
-            for s in saves { s.status = .away; s.returnDate = start; s.seenOn = nil }
+            for s in saves {
+                s.status = .away; s.returnDate = start; s.seenOn = nil
+                // A date read from the words that falls before the day you chose would retire the post
+                // before it ever shows. The day you chose is the one that counts.
+                if let event = s.eventDate, event < start {
+                    s.eventDate = nil; s.eventHasTime = false; s.otherDatesRaw = ""
+                }
+            }
         }
         var added: [Save] = []
         for s in saves where !Capture.isDuplicate(s, in: context) {

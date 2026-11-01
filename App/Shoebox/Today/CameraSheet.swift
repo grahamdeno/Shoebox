@@ -32,6 +32,15 @@ struct CameraSheet: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
+            if !camera.problem.isEmpty {
+                Text(camera.problem)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16).padding(.vertical, 10)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .frame(maxHeight: .infinity, alignment: .center)
+            }
+
             HStack {
                 Button("Cancel") { dismiss() }
                     .frame(minWidth: 88, minHeight: 52, alignment: .leading)
@@ -70,10 +79,13 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
     let session = AVCaptureSession()
     @Published var denied = false
     @Published var ready = false
+    @Published var problem = ""
 
     private let output = AVCapturePhotoOutput()
     private let queue = DispatchQueue(label: "shoebox.camera")
     private var handler: ((Data) -> Void)?
+    /// Set once the sheet has gone, so a late permission answer or photo does nothing.
+    private var stopped = false
 
     @MainActor
     func start() async {
@@ -81,6 +93,7 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
         case .authorized: break
         case .notDetermined:
             if !(await AVCaptureDevice.requestAccess(for: .video)) { denied = true; return }
+            guard !stopped else { return }
         default:
             denied = true
             return
@@ -100,22 +113,35 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
         }
     }
 
+    @MainActor
     func stop() {
+        stopped = true
+        handler = nil
         queue.async { [weak self] in
             if self?.session.isRunning == true { self?.session.stopRunning() }
         }
     }
 
+    @MainActor
     func capture(_ done: @escaping (Data) -> Void) {
+        guard !stopped, handler == nil else { return }
         handler = done
-        output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+        problem = ""
+        queue.async { [weak self] in
+            guard let self else { return }
+            // The app is portrait: keep the photo upright.
+            if let c = self.output.connection(with: .video), c.isVideoRotationAngleSupported(90) { c.videoRotationAngle = 90 }
+            self.output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+        }
     }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        guard error == nil, let data = photo.fileDataRepresentation() else { return }
+        let data = error == nil ? photo.fileDataRepresentation() : nil
         DispatchQueue.main.async { [weak self] in
-            self?.handler?(data)
-            self?.handler = nil
+            guard let self else { return }
+            let done = self.handler
+            self.handler = nil
+            if let data { done?(data) } else if done != nil { self.problem = "That photo didn't take. Try again." }
         }
     }
 }
