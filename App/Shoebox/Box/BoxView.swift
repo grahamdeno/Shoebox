@@ -4,7 +4,6 @@ import SwiftUI
 /// The Shoebox: everything you are not done with, in the order the stack will bring it. What you put away
 /// (done) is out of the list until you ask for it with one word at the top right. Searching looks everywhere.
 struct BoxView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Query(sort: \Save.createdAt) private var all: [Save]
     @State private var search = ""
@@ -14,6 +13,8 @@ struct BoxView: View {
     @State private var toast: Toast?
 
     let planner: LaterPlanner
+    /// Closes the Shoebox (it is a sheet that slides out from behind the box on Today).
+    var onClose: () -> Void = {}
     var onBringBack: (Save) -> Void
     /// "Go through them one at a time": close the Shoebox and bring them out on Today.
     var onBrowse: () -> Void = {}
@@ -57,7 +58,7 @@ struct BoxView: View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Button("Today") { dismiss() }
+                    Button("Today") { onClose() }
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
@@ -140,6 +141,7 @@ struct BoxView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
 
             if let toast {

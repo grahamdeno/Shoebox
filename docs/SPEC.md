@@ -43,7 +43,7 @@ A smoked-glass box across the bottom (dark glass the photo blurs through), under
 - It grows a little as a post is pulled toward it.
 - Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
 - Flicking a post up or dropping one in makes the box shake and the lid knock, with a rustling haptic: quick knocks that spread out and fade over a low rumble.
-- Tap it or pull it up to open the Box.
+- Pull it up and the Shoebox slides out from behind the box at the pace of your thumb (not on release). Let go and it settles open or closed by where it is and how fast you were going. Tap also opens it. Pull the handle at the top of the Shoebox down to close it, or tap Today.
 
 ### 2.3 The opened post
 
