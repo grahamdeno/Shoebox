@@ -196,8 +196,8 @@ struct ThreeMoves: View {
                 .tracking(-0.8)
                 .foregroundStyle(Theme.ink)
             NumberedStep(n: 1, head: "Swipe up", text: "Next one. It comes back when your why says, or tomorrow.")
-            NumberedStep(n: 2, head: "Pull down", text: "Into your Shoebox. Done, and kept where you can find it.")
-            NumberedStep(n: 3, head: "Tap it", text: "Opens it full screen.")
+            NumberedStep(n: 2, head: "Pull down", text: "Put it away. You're done with it. It's kept, and search finds it.")
+            NumberedStep(n: 3, head: "Tap it", text: "Open it. Edit is there too.")
             Spacer()
         }
         .padding(.horizontal, 32)
