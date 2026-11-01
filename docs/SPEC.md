@@ -8,7 +8,7 @@ App Store name: **Shoebox: Your Own Feed**. One app. There is no Shoebox Me (dec
 
 ## 1. What it is, in one breath
 
-Shoebox is your own feed, made of the things you meant to come back to. They live scattered across email, notes, texts and open tabs. You keep something once, with your reason. Each morning what's due comes out of the box. You flick it up (it comes back when your reason says, or tomorrow), pull it down into your Shoebox (done, kept and searchable), or tap it to open it. You use it once a day as an idle scroll, and the goal is a clear feed, not a finished list.
+Shoebox is your own feed, made of the things you meant to come back to. They live scattered across email, notes, texts and open tabs. You keep something once, with your reason. Each morning what's due comes out of the box. You flick it up (it comes back when your reason says, or tomorrow), pull it down to put it away (done, kept and searchable), or tap it to open it. You use it once a day as an idle scroll, and the goal is a clear feed, not a finished list.
 
 What Graham said matters most: things coming to him and getting handled or put away. Seamless, easy choices, clear actions and results. Each step makes sense without explanation.
 
@@ -31,7 +31,7 @@ Full screen, one post per screen. No list, no second sort screen, no tab bar.
 | Move | What happens |
 |---|---|
 | Flick up past 100 pt | Next. The post comes back when your reason says, or tomorrow. The box rattles lightly. |
-| Pull down past 160 pt | Into your Shoebox: done, kept and searchable. The lid tips open as you cross; let go and it drops in with a heavy knock and a strong rattle. |
+| Pull down past 160 pt | Put away: done, kept and searchable. The lid tips open as you cross; let go and it drops in with a heavy knock and a strong rattle. |
 | Quick tap (under 0.35 s) | Opens the post full screen. |
 
 The post follows the finger 1:1 for 40 pt, then at half speed, and springs back if you let go short. A tick at each threshold. Every move has Undo for 5 seconds.
@@ -92,9 +92,9 @@ One idea per screen, one clear choice. The words sit along the bottom on the gro
 1. **Welcome.** The app logo, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint. Start.
 2. **Save from anywhere.** Three numbered steps, then "Or forward email" with your address or "Get my address". Skip, Next.
 3. **When should they come out?** A time wheel and one line about the daily notification. Not now, Turn on.
-4. **Three moves. That's the whole app.** Swipe up, Pull down, Tap it.
+4. **Three moves. That's the whole app.** Swipe up: Next, it comes back when your why says, or tomorrow. Pull down: Put it away, done, kept, and search finds it. Tap it: Open it, Edit is there too.
 
-Settings has "Show the three moves again".
+Settings › How to use Shoebox › The three moves shows it again.
 
 ### 2.8 Settings
 
@@ -121,7 +121,7 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
    - Posts you passed before go first, then the oldest never seen.
    - Bringing something back from the Box puts it first.
 2. **Flick up = Next.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
-3. **Pull down = into your Shoebox.** Done, kept and searchable in the Box.
+3. **Pull down = Put away.** Done, kept, and found by search in the Shoebox.
 4. **Every action is instant, with Undo for 5 seconds.** No confirm dialogs, except Delete everything.
 5. **Dated posts** come back on their own 5 days before, 1 day before and on the day, at 8 AM. Every save is read for the date it is about (section 4.2). The nearest event comes first. Once the day has gone by, the post moves to Kept on its own (never deleted) and stays searchable.
 6. **A new save** comes back when its reason says, or tomorrow.
