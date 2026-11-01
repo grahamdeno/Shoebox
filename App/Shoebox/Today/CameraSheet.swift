@@ -125,8 +125,8 @@ struct CameraPreview: UIViewRepresentable {
 
     func makeUIView(context: Context) -> PreviewView {
         let v = PreviewView()
-        v.layer.session = session
-        v.layer.videoGravity = .resizeAspectFill
+        v.previewLayer.session = session
+        v.previewLayer.videoGravity = .resizeAspectFill
         return v
     }
 
@@ -134,7 +134,6 @@ struct CameraPreview: UIViewRepresentable {
 
     final class PreviewView: UIView {
         override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
-        // swiftlint:disable:next force_cast
-        var layer: AVCaptureVideoPreviewLayer { super.layer as! AVCaptureVideoPreviewLayer }
+        var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
     }
 }
