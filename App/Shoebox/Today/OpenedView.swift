@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftUI
 import UIKit
 
@@ -17,6 +18,7 @@ struct OpenedView: View {
     /// One move per opening. A second tap before the post closes would take its Undo copy after the first move,
     /// and Undo would put it back to the wrong place.
     @State private var acted = false
+    @State private var previewFile: URL?
 
     private func once(_ move: @escaping () -> Void) -> () -> Void {
         { guard !acted else { return }; acted = true; move() }
@@ -68,6 +70,19 @@ struct OpenedView: View {
                             .glassEffect(.regular.tint(Theme.lid.opacity(0.85)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
 
+                    if save.fileData != nil {
+                        Button { previewFile = FileKeeper.tempURL(for: save) } label: {
+                            Text("Open \(save.fileName ?? "the file")")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .padding(.horizontal, 18)
+                                .frame(minHeight: Metrics.touchMin)
+                                .glassEffect(.regular.tint(Theme.onyx.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     if let url = save.url {
                         Link(destination: url) {
                             Text("Open the page on \(save.host ?? "the web")")
@@ -114,6 +129,7 @@ struct OpenedView: View {
         }
         .environment(\.colorScheme, .dark)
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
+        .quickLookPreview($previewFile)
         // Outside the dark override, so the edit screen follows the app's own look.
         .sheet(isPresented: $showEdit) {
             EditSheet(save: save, onSaved: flashSaved, onDelete: once(onDelete))

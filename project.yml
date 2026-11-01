@@ -51,6 +51,7 @@ targets:
         INFOPLIST_KEY_UIFileSharingEnabled: YES
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "To keep a photo you pick."
+        INFOPLIST_KEY_NSCameraUsageDescription: "To take a photo and keep it."
   ShoeboxShare:
     type: app-extension
     platform: iOS

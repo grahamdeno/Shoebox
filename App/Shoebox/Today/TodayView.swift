@@ -176,8 +176,8 @@ struct TodayView: View {
                 .contentShape(Rectangle())
                 .gesture(drag)
             BoxView(planner: planner, pull: pull, onClose: { closeBox() }, onBringBack: { bringBack($0) },
-                    onBrowse: { closeBox(); startBrowsing() }, onHandOff: { if toast == nil { show($0) } },
-                    onSettings: { showSettings = true },
+                    onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
+                    onHandOff: { if toast == nil { show($0) } },
                     pullGesture: AnyGesture(headerDrag.map { _ in () }))
         }
         .frame(height: height - tops.open)
