@@ -71,7 +71,10 @@ enum Theme {
     /// The bottom box: Wheat in both modes, with the Nectarine lid on top.
     static let boxBody = Color(UIColor(hex: 0xFFF6E9))
     /// The box's smoked glass: the warm grey it takes over Wheat, kept the same in dark mode and over photos.
-    static let boxGlass = Color(UIColor(hex: 0x7B7C79))
+    /// The box under the lid: the screen's own ground, one tint lighter in dark (one step deeper in light,
+    /// where the ground is already the lightest), so the box reads as part of the same app.
+    static let boxGlass = adaptive(light: 0xEFE3CF, dark: 0x22363E)
+    static let boxText = adaptive(light: 0x0A171D, dark: 0xFFF6E9)
     static let boxBodyQuiet = Color(UIColor(hex: 0x5A6B6E))
     static let logoCards = adaptive(light: 0x5A6B6E, dark: 0xB8C4BF)
 

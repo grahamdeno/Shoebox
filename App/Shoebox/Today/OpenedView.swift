@@ -130,6 +130,7 @@ struct OpenedView: View {
         .environment(\.colorScheme, .dark)
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
         .quickLookPreview($previewFile)
+        .onChange(of: previewFile) { old, new in if new == nil { FileKeeper.cleanUp(old) } }
         // Outside the dark override, so the edit screen follows the app's own look.
         .sheet(isPresented: $showEdit) {
             EditSheet(save: save, onSaved: flashSaved, onDelete: once(onDelete))

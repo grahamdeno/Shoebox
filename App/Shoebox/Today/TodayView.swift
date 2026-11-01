@@ -292,7 +292,7 @@ struct TodayView: View {
             Spacer()
             ZStack(alignment: .top) {
                 // Smoked glass: the photo blurs through, so the box belongs to every post.
-                // Smoked glass in the same warm grey in light, dark and over any photo.
+                // Tinted from the ground, so the box matches the Shoebox sheet that pulls out of it.
                 Color.clear
                     .glassEffect(.regular.tint(Theme.boxGlass.opacity(0.88)), in: Rectangle())
                     .padding(.top, 16)
@@ -305,9 +305,9 @@ struct TodayView: View {
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxBody.opacity(0.75))
+                        .foregroundStyle(Theme.boxText.opacity(0.7))
                 }
-                .foregroundStyle(Theme.boxBody)
+                .foregroundStyle(Theme.boxText)
                 .padding(.horizontal, 24)
                 .padding(.top, 68)
                 lid(ready: ready)

@@ -249,7 +249,7 @@ struct SettingsView: View {
 
     private func deleteEverything() {
         // One last copy first, so this can be undone from Files. No copy, no delete.
-        guard let data = Backups.export(context),
+        guard let data = Backups.export(context, files: true),
               Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
             importNote = "Couldn't save a backup first, so nothing was deleted."
             confirmDelete = false
