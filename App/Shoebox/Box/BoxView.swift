@@ -13,6 +13,8 @@ struct BoxView: View {
     @State private var toast: Toast?
 
     let planner: LaterPlanner
+    /// Tells the Shoebox when it has been closed, so a showing Undo can move to Today.
+    var pull: BoxPull?
     /// Closes the Shoebox (it is a sheet that slides out from behind the box on Today).
     var onClose: () -> Void = {}
     var onBringBack: (Save) -> Void
@@ -20,6 +22,8 @@ struct BoxView: View {
     var onBrowse: () -> Void = {}
     /// The Box is closing while its Undo is still showing: Today shows it instead, so it can still be undone.
     var onHandOff: (Toast) -> Void = { _ in }
+    /// Pulling down on the top of the Shoebox closes it. Buttons there still tap.
+    var pullGesture: AnyGesture<Void> = AnyGesture(DragGesture(minimumDistance: 100_000).map { _ in () })
 
     private let rules = TodayRules()
     private let actions = SaveActions()
@@ -57,16 +61,19 @@ struct BoxView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Button("Today") { onClose() }
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Theme.ink)
-                        .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
+                        .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .leading)
+                        .contentShape(Rectangle())
                     Spacer()
                     Button("Settings") { showSettings = true }
                         .font(.system(size: 17))
                         .foregroundStyle(Theme.ink)
-                        .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
+                        .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
@@ -89,6 +96,9 @@ struct BoxView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 8)
+                }
+                .contentShape(Rectangle())
+                .simultaneousGesture(pullGesture)
 
                 TextField("Search everything", text: $search)
                     .font(.system(size: 16))
@@ -170,7 +180,9 @@ struct BoxView: View {
                 onDelete: { opened = nil; perform(on: save) { actions.letGo($0, now: now); return "Deleted" } }
             )
         }
-        .onDisappear { if let toast { onHandOff(toast) } }
+        .onChange(of: pull?.closedTick ?? 0) { _, _ in
+            if let toast { onHandOff(toast); self.toast = nil }
+        }
         .onAppear {
             #if DEBUG
             if UserDefaults.standard.string(forKey: "screen") == "settings" { showSettings = true }
@@ -225,7 +237,7 @@ struct BoxView: View {
                     }
                     .frame(width: 42)
                 } else {
-                    thumb(s)
+                    RowThumb(save: s)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(s.headline)
@@ -250,23 +262,5 @@ struct BoxView: View {
     /// "2 weeks ago, from Safari"
     private func meta(_ s: Save) -> String {
         s.byline().replacingOccurrences(of: "You, ", with: "")
-    }
-
-    /// The post's own picture, small; without one, the warm Onyx the post itself shows.
-    @ViewBuilder
-    private func thumb(_ s: Save) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
-        if let data = s.imageData, let image = PhotoCache.entry(id: s.id, data: data)?.image {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 42, height: 42)
-                .clipShape(shape)
-        } else {
-            shape
-                .fill(Theme.card)
-                .overlay(RadialGradient(colors: [Theme.lid.opacity(0.45), .clear], center: .topLeading, startRadius: 0, endRadius: 46).clipShape(shape))
-                .frame(width: 42, height: 42)
-        }
     }
 }
