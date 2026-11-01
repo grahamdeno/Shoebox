@@ -28,6 +28,7 @@ struct TodayView: View {
     /// How far the Shoebox sheet is out from behind the box: 0 hidden, 1 fully open. It follows the thumb.
     @State private var pull = BoxPull()
     @GestureState private var pulling = false
+    @State private var showSettings = false
     @State private var showAdd = false
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
@@ -148,6 +149,9 @@ struct TodayView: View {
         .sheet(isPresented: $showAdd) {
             AddSheet()
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 
     // MARK: The Shoebox sheet
@@ -162,6 +166,9 @@ struct TodayView: View {
     private func boxSheet(height: CGFloat, top: CGFloat) -> some View {
         let tops = boxTops(height, top)
         let drag = boxPull(height: height, top: top)
+        // On the header the drag must travel further before it takes over, so a tap on Today or Settings
+        // that wobbles a few points is still a tap.
+        let headerDrag = boxPull(height: height, top: top, minimum: 18)
         return VStack(spacing: 0) {
             // The handle: pull it down to close, like any sheet. The whole top of the Shoebox pulls too.
             Capsule().fill(Theme.quiet.opacity(0.45)).frame(width: 38, height: 5)
@@ -170,7 +177,8 @@ struct TodayView: View {
                 .gesture(drag)
             BoxView(planner: planner, pull: pull, onClose: { closeBox() }, onBringBack: { bringBack($0) },
                     onBrowse: { closeBox(); startBrowsing() }, onHandOff: { if toast == nil { show($0) } },
-                    pullGesture: AnyGesture(drag.map { _ in () }))
+                    onSettings: { showSettings = true },
+                    pullGesture: AnyGesture(headerDrag.map { _ in () }))
         }
         .frame(height: height - tops.open)
         .background(Theme.ground)
@@ -183,10 +191,10 @@ struct TodayView: View {
     /// One drag opens and closes the sheet: it follows the thumb one to one, and on release it settles open
     /// or closed by where it is and how fast you were going. Measured on the screen, not on the sheet, because
     /// the sheet moves under the finger and its own measure would shrink as it follows.
-    private func boxPull(height: CGFloat, top: CGFloat) -> some Gesture {
+    private func boxPull(height: CGFloat, top: CGFloat, minimum: CGFloat = 4) -> some Gesture {
         let tops = boxTops(height, top)
         let travel = max(1, tops.closed - tops.open)
-        return DragGesture(minimumDistance: 4, coordinateSpace: .global)
+        return DragGesture(minimumDistance: minimum, coordinateSpace: .global)
             .updating($pulling) { _, state, _ in state = true }
             .onChanged { v in
                 if !pull.dragging { pull.dragging = true; pull.start = pull.progress; pull.mounted = true }
@@ -642,7 +650,8 @@ struct TodayView: View {
         case "up": drag = -110; crossed = 1
         case "away": drag = 170; crossed = -1
         case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
-        case "box", "settings": pull.mounted = true; pull.progress = 1
+        case "box": pull.mounted = true; pull.progress = 1
+        case "settings": pull.mounted = true; pull.progress = 1; showSettings = true
         case "add": showAdd = true
         default: break
         }

@@ -7,7 +7,6 @@ struct BoxView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Save.createdAt) private var all: [Save]
     @State private var search = ""
-    @State private var showSettings = false
     @State private var showPutAway = false
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
@@ -20,6 +19,8 @@ struct BoxView: View {
     var onBringBack: (Save) -> Void
     /// "Go through them one at a time": close the Shoebox and bring them out on Today.
     var onBrowse: () -> Void = {}
+    /// Settings is shown by Today, not by the Shoebox sheet, so it opens the same way every time.
+    var onSettings: () -> Void = {}
     /// The Box is closing while its Undo is still showing: Today shows it instead, so it can still be undone.
     var onHandOff: (Toast) -> Void = { _ in }
     /// Pulling down on the top of the Shoebox closes it. Buttons there still tap.
@@ -69,7 +70,7 @@ struct BoxView: View {
                         .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .leading)
                         .contentShape(Rectangle())
                     Spacer()
-                    Button("Settings") { showSettings = true }
+                    Button("Settings") { onSettings() }
                         .font(.system(size: 17))
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .trailing)
@@ -106,31 +107,31 @@ struct BoxView: View {
                     .padding(.horizontal, 24)
                     .submitLabel(.search)
 
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        if showPutAway {
-                            if putAway.isEmpty { empty(searching ? "Nothing found." : "Nothing put away yet.") }
-                            ForEach(putAway, id: \.id) { row($0, dim: true) }
-                        } else {
-                            let up = comingUp
-                            let rest = everythingElse
-                            if up.isEmpty && rest.isEmpty && !(searching && !putAway.isEmpty) {
-                                empty(searching ? "Nothing found." : "Nothing waiting. Everything is put away.")
-                            }
-                            if !up.isEmpty {
-                                sectionTitle("Coming up")
-                                ForEach(up, id: \.id) { row($0, dim: false, dated: true) }
-                            }
-                            if !rest.isEmpty {
-                                sectionTitle("Everything else")
-                                ForEach(rest, id: \.id) { row($0, dim: false) }
-                            }
-                            // Searching looks everywhere, so what you put away can still be found.
-                            if searching && !putAway.isEmpty {
-                                sectionTitle("Put away")
-                                ForEach(putAway, id: \.id) { row($0, dim: true) }
-                            }
-                            if !searching && !(up.isEmpty && rest.isEmpty) {
+                List {
+                    if showPutAway {
+                        if putAway.isEmpty { plain(empty(searching ? "Nothing found." : "Nothing put away yet.")) }
+                        ForEach(putAway, id: \.id) { listRow($0, dim: true) }
+                    } else {
+                        let up = comingUp
+                        let rest = everythingElse
+                        if up.isEmpty && rest.isEmpty && !(searching && !putAway.isEmpty) {
+                            plain(empty(searching ? "Nothing found." : "Nothing waiting. Everything is put away."))
+                        }
+                        if !up.isEmpty {
+                            plain(sectionTitle("Coming up"))
+                            ForEach(up, id: \.id) { listRow($0, dim: false, dated: true) }
+                        }
+                        if !rest.isEmpty {
+                            plain(sectionTitle("Everything else"))
+                            ForEach(rest, id: \.id) { listRow($0, dim: false) }
+                        }
+                        // Searching looks everywhere, so what you put away can still be found.
+                        if searching && !putAway.isEmpty {
+                            plain(sectionTitle("Put away"))
+                            ForEach(putAway, id: \.id) { listRow($0, dim: true) }
+                        }
+                        if !searching && !(up.isEmpty && rest.isEmpty) {
+                            plain(
                                 Button(action: onBrowse) {
                                     HStack {
                                         Text("Go through them one at a time")
@@ -145,12 +146,13 @@ struct BoxView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .padding(.top, 26)
-                            }
+                            )
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .environment(\.defaultMinListRowHeight, 1)
                 .scrollDismissesKeyboard(.interactively)
             }
 
@@ -168,7 +170,6 @@ struct BoxView: View {
             }
         }
         .background(Theme.ground.ignoresSafeArea())
-        .sheet(isPresented: $showSettings) { SettingsView() }
         .fullScreenCover(item: $opened) { item in
             let save = item.save
             OpenedView(
@@ -183,11 +184,6 @@ struct BoxView: View {
         .onChange(of: pull?.closedTick ?? 0) { _, _ in
             if let toast { onHandOff(toast); self.toast = nil }
         }
-        .onAppear {
-            #if DEBUG
-            if UserDefaults.standard.string(forKey: "screen") == "settings" { showSettings = true }
-            #endif
-        }
     }
 
     /// Makes the change, keeps it, and shows Undo for 5 seconds.
@@ -201,6 +197,26 @@ struct BoxView: View {
             try? await Task.sleep(for: .seconds(5))
             if toast?.id == new.id { withAnimation { toast = nil } }
         }
+    }
+
+    /// A list row that is not a post: no separator, no background, the same side margins as a post.
+    private func plain<V: View>(_ content: V) -> some View {
+        content
+            .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+    }
+
+    /// A post row. Swipe left to delete it: it leaves every list at once, stays in backups, and Undo shows for 5 seconds.
+    private func listRow(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
+        plain(row(s, dim: dim, dated: dated))
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    perform(on: s) { actions.letGo($0, now: now); return "Deleted" }
+                } label: {
+                    Text("Delete")
+                }
+            }
     }
 
     private func empty(_ text: String) -> some View {
