@@ -15,18 +15,58 @@ enum AppGroup {
     static var defaults: UserDefaults { UserDefaults(suiteName: id) ?? .standard }
 }
 
+/// Version 1 of the store: the model as of Shoebox 1.0. Before changing `Save` (adding, renaming or removing a
+/// property), freeze today's `Save` as a nested copy inside this enum, make the new one version 2, and add a stage
+/// to `ShoeboxMigrationPlan`. Never edit the model and ship without a new version: that is how a store stops opening.
+enum ShoeboxSchemaV1: VersionedSchema {
+    static let versionIdentifier = Schema.Version(1, 0, 0)
+    static var models: [any PersistentModel.Type] { [Save.self] }
+}
+
+enum ShoeboxMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] { [ShoeboxSchemaV1.self] }
+    static var stages: [MigrationStage] { [] }
+}
+
 enum Store {
+    /// The file the store lives in, in the App Group.
+    static var url: URL { AppGroup.container.appending(path: "Shoebox.store") }
+
     /// One SwiftData store in the App Group. CloudKit is off on purpose: the app has an iCloud
     /// entitlement for reading Shoebox 1's backups, and SwiftData would otherwise try to sync.
-    static func make(inMemory: Bool = false) throws -> ModelContainer {
+    /// `at` is for tests: a store somewhere else.
+    static func make(inMemory: Bool = false, at location: URL? = nil) throws -> ModelContainer {
         let config: ModelConfiguration
         if inMemory {
             config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         } else {
-            let url = AppGroup.container.appending(path: "Shoebox.store")
-            config = ModelConfiguration(url: url, cloudKitDatabase: .none)
+            config = ModelConfiguration(url: location ?? url, cloudKitDatabase: .none)
         }
-        return try ModelContainer(for: Save.self, configurations: config)
+        do {
+            return try ModelContainer(for: Schema(versionedSchema: ShoeboxSchemaV1.self), migrationPlan: ShoeboxMigrationPlan.self, configurations: config)
+        } catch {
+            // A store made before versions were recorded has none. It holds the same model, so open it the plain way.
+            // Nothing is changed or deleted by trying.
+            return try ModelContainer(for: Save.self, configurations: config)
+        }
+    }
+
+    /// Copies the store files (the database, its journal and the pictures and files kept beside it) into a folder in
+    /// Files, and only then removes them from `directory`, so a new empty store can start. Nothing is deleted unless
+    /// the copy worked. Returns the folder.
+    @discardableResult
+    static func setAside(from directory: URL = AppGroup.container, into documents: URL? = nil, now: Date = Date()) throws -> URL {
+        let fm = FileManager.default
+        let docs = documents ?? fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let stamp = DateFormatter()
+        stamp.locale = Locale(identifier: "en_US_POSIX")
+        stamp.dateFormat = "yyyy-MM-dd HHmmss"
+        let dest = docs.appending(path: "Recovered \(stamp.string(from: now))")
+        try fm.createDirectory(at: dest, withIntermediateDirectories: true)
+        let names = try fm.contentsOfDirectory(atPath: directory.path).filter { $0.hasPrefix("Shoebox.store") || $0 == ".Shoebox_SUPPORT" }
+        for name in names { try fm.copyItem(at: directory.appending(path: name), to: dest.appending(path: name)) }
+        for name in names { try fm.removeItem(at: directory.appending(path: name)) }
+        return dest
     }
 }
 
