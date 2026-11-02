@@ -1,4 +1,5 @@
 import Foundation
+import ShoeboxCore
 
 /// Finds the date a post is about, in the post's own words, so it can come back at the right time.
 /// Plain rules on the phone, no network. Only dates still ahead of the day the post was kept count:
@@ -25,8 +26,9 @@ enum DateReader {
     // MARK: Reading
 
     /// The date a post is about, or nil when its words name none still ahead.
-    static func read(_ text: String, created: Date, calendar: Calendar = .current, allowWeekdays: Bool = true) -> DateReading? {
-        let found = mentions(in: text, created: created, calendar: calendar, allowWeekdays: allowWeekdays)
+    static func read(_ text: String, created: Date, calendar: Calendar = .current, allowWeekdays: Bool = true,
+                     dayFirst: Bool = EmailCalendar.deviceDayFirst) -> DateReading? {
+        let found = mentions(in: text, created: created, calendar: calendar, allowWeekdays: allowWeekdays, dayFirst: dayFirst)
         guard !found.isEmpty else { return nil }
         let event = found.first(where: { !$0.isDeadline }) ?? found[0]
         let others = found.filter { $0.day != event.day }.map(\.day)
@@ -36,7 +38,8 @@ enum DateReader {
     }
 
     /// Every date still ahead, earliest first.
-    static func mentions(in raw: String, created: Date, calendar: Calendar = .current, allowWeekdays: Bool = true) -> [DateMention] {
+    static func mentions(in raw: String, created: Date, calendar: Calendar = .current, allowWeekdays: Bool = true,
+                         dayFirst: Bool = EmailCalendar.deviceDayFirst) -> [DateMention] {
         let text = stripLinks(raw)
         guard !text.isEmpty else { return [] }
         let start = calendar.startOfDay(for: created)
@@ -55,17 +58,32 @@ enum DateReader {
                 out.append(make(d, m.range, ns, calendar))
             }
         }
-        // "10/30" and "10/30/26" (month first)
+        // "7 November", "7th of Nov 2026" (day first, as written in the UK, Canada, Australia and New Zealand)
+        for m in dayMonth.matches(in: text, range: whole) {
+            let word = ns.substring(with: m.range(at: 2))
+            // "up to 10 may attend" is the verb, not the month.
+            if word == "may" { continue }
+            guard let month = monthNumber(word),
+                  let day = Int(ns.substring(with: m.range(at: 1))), (1...31).contains(day) else { continue }
+            var year: Int?
+            if m.range(at: 3).location != NSNotFound { year = Int(ns.substring(with: m.range(at: 3))) }
+            if let d = resolve(month: month, day: day, year: year, created: start, calendar: calendar) {
+                out.append(make(d, m.range, ns, calendar))
+            }
+        }
+        // "10/30" and "10/30/26" (month first), or "30/10" and "30/10/26" (day first in dayFirst regions).
+        // A number over 12 can only be the day, so "25/12" is the 25th of December anywhere.
         for m in numeric.matches(in: text, range: whole) {
-            guard let month = Int(ns.substring(with: m.range(at: 1))), (1...12).contains(month),
-                  let day = Int(ns.substring(with: m.range(at: 2))), (1...31).contains(day) else { continue }
+            guard let a = Int(ns.substring(with: m.range(at: 1))), let b = Int(ns.substring(with: m.range(at: 2))),
+                  let md = EmailCalendar.monthAndDay(a, b, dayFirst: dayFirst), (1...12).contains(md.month) else { continue }
+            let month = md.month, day = md.day
             var year: Int?
             if m.range(at: 3).location != NSNotFound, var y = Int(ns.substring(with: m.range(at: 3))) {
                 if y < 100 { y += 2000 }
                 year = y
             }
             // "1/2 cup sugar" and "Rated 4/5" are not dates.
-            if year == nil, notADate(month: month, day: day, range: m.range, in: ns) { continue }
+            if year == nil, notADate(month: a, day: b, range: m.range, in: ns) { continue }
             if let d = resolve(month: month, day: day, year: year, created: start, calendar: calendar) {
                 out.append(make(d, m.range, ns, calendar))
             }
@@ -268,6 +286,9 @@ enum DateReader {
 
     private static let monthDay = try! NSRegularExpression(
         pattern: #"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b"#,
+        options: [.caseInsensitive])
+    private static let dayMonth = try! NSRegularExpression(
+        pattern: #"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b\.?(?:,?\s+(\d{4})\b)?"#,
         options: [.caseInsensitive])
     private static let numeric = try! NSRegularExpression(pattern: #"(?<![\d/])(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?(?![\d/])"#)
     private static let weekday = try! NSRegularExpression(

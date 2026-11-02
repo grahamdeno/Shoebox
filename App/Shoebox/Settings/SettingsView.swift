@@ -253,7 +253,7 @@ struct SettingsView: View {
             }
             question("Who it's about")
             card {
-                TextField("Gunner, 8th grade: cross country, band", text: $mailFor, axis: .vertical)
+                TextField("Sam, 4th grade: soccer, band", text: $mailFor, axis: .vertical)
                     .lineLimit(1...4)
                     .foregroundStyle(Theme.ink)
                     .padding(.vertical, 14)
@@ -321,7 +321,12 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.ink)
                 .padding(.top, 24).padding(.horizontal, 6)
             line("No account. No ads. No tracking.")
-            line("Link previews, stock pictures and your Shoebox email pass through our server. Nothing is kept.")
+            line("Link previews and stock pictures pass through our server and are not kept.")
+            line("Forwarded mail waits there up to 7 days, until your phone collects it.")
+            Link("Read the privacy policy", destination: URL(string: "https://inmyshoebox.com/privacy")!)
+                .fontWeight(.semibold).foregroundStyle(Theme.ink)
+                .frame(minHeight: Metrics.touchMin, alignment: .leading)
+                .padding(.top, 16).padding(.horizontal, 6)
         }
     }
 

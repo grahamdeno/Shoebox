@@ -14,6 +14,8 @@ struct BoxView: View {
     let planner: LaterPlanner
     /// Tells the Shoebox when it has been closed, so a showing Undo can move to Today.
     var pull: BoxPull?
+    /// Today is already showing an opened post: this sheet opens none until it is closed, so two covers never stack.
+    var otherPostOpen = false
     /// Closes the Shoebox (it is a sheet that slides out from behind the box on Today).
     var onClose: () -> Void = {}
     var onBringBack: (Save) -> Void
@@ -247,7 +249,7 @@ struct BoxView: View {
 
     /// One shape for every row: a date or a small picture, one line of title, one quiet line of where it came from.
     private func row(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
-        Button { opened = OpenedPost(save: s) } label: {
+        Button { if opened == nil, !otherPostOpen { opened = OpenedPost(save: s) } } label: {
             HStack(spacing: 14) {
                 if dated, let day = s.eventDate {
                     VStack(spacing: 2) {

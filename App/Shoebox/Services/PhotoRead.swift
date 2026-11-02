@@ -18,11 +18,12 @@ enum PhotoRead {
     /// The text in a picture, top to bottom. Empty when there is none.
     static func recognizedText(in data: Data) async -> String {
         await Task.detached(priority: .userInitiated) { () -> String in
-            guard let image = UIImage(data: data), let cg = image.cgImage else { return "" }
+            // Read at up to 3,000 pixels, turned upright: a 48 megapixel photo is never decoded whole.
+            guard let cg = ImageDownsample.cgImage(from: data, maxPixel: 3_000) else { return "" }
             let request = VNRecognizeTextRequest()
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            let handler = VNImageRequestHandler(cgImage: cg, orientation: CGImagePropertyOrientation(image.imageOrientation), options: [:])
+            let handler = VNImageRequestHandler(cgImage: cg, orientation: .up, options: [:])
             guard (try? handler.perform([request])) != nil else { return "" }
             let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
             return String(lines.joined(separator: "\n").prefix(4_000))

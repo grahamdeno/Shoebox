@@ -2,7 +2,7 @@ import Foundation
 import ShoeboxCore
 import SwiftData
 
-/// Your Shoebox email address. Mail waits on the relay up to 30 days until the app collects it.
+/// Your Shoebox email address. Mail waits on the relay up to 7 days until the app collects it.
 /// Each email becomes one short post written from what matters in it (the email itself is not kept); your note above a forward is the reason;
 /// ads and sign-in codes are skipped; a PDF or a lone link is read too; a date makes it come back before that day; an email with many
 /// dates (a school newsletter) becomes one post per date that is about the people named in Settings.
@@ -65,7 +65,8 @@ enum Inbox {
         let req = Relay.request("inbox", key: key)
         guard let (data, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200,
               let r = try? JSONDecoder().decode(Response.self, from: data) else { return 0 }
-        if let a = r.address { Prefs.inboxAddress = a }
+        // No address on the server (a new relay, or it expired): stop showing one that no longer delivers.
+        Prefs.inboxAddress = r.address
         let existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         var done: [String] = []
         var added = 0
@@ -92,7 +93,7 @@ enum Inbox {
             }
             let body = EmailRules.stripAds(EmailRules.unwrap(rawBody))
             var lines = body.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty && !$0.hasPrefix("From:") && !$0.hasPrefix("Date:") && !$0.hasPrefix("Subject:") && !$0.hasPrefix("To:") && !$0.contains("Forwarded message") }
+                .filter { !$0.isEmpty && !EmailRules.isForwardHeader($0) }
             let link = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
 
             // A PDF sent by email is read like the email itself, and kept on the post so you can open it.
@@ -109,7 +110,7 @@ enum Inbox {
             }
 
             // Many dates (a school newsletter, a season schedule): one post per date that is about your people.
-            let items = EmailCalendar.items(in: lines.joined(separator: "\n"), received: received, calendar: .current)
+            let items = EmailCalendar.items(in: lines.joined(separator: "\n"), received: received, calendar: .current, dayFirst: EmailCalendar.deviceDayFirst)
             if items.count >= EmailCalendar.minimumDates {
                 let today = Calendar.current.startOfDay(for: now)
                 let keep = EmailCalendar.relevant(items, to: EmailCalendar.Profile(Prefs.mailFor)).filter { $0.day >= today }
@@ -166,15 +167,27 @@ enum Inbox {
             added += 1
             done.append(m.id)
         }
-        try? context.save()
-        if !done.isEmpty {
-            let body = try? JSONSerialization.data(withJSONObject: ["ids": done])
+        // Mail is acknowledged (and so deleted from the relay) only after the posts made from it are saved.
+        // If the save fails, the mail stays on the relay for the next try. The context is not rolled back: it is the
+        // app's main context, and a rollback would also throw away anything else not yet saved, such as an edit.
+        // If the new posts are saved later, the next collection finds them and does not make them twice.
+        let saved = await commit(done: done, save: { try context.save() }, acknowledge: { ids in
+            let body = try? JSONSerialization.data(withJSONObject: ["ids": ids])
             _ = try? await URLSession.shared.data(for: Relay.request("inbox/ack", method: "POST", body: body, key: key))
-        }
+        })
+        if !saved { return 0 }
         return added
     }
 
-    /// The first name in your address ("Graham-keep@..." gives "Graham"), so posts can say "you". Empty when unknown.
+    /// Saves, then acknowledges the mail that was handled. Returns false, without acknowledging anything,
+    /// when the save fails: the mail then waits on the relay and is collected again.
+    static func commit(done: [String], save: () throws -> Void, acknowledge: ([String]) async -> Void) async -> Bool {
+        do { try save() } catch { return false }
+        if !done.isEmpty { await acknowledge(done) }
+        return true
+    }
+
+    /// The first name in your address ("Sam-keep@..." gives "Sam"), so posts can say "you". Empty when unknown.
     private static var readerName: String {
         guard let local = Prefs.inboxAddress?.split(separator: "@").first else { return "" }
         let name = local.split(separator: "-").first.map { String($0.filter(\.isLetter)) } ?? ""

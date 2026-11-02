@@ -1,0 +1,18 @@
+{
+  // Shoebox app relay: the Worker for the Shoebox iPhone app. Seven routes, nothing else (see worker.js).
+  // The old Worker (../wrangler.jsonc, shoebox-relay) stays as it is for Shoebox 1 until it is retired.
+  // Deploy from this folder: npx wrangler deploy -c wrangler.jsonc   (docs/handoff/grok-relay-deploy.md has the steps)
+  "name": "shoebox-app-relay",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  // Variables and secrets are set in the Cloudflare dashboard or with `wrangler secret put`; deploys keep them.
+  "keep_vars": true,
+  // The Worker is reached only at its own domain. The *.workers.dev address stays off.
+  "workers_dev": false,
+  "preview_urls": false,
+  // A NEW KV namespace for this Worker (name it SHOEBOX_APP). Do not reuse the old SHOEBOX namespace.
+  // The id is left out of the repo on purpose. Replace the placeholder before deploying and don't commit the real id.
+  "kv_namespaces": [{ "binding": "SHOEBOX", "id": "REPLACE_WITH_SHOEBOX_APP_KV_NAMESPACE_ID" }],
+  // No Cron Trigger: this Worker sends no reminders or notifications.
+  "routes": [{ "pattern": "api.inmyshoebox.com", "custom_domain": true }]
+}

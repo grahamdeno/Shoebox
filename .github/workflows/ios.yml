@@ -6,17 +6,26 @@ on:
     branches: [main]
 
 jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Relay tests
+        run: node --test relay/app/test/worker.test.mjs
+
   build-and-test:
     runs-on: macos-26
+    env:
+      # A released Xcode, pinned. The macos-26 image has 26.6 (default) and 26.5. Change it here, and in testflight.yml.
+      XCODE_APP: /Applications/Xcode_26.6.app
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select the newest Xcode 26
-        run: |
-          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
-          echo "Using $XC"
-          sudo xcode-select -s "$XC"
-          xcodebuild -version
+      - name: Select the pinned Xcode
+        run: Scripts/ci-select-xcode.sh
 
       - name: Core rules tests
         run: |
@@ -29,11 +38,10 @@ jobs:
       - name: Generate the project
         run: xcodegen generate
 
-      - name: Pick an iPhone simulator
+      - name: Pick an iPhone simulator on iOS 26
         id: sim
         run: |
-          UDID=$(xcrun simctl list devices available iPhone | grep -Eo '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
-          echo "Simulator: $UDID"
+          UDID=$(Scripts/ci-pick-simulator.sh)
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Build and test

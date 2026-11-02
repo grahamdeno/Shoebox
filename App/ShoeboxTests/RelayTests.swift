@@ -7,7 +7,7 @@ final class RelayTests: XCTestCase {
         let req = Relay.request("preview", query: [.init(name: "url", value: "https://example.com/a?b=1")])
         XCTAssertEqual(req.value(forHTTPHeaderField: "Origin"), "https://inmyshoebox.com")
         XCTAssertEqual(req.httpMethod, "GET")
-        XCTAssertEqual(req.url?.host(), "shoebox-api.tangomike.app")
+        XCTAssertEqual(req.url?.host(), "api.inmyshoebox.com")
         XCTAssertEqual(req.url?.path(), "/preview")
         XCTAssertTrue(req.url?.query?.contains("url=") ?? false)
     }

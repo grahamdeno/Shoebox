@@ -57,7 +57,8 @@ final class ShareViewController: UIViewController {
                 if p.hasItemConformingToTypeIdentifier(UTType.url.identifier), let u = await loadURL(p), !u.isFileURL {
                     url = url ?? u
                 } else if p.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                    if let d = await loadData(p, type: .image) { photos.append(d) }
+                    // One at a time, shrunk as they are read from the file the system hands over.
+                    if let d = await loadPhoto(p) { photos.append(d) }
                 } else if p.hasItemConformingToTypeIdentifier(UTType.plainText.identifier), let t = await loadText(p) {
                     texts.append(t)
                 }
@@ -76,9 +77,23 @@ final class ShareViewController: UIViewController {
         await withCheckedContinuation { c in _ = p.loadObject(ofClass: String.self) { s, _ in c.resume(returning: s) } }
     }
 
-    private func loadData(_ p: NSItemProvider, type: UTType) async -> Data? {
-        let t = p.registeredContentTypes.first { $0.conforms(to: type) } ?? type
-        return await withCheckedContinuation { c in _ = p.loadDataRepresentation(for: t) { d, _ in c.resume(returning: d) } }
+    /// A shared photo as a small JPEG (2,400 pixels at most). The system hands over a file, not the bytes, and the
+    /// file only exists inside this callback, so it is shrunk there. A 48 megapixel photo never sits in memory whole.
+    private func loadPhoto(_ p: NSItemProvider) async -> Data? {
+        let t = p.registeredContentTypes.first { $0.conforms(to: .image) } ?? .image
+        let fromFile: Data? = await withCheckedContinuation { c in
+            _ = p.loadFileRepresentation(forTypeIdentifier: t.identifier) { url, _ in
+                c.resume(returning: url.flatMap { ImageDownsample.jpeg(fromFile: $0) })
+            }
+        }
+        if let fromFile { return fromFile }
+        // Some apps hand over only the bytes. They are shrunk straight from the bytes, so the photo is still never
+        // decoded whole, and a photo is never lost because it did not come as a file.
+        return await withCheckedContinuation { c in
+            _ = p.loadDataRepresentation(for: t) { d, _ in
+                c.resume(returning: d.flatMap { ImageDownsample.jpeg(from: $0, maxWidth: 2400, quality: 0.85) ?? $0 })
+            }
+        }
     }
 }
 
@@ -94,6 +109,8 @@ final class ShareModel {
     var why: String
     var kept = false
     var keptLabel = ""
+    /// Set when the save could not be made. The sheet stays open with what was typed, so nothing is lost.
+    var problem: String?
     var onClose: () -> Void = {}
     /// When it starts coming back. Automatic: your words decide.
     var choice: ReturnChoice = .auto
@@ -129,8 +146,15 @@ final class ShareModel {
         }
     }
 
+    static let couldNotKeep = "Couldn't keep that. Open Shoebox once, then try again."
+
     func keep() {
-        guard !kept, let container = try? Store.make() else { onClose(); return }
+        guard !kept else { return }
+        let container: ModelContainer
+        do { container = try Store.make() } catch {
+            problem = ShareModel.couldNotKeep
+            return
+        }
         let context = container.mainContext
         let note = why.trimmingCharacters(in: .whitespacesAndNewlines)
         var saves: [Save] = []
@@ -156,7 +180,12 @@ final class ShareModel {
             context.insert(s)
             added += 1
         }
-        try? context.save()
+        do { try context.save() } catch {
+            context.rollback()
+            problem = ShareModel.couldNotKeep
+            return
+        }
+        problem = nil
         let back = saves.first?.returnDate.map { LaterPlanner().label(for: $0, now: Date()).lowercased() } ?? "tomorrow"
         keptLabel = added == 0 ? "Already in your Shoebox." : "Kept. It comes back \(back)."
         withAnimation(.snappy) { kept = true }
@@ -220,6 +249,12 @@ struct ShareSheet: View {
                     .focused($focused)
                     .submitLabel(.done)
                     .onSubmit { model.keep() }
+            }
+            if let problem = model.problem {
+                Text(problem)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.onPhoto)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
                 Spacer()

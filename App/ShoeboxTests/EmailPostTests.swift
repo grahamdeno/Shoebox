@@ -3,7 +3,7 @@ import XCTest
 
 final class EmailPostTests: XCTestCase {
     func testPlainKeepsAShortGistNotTheEmail() {
-        let lines = ["Hi Graham,", "Your son's band concert is Thursday, Nov 13 at 7 pm in the school gym.",
+        let lines = ["Hi Jordan,", "Your son's band concert is Thursday, Nov 13 at 7 pm in the school gym.",
                      "Please have him there by 6:30 in black pants and a white shirt.",
                      "Tickets are free. Families may bring a canned food item for the drive."]
             + (1...40).map { "More news item \($0) that goes on and on about things nobody needs to read today." }

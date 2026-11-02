@@ -168,4 +168,35 @@ final class DateReaderTests: XCTestCase {
         XCTAssertEqual(s.status, .today)
         XCTAssertEqual(TodayRules(calendar: cal).retirePast([s], now: now), 0)
     }
+
+    // MARK: C-14 day-first regions (Canada, UK, Australia, New Zealand)
+
+    func testANumericDateIsDayFirstWhereThatIsHowItIsWritten() {
+        let text = "Parents evening 10/11 at 6pm"
+        XCTAssertEqual(DateReader.read(text, created: kept, calendar: cal, dayFirst: true)?.event, date(2026, 11, 10, 18))
+        // Month first, 10/11 is October 11: already gone on October 26, so no event.
+        XCTAssertNil(DateReader.read(text, created: kept, calendar: cal, dayFirst: false))
+    }
+
+    func testANumberOverTwelveIsTheDayInEveryRegion() {
+        for dayFirst in [true, false] {
+            XCTAssertEqual(DateReader.read("Carols 25/12", created: kept, calendar: cal, dayFirst: dayFirst)?.event, date(2026, 12, 25))
+        }
+    }
+
+    func testADayWrittenBeforeTheMonth() {
+        let r = DateReader.read("Class trip on 12 November. Forms due 5th of Nov.", created: kept, calendar: cal, dayFirst: true)
+        XCTAssertEqual(r?.event, date(2026, 11, 12))
+        XCTAssertEqual(r?.others, [date(2026, 11, 5)])
+    }
+
+    func testLowercaseMayAfterANumberIsNotAMonth() {
+        XCTAssertNil(DateReader.read("Up to 10 may attend", created: kept, calendar: cal, dayFirst: true))
+        XCTAssertEqual(DateReader.read("Sports day 10 May 2027", created: kept, calendar: cal, dayFirst: true)?.event, date(2027, 5, 10))
+    }
+
+    func testFractionsAreStillNotDatesDayFirst() {
+        XCTAssertNil(DateReader.read("Add 1/2 cup of sugar", created: kept, calendar: cal, dayFirst: true))
+        XCTAssertNil(DateReader.read("Rated 4/5 stars", created: kept, calendar: cal, dayFirst: true))
+    }
 }

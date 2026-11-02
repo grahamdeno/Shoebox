@@ -3,7 +3,8 @@ import SwiftUI
 
 @main
 struct ShoeboxApp: App {
-    let container: ModelContainer
+    @State private var container: ModelContainer?
+    private let demo: Bool
 
     init() {
         #if DEBUG
@@ -11,29 +12,35 @@ struct ShoeboxApp: App {
         #else
         let demo = false
         #endif
-        do {
-            container = try Store.make(inMemory: demo)
-        } catch {
-            fatalError("Could not open the Shoebox store: \(error)")
-        }
+        self.demo = demo
+        if !demo { Diagnostics.shared.start() }
+        // A store that will not open shows a recovery screen, never a crash.
+        let opened = try? Store.make(inMemory: demo)
+        _container = State(initialValue: opened)
         #if DEBUG
-        if demo {
-            SampleData.seed(container.mainContext)
+        if demo, let opened {
+            SampleData.seed(opened.mainContext)
             let screen = UserDefaults.standard.string(forKey: "screen") ?? ""
             Prefs.onboarded = !["welcome", "share", "time", "learn"].contains(screen)
             Prefs.pickDay = nil
-            if screen == "clear" { SampleData.clearToday(container.mainContext) }
+            if screen == "clear" { SampleData.clearToday(opened.mainContext) }
         }
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .appearance()
-                .tint(Theme.accent)
+            if let container {
+                RootView()
+                    .appearance()
+                    .tint(Theme.accent)
+                    .modelContainer(container)
+            } else {
+                StoreProblemView { container = try? Store.make(inMemory: demo) }
+                    .appearance()
+                    .tint(Theme.accent)
+            }
         }
-        .modelContainer(container)
     }
 }
 

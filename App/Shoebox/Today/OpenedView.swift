@@ -13,9 +13,12 @@ struct OpenedView: View {
     var onBringBack: () -> Void
     var onDelete: () -> Void
 
-    /// Close asks the host to clear its item, and also dismisses this cover itself, so the button works
-    /// even when the host's state change is swallowed by another presentation in flight.
+    /// Close asks the host to clear its item. If the host's change is swallowed by another presentation in flight,
+    /// this cover dismisses itself a moment later. It never does both at once: two dismissals in the same frame
+    /// are what made Close unreliable, and a second tap on Close is ignored.
     @Environment(\.dismiss) private var dismiss
+    @State private var closing = false
+    @State private var gone = false
     @State private var showEdit = false
     @State private var savedFlash = false
     /// One move per opening. A second tap before the post closes would take its Undo copy after the first move,
@@ -137,6 +140,7 @@ struct OpenedView: View {
         }
         .environment(\.colorScheme, .dark)
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
+        .onDisappear { gone = true }
         .onChange(of: previewFile) { old, new in if new == nil { FileKeeper.cleanUp(old) } }
         // Outside the dark override, so the edit screen follows the app's own look.
         .sheet(isPresented: $showEdit) {
@@ -189,16 +193,23 @@ struct OpenedView: View {
         }
     }
 
+    private func close() {
+        guard !closing else { return }
+        closing = true
+        onClose()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            if !gone { dismiss() }
+        }
+    }
+
     private var grade: PhotoGrade { PhotoCache.grade(id: save.id, data: save.imageData) }
 
     /// Close at the left, Edit at the right.
     private var topWords: some View {
         VStack {
             HStack {
-                glassWord("Close") {
-                    onClose()
-                    dismiss()
-                }
+                glassWord("Close") { close() }
                 Spacer()
                 glassWord("Edit") { showEdit = true }
             }

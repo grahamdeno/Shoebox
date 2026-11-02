@@ -12,7 +12,7 @@
 - [x] `support@inmyshoebox.com` reaches Graham's Gmail under Support/Shoebox (tested November 2)
 - [ ] Beta App Description and What to Test written
 - [ ] Beta App Review contact and demo notes (same as review notes below)
-- [ ] Relay split and deployed from this repo; `/stock` and `/me/delete` answer correctly
+- [ ] Relay split (written in `relay/app`, PR beta/batch-1) and deployed with `docs/handoff/grok-relay-deploy.md`; `/stock` and `/me/delete` answer correctly
 - [ ] Workers Paid plan on
 
 ## Metadata

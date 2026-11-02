@@ -1,4 +1,6 @@
-# Shoebox relay
+# Shoebox relay (the old Worker, for Shoebox 1)
+
+**The Shoebox iPhone app (1.0 and later) no longer uses this Worker.** It has its own, with seven routes, in `relay/app/` (see `relay/app/README.md`). This Worker stays as it is, for Shoebox 1 and build 36, until they are retired.
 
 The Cloudflare Worker `shoebox-relay`, live at `https://shoebox-api.tangomike.app`. It does what the app can't do on its own: link previews (`/preview`, `/image`), photo search (`/photo` through Openverse, `/stock` through Pixabay), the email inbox (`inmyshoebox.com` addresses, `/inbox/*`), reminders and notifications (`/push/*`, `/remind`, a 15-minute Cron Trigger), Claude calls with Shoebox's own key (`/ai/*`), Apple Music tokens and calendar pass-through.
 

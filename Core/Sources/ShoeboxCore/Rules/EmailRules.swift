@@ -116,6 +116,17 @@ public enum EmailRules {
         return String(kept).split(separator: " ").joined(separator: " ")
     }
 
+    /// A forwarded message's header line ("From:", "Sent:", "Cc:", "Reply-To:" and the French, Spanish and German
+    /// forms). These carry the forwarder's day and people, never an event, so they are dropped before any date is read.
+    public static func isForwardHeader(_ line: String) -> Bool {
+        let t = line.trimmingCharacters(in: .whitespaces)
+        if t.contains("Forwarded message") { return true }
+        let labels = "from|sent|date|subject|to|cc|bcc|reply-to|importance|"
+            + "de|envoy\u{00E9}|envoy\u{00E9} le|date d.envoi|objet|\u{00E0}|enviado|enviado el|para|asunto|"
+            + "von|gesendet|an|betreff"
+        return t.range(of: "^(\(labels))\\s*:", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
     /// Days the email itself names: written dates, and weekdays within the two weeks after it arrived.
     public static func days(in text: String, received: Date, calendar: Calendar) -> Set<Date> {
         var out = Set<Date>()
@@ -135,6 +146,22 @@ public enum EmailRules {
         let months = calendar.shortMonthSymbols.map { $0.lowercased() }
         let scanner = lower.replacingOccurrences(of: ",", with: " ").replacingOccurrences(of: ".", with: " ")
         let tokens = scanner.split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\t" }).map(String.init)
+        // The same pairs written day first ("20 Nov", "20th of November"): the capital of "May" is read from the original.
+        let original = text.replacingOccurrences(of: ",", with: " ").replacingOccurrences(of: ".", with: " ")
+            .split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\t" }).map(String.init)
+        if original.count == tokens.count {
+            for (i, tok) in tokens.enumerated() {
+                guard let month = EmailCalendar.monthNames[tok], let day = EmailCalendar.dayBeforeMonth(original, at: i) else { continue }
+                var c = calendar.dateComponents([.year], from: received)
+                c.month = month; c.day = day
+                if var d = calendar.date(from: c) {
+                    if d < calendar.date(byAdding: .day, value: -60, to: received) ?? received {
+                        d = calendar.date(byAdding: .year, value: 1, to: d) ?? d
+                    }
+                    out.insert(calendar.startOfDay(for: d))
+                }
+            }
+        }
         for (i, tok) in tokens.enumerated() where i + 1 < tokens.count {
             guard let mi = months.firstIndex(where: { tok.hasPrefix($0) }) else { continue }
             let digits = tokens[i + 1].prefix { $0.isNumber }
