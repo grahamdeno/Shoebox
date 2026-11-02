@@ -80,9 +80,9 @@ Every screen where you write is the post you are making. What you see while you 
 - **One Liquid Glass panel** holds everything, in this order:
   1. The words, large. One field: "Paste a link or write a note". No screen title; the placeholder says it.
   2. **Why**, one line, shown once there are words. Your why is Nectarine.
-  3. A bottom row: **Add** at the left, the return line at the right.
+  3. A bottom row: **Photo or file** at the left, the return line at the right.
 - **The return line** says when it comes back and changes as you type: "Back tomorrow", "Back Saturday", "Back Nov 9 · 5 days before". Tap it for one small screen of choices as words: Tomorrow, This weekend, Next week, Pick a day; for a dated save also its date, Add a time and Clear. It replaces "Start showing it on" and the paragraph about the why.
-- **Add** opens the standard menu: Photo Library, Take Photo (the system camera), Choose File. A photo becomes the ground and Add becomes **Remove photo**. A file shows as one line in the panel with **Remove**.
+- **Photo or file** opens the standard menu: Photo Library, Take Photo (the system camera), Choose File. A photo becomes the ground and Photo or file becomes **Remove photo**. A file shows as one line in the panel with **Remove**.
 - **The panel rides the keyboard.** With the keyboard down it sits at the bottom in thumb reach. One swipe down closes the screen.
 - **Read on the phone.** After a photo, the phone suggests the words and the why: Vision reads the text in it, Apple Intelligence writes a short title, the details and the why (refused if it holds a number or day word the photo does not), and the date reader finds the date in those words. Suggestions show lighter under one line, "Read from the photo. Tap to change." Typing makes them yours and solid. Keep keeps what is shown; nothing is kept on its own. Nothing leaves the phone for this. Without Apple Intelligence the first line is the title and the next lines the details; a photo with no readable text stays "A photo". Files and links are read after they are kept, as before (the page's title and picture, a file's text, dates in the words).
 - **The share sheet** is the same surface: the page's picture is the ground, the page's title is the words once read, and your own words go under it ("Add a note").

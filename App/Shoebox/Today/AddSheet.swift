@@ -129,7 +129,7 @@ struct AddSheet: View {
                 }
                 Button("Choose File") { focused = false; showFiles = true }
             } label: {
-                SurfaceWord(text: "Add")
+                SurfaceWord(text: "Photo or file")
             }
         }
     }
