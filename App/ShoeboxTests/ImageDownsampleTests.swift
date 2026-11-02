@@ -9,9 +9,9 @@ final class ImageDownsampleTests: XCTestCase {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         let image = UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { ctx in
-            UIColor(hex: 0x56395F).setFill()
+            UIColor(hex: 0x3B2240).setFill()
             ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-            UIColor(hex: 0xFFBD76).setFill()
+            UIColor(hex: 0xF9C93A).setFill()
             ctx.fill(CGRect(x: 0, y: 0, width: width / 2, height: height / 2))
         }
         return image.jpegData(compressionQuality: 0.9)!

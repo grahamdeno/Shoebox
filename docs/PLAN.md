@@ -56,7 +56,8 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
 | Palette | Onyx, Wheat, Oceanic and Nectarine: Wheat light, Onyx dark. Neumorphic depth, Liquid Glass on opened posts | October 30 evening, replacing Peach and slate. Replaced November 1 (next row). |
-| Palette | Wheat, Plum Night, Plum Ink, Plum and Nectarine. Plum box in both modes and the logo; no black; Onyx and Oceanic retired | November 1. SPEC section 5.1 |
+| Palette | Wheat, Plum Night, Plum Ink, Plum and Nectarine. Plum box in both modes and the logo; no black; Onyx and Oceanic retired | November 1. Replaced November 2 (next row). |
+| Palette | Pistachio light ground, Plum `#3B2240` dark ground (from Scales), Bone, Plum Ink and a Sunflower lid. Plum box in light, Bone box in dark; no peach left | November 2. SPEC section 5.1 |
 | Type | SF Pro (system) throughout | Chosen October 30. Native, nothing to bundle. |
 | Names | Today (the feed) and Box (put away, kept, search) | Chosen October 30. |
 | Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |
@@ -64,7 +65,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 
 ## 5. Design
 
-The design changed on October 31, 2026 to the stack: Scales' moves, full-screen graded photos with words on Liquid Glass, and a smoked-glass box under a Nectarine lid across the bottom. `docs/SPEC.md` sections 2 and 5 hold the detail and win over anything older here. The Nectarine bar, the Later list and neumorphic cards are retired.
+The design changed on October 31, 2026 to the stack: Scales' moves, full-screen graded photos with words on Liquid Glass, and a smoked-glass box under a Sunflower lid across the bottom. `docs/SPEC.md` sections 2 and 5 hold the detail and win over anything older here. The Nectarine bar, the Later list and neumorphic cards are retired.
 
 ## 6. Architecture
 

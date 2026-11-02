@@ -71,7 +71,7 @@ enum Thumbs {
     }
 }
 
-/// The small tile at the left of a row: the post's own picture, or a card-colored tile lit with Nectarine when it has none.
+/// The small tile at the left of a row: the post's own picture, or a card-colored tile lit with Sunflower when it has none.
 struct RowThumb: View {
     let save: Save
     @State private var image: UIImage?

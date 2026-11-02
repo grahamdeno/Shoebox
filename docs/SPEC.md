@@ -20,8 +20,8 @@ Updated October 31, 2026 for the stack (PR #11 and #12). The moves are copied fr
 
 Full screen, one post per screen. No list, no second sort screen, no tab bar.
 
-- **A post:** the photo fills the whole screen, graded (section 5.3). The words sit low on one Liquid Glass panel: your reason in Nectarine, the headline (30 pt bold, 34 pt with no photo), a short snippet, a "Comes back ..." line for dated posts, and the byline ("You, 2 weeks ago, from Safari").
-- **No photo:** a stock picture is found for it (section 4.1). Until then, or when none is found, Plum Night lit warm from the top corner with a Nectarine glow.
+- **A post:** the photo fills the whole screen, graded (section 5.3). The words sit low on one Liquid Glass panel: your reason in Sunflower, the headline (30 pt bold, 34 pt with no photo), a short snippet, a "Comes back ..." line for dated posts, and the byline ("You, 2 weeks ago, from Safari").
+- **No photo:** a stock picture is found for it (section 4.1). Until then, or when none is found, Plum lit warm from the top corner with a Sunflower glow.
 - **Dated posts:** one line under the words, "Oct 30 at 4:00 PM. Back Oct 25, Oct 29 and Oct 30."
 - **Top left:** "+ New" opens Keep something.
 - **Your Shoebox** across the bottom (section 2.2).
@@ -38,7 +38,7 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 ### 2.2 Your Shoebox (the bottom box)
 
-A Plum glass box across the bottom, the same in light and dark and the same box as the logo, under a tall Nectarine lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
+A glass box across the bottom, Plum in light and Bone in dark like the logo, under a tall Sunflower lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
 
 - It grows a little as a post is pulled toward it.
 - Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
@@ -64,7 +64,7 @@ A Plum glass box across the bottom, the same in light and dark and the same box 
 - "Today" on the left and "Settings" on the right, a large "Shoebox" title, then search ("Search everything").
 - The list is everything you are not done with, in two calm sections with one row shape (a date or a small picture, one line of title, one quiet line of where it came from):
   - **Coming up:** posts dated in the next two months, soonest first, with the date block at the left. Posts dated later sit in Everything else until they are within two months.
-  - **Everything else:** newest first, with the post's picture as a small tile (a card-colored tile lit with Nectarine when it has none).
+  - **Everything else:** newest first, with the post's picture as a small tile (a card-colored tile lit with Sunflower when it has none).
 - The last row, **Go through them one at a time**, closes the Shoebox and brings the posts out on Today with the same moves.
 - One word at the top right, **Put away (41)**, shows only what you are done with, newest first. The title becomes "Put away" and the word becomes **Shoebox**. It does not show when nothing is put away.
 - Search covers the headline, reason, snippet, full text and link, and always looks everywhere. Put away posts that match appear under their own "Put away" heading.
@@ -75,11 +75,11 @@ A Plum glass box across the bottom, the same in light and dark and the same box 
 
 Every screen where you write is the post you are making. What you see while you write is what comes back. Agreed November 2, 2026 (mock: the "Shoebox Keep screen" canvas); it replaces the Scales-style form.
 
-- **The ground is the post.** Its photo, full-bleed and graded as on Today, or Plum Night lit warm with Nectarine. The same in light and dark, as posts are.
-- **Top:** **Cancel** (**Close** in Edit) at the left and **Keep** at the right, words on Liquid Glass as on the opened post. Keep is quiet until there is something to keep, then Nectarine.
+- **The ground is the post.** Its photo, full-bleed and graded as on Today, or Plum lit warm with Sunflower. The same in light and dark, as posts are.
+- **Top:** **Cancel** (**Close** in Edit) at the left and **Keep** at the right, words on Liquid Glass as on the opened post. Keep is quiet until there is something to keep, then Sunflower.
 - **One Liquid Glass panel** holds everything, in this order:
   1. The words, large. One field: "Paste a link or write a note". No screen title; the placeholder says it.
-  2. **Why**, one line, shown once there are words. Your why is Nectarine.
+  2. **Why**, one line, shown once there are words. Your why is Sunflower.
   3. A bottom row: **Photo or file** at the left, the return line at the right.
 - **The return line** says when it comes back and changes as you type: "Back tomorrow", "Back Saturday", "Back Nov 9 · 5 days before". Tap it for one small screen of choices as words: Tomorrow, This weekend, Next week, Pick a day; for a dated save also its date, Add a time and Clear. It replaces "Start showing it on" and the paragraph about the why.
 - **Photo or file** opens the standard menu: Photo Library, Take Photo (the system camera), Choose File. A photo becomes the ground and Photo or file becomes **Remove photo**. A file shows as one line in the panel with **Remove**.
@@ -96,7 +96,7 @@ Every screen where you write is the post you are making. What you see while you 
 
 One idea per screen, one clear choice. The words sit along the bottom on the ground, a quiet word on the left and the action on the right, with no bar behind them.
 
-1. **Welcome.** The app logo, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint. Start.
+1. **Welcome.** The app logo, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Pistachio tint. Start.
 2. **Save from anywhere.** Three numbered steps for the share sheet. Skip, Next. (The email address is not offered here; it comes with Shoebox Plus, offered after the first week.)
 3. **When should they come out?** A time wheel and one line about the daily notification. Not now, Turn on.
 4. **Three moves. That's the whole app.** Swipe up: Next, it comes back when your why says, or tomorrow. Pull down: Put it away, done, kept, and search finds it. Tap it: Open it, Edit is there too.
@@ -105,7 +105,7 @@ Settings › How to use Shoebox › The three moves shows it again.
 
 ### 2.8 Settings
 
-Reached from Today and the Box. No paragraphs. One short list in a card one step off the ground (deeper Wheat in light, lighter Plum Night in dark), no outline; each row shows its answer on the right. A row opens one small screen: a title, its question, the choices as words, at most one quiet line.
+Reached from Today and the Box. No paragraphs. One short list in a card one step off the ground (deeper Pistachio in light, lighter Plum in dark), no outline; each row shows its answer on the right. A row opens one small screen: a title, its question, the choices as words, at most one quiet line.
 
 - **Each day:** How many (5, 10 or All; default 10). Remind me (the time, or Off).
 - **Look:** Auto, Light or Dark. The share sheet follows it too.
@@ -182,45 +182,36 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 
 | Job | Light | Dark |
 |---|---|---|
-| Ground | Wheat `#FFF6E9` | Plum Night `#2F2036` |
-| Sheet | `#FFF9F0` | `#36263E` |
-| Card (Settings groups) | `#F3E5D3` | `#3B2A44` |
-| Text | Plum Ink `#2A1C30` | Wheat `#FFF6E9` |
-| Quiet (dates, sources, labels) | `#6E6170` | `#BBAEBF` |
-| Hairlines | `#EADCCB`; fields `#DCCAB8` | `#45344D`; fields `#4A3852` |
-| Your reason | pale Nectarine `#FFD7AA` | Nectarine at 28% |
-| Action word (Keep, Next) | Plum Ink | Nectarine `#FFBD76` |
-| System controls (date pickers, links) | Plum `#56395F` | Nectarine |
-| Bottom box | Plum `#56395F` glass, text Wheat, lid Nectarine with a `#E9A35C` lip | same |
-| Logo box | Plum `#56395F` | `#6B4A76` |
-| Delete (swipe) | Brick `#A8402F` with Wheat word | same |
-| Words on photos | Wheat | Wheat |
+| Ground | Pistachio `#F6F3E8` | Plum `#3B2240` |
+| Sheet | `#FBF9F1` | `#442B4B` |
+| Card (Settings groups) | `#E8ECDA` | `#4A3352` |
+| Text | Plum Ink `#2A1E2E` | Bone `#F1E9D8` |
+| Quiet (dates, sources, labels) | `#6A6070` | `#BBA7BE` |
+| Hairlines | `#DEDAC9`; fields `#CFCBB6` | `#54405A`; fields `#5E4965` |
+| Your reason (chip) | Pistachio tint `#E3EBD7` | Pistachio `#B9C9A3` at 28%, text `#E3EBD7` |
+| Your reason (on a photo) | Sunflower | Sunflower |
+| Action word (Keep, Next) | Plum Ink | Sunflower `#F9C93A` |
+| System controls (date pickers, links) | Plum `#3B2240` | Sunflower |
+| Bottom box | Plum `#3B2240` glass, text Bone | Bone `#F1E9D8` glass, text Plum |
+| Lid | Sunflower `#F9C93A` with a `#D4A21E` lip | same |
+| Logo | tile Bone, box Plum, cards `#A798AD` | tile Plum, box Bone, cards `#8E7A92` |
+| Delete (swipe) | Brick `#A8402F` with Bone word | same |
+| Words on photos | Bone | Bone |
 | Shadows, scrims, glass over photos | plum shade `#1A1020` | same |
-| Launch screen | Wheat | Plum Night |
+| Launch screen | Pistachio | Plum |
 
 No black anywhere. Brick is the only red and is used for Delete alone. Each color has one job:
-- Wheat and Plum Night are the grounds; Wheat is also the text on dark and on photos.
-- Plum Ink is the text on light.
-- Plum is the box, in the app and the logo, and the light-mode accent.
-- Nectarine is the lid, your reason, and the action word and accent in dark mode.
+- Pistachio is the light ground. Plum is the dark ground, and posts without a picture are Plum in both modes.
+- Bone is the text on dark and on photos, and the box in dark mode.
+- Plum Ink is the text on light. Plum is the box in light mode and the light-mode accent.
+- Sunflower is the lid, your reason on a photo, and the action word and accent in dark mode.
 - Shadows and scrims are the plum shade, so dark parts stay warm.
-
-### 5.2 Type and shape
-
-- SF Pro throughout.
-- Post headline 30 pt bold (34 pt with no photo). Screen titles 34 pt bold.
-- Glass panels 20 pt corners (the writing panel too); Settings cards 16 pt; the lid 6 pt.
-- Touch targets at least 44 pt.
-- Actions are words: never pills, never icon-only buttons.
-- No neumorphic shadows in v1.
-
-### 5.3 Photos
 
 Every photo is measured once (average brightness and spread from a 16 by 16 copy) and graded: bright ones get more plum shade and a little less color, dark ones are lifted, flat ones get more contrast. Then a light Oceanic soft-light tint, an edge vignette, and shading top and bottom so the status bar and the glass always read.
 
 ### 5.4 App icon
 
-Shoebox 1's layered Liquid Glass icon (`App/Shoebox/AppIcon.icon`: lid, box and cards), recolored: ground Wheat or Plum Night, box Plum (`#56395F`, lifted to `#6B4A76` on Plum Night), cards `#6E6170` or `#C9BCCB`, lid Nectarine. Each layer is glass, so iOS renders it in Liquid Glass, dark and tinted on its own. The same artwork is drawn in the app (`AppLogo`, from `Assets.xcassets` Logo*).
+Shoebox 1's layered Liquid Glass icon (`App/Shoebox/AppIcon.icon`: lid, box and cards), recolored: tile Bone or Plum, box Plum (`#3B2240`) on Bone and Bone (`#F1E9D8`) on Plum, cards `#A798AD` or `#8E7A92`, lid Sunflower. Each layer is glass, so iOS renders it in Liquid Glass, dark and tinted on its own. The same artwork is drawn in the app (`AppLogo`, from `Assets.xcassets` Logo*).
 
 ### 5.5 Retired
 

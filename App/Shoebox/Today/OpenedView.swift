@@ -159,7 +159,7 @@ struct OpenedView: View {
     }
 
     /// The photo, full screen and still while the words scroll over it. Without one,
-    /// Plum Night lit warm from the top corner so the glass still has something to sit on.
+    /// Plum lit warm from the top corner so the glass still has something to sit on.
     private var backdrop: some View {
         GeometryReader { geo in
             // The words start about 330 pt down, so the subject sits in the space above them.

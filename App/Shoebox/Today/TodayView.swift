@@ -283,7 +283,7 @@ struct TodayView: View {
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
     }
 
-    /// Your Shoebox, across the bottom: a Wheat box with its Nectarine lid on top, like the logo.
+    /// Your Shoebox, across the bottom: a Plum box (Bone in dark) with its Sunflower lid on top, like the logo.
     /// The lid lifts and tips open once a post is far enough to drop in, and the whole box rattles
     /// when a post is flicked away or dropped into it. Tap it or pull it up to open the Box.
     private var strip: some View {
@@ -337,7 +337,7 @@ struct TodayView: View {
         }
     }
 
-    /// The Nectarine lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
+    /// The Sunflower lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
     /// Bumped, it knocks against the box.
     private func lid(ready: Bool) -> some View {
         // A shoebox top: lit along its top edge, a deeper lip where it folds down over the sides, and a shadow
