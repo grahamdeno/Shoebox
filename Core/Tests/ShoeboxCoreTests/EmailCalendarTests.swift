@@ -63,6 +63,21 @@ struct EmailCalendarTests {
         #expect(!EmailCalendar.contains("husband", word: "band"))
     }
 
+    @Test func aLineLeftOnACommaCarriesOn() {
+        let text = "8TH GRADE\n- Thu Nov 5: High school course selection night for 8th grade families,\n6:00 PM, library."
+        let items = EmailCalendar.items(in: text, received: Self.received, calendar: Self.cal)
+        #expect(items.count == 1)
+        #expect(items[0].line.hasSuffix("6:00 PM, library."))
+    }
+
+    @Test func mailTextIsUnwrapped() {
+        let crlf = "> Total: $4,150\r\n> Work takes two days. We can start the week of December 7 if you confirm b \r\ny November 15.\r\n\r\nThoughts?"
+        let lines = EmailRules.unwrap(crlf).components(separatedBy: "\n")
+        #expect(lines.count == 4)
+        #expect(lines[1].hasSuffix("confirm b y November 15."))
+        #expect(EmailRules.unwrap("Inservice/No School&nbsp;") == "Inservice/No School ")
+    }
+
     @Test func titlesDropTheDate() {
         #expect(EmailCalendar.title(of: "Sat Nov 7: Cross country regional championship, 8:30 AM start") == "Cross country regional championship")
         #expect(EmailCalendar.title(of: "Nov 25 to 27: No school, Thanksgiving break.") == "No school")

@@ -58,14 +58,10 @@ enum Capture {
     static func place(_ s: Save, note: String, now: Date) {
         let planner = LaterPlanner()
         DateReader.apply(to: s)
-        if let event = s.eventDate, planner.match(words: note, now: now) == nil {
-            if let first = SaveActions().reminders(for: event).first(where: { $0 > now }) {
-                s.status = .away
-                s.returnDate = first
-            } else {
-                s.status = .today        // the day is here
-                s.returnDate = nil
-            }
+        if s.eventDate != nil, planner.match(words: note, now: now) == nil {
+            // Seen once now; flicked up, it waits for 5 days before, the day before and the day itself.
+            s.status = .today
+            s.returnDate = nil
             return
         }
         s.status = .away

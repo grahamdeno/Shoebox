@@ -58,13 +58,16 @@ public enum EmailCalendar {
         for raw in text.components(separatedBy: .newlines) {
             let line = tidy(raw)
             guard !line.isEmpty else { continue }
-            // A line that starts in lowercase carries on the one above (a PDF wraps long lines).
-            if let f = line.first, f.isLowercase {
+            // A line that starts in lowercase, or follows a line left open on a comma, carries on the one above
+            // (a PDF or a mail program wraps long lines).
+            let day = firstDay(in: line, received: received, calendar: calendar)
+            let open = lastWasItem && day == nil && (out.last?.line.hasSuffix(",") ?? false)
+            if let f = line.first, f.isLowercase || open {
                 if lastWasItem, var last = out.popLast() { last.line += " " + line; out.append(last) }
                 continue
             }
             lastWasItem = false
-            if let day = firstDay(in: line, received: received, calendar: calendar) {
+            if let day {
                 out.append(Item(line: line, section: section, title: title(of: line), day: day, link: link(in: line)))
                 lastWasItem = true
             } else if isHeading(line) {

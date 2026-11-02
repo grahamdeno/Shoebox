@@ -87,8 +87,8 @@ enum Inbox {
             if reason.isEmpty, EmailRules.isAccountNotice(subject: subject, text: m.text ?? "") {
                 done.append(m.id); continue
             }
-            let body = EmailRules.stripAds(rawBody)
-            var lines = body.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            let body = EmailRules.stripAds(EmailRules.unwrap(rawBody))
+            var lines = body.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && !$0.hasPrefix("From:") && !$0.hasPrefix("Date:") && !$0.hasPrefix("Subject:") && !$0.hasPrefix("To:") && !$0.contains("Forwarded message") }
             let link = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
 
@@ -102,7 +102,7 @@ enum Inbox {
             // An email that is only a link ("have a look at this"): read the page, so the post is about it.
             let thin = lines.filter { !$0.hasPrefix("http") }.joined(separator: " ").count < 120
             if thin, pdf == nil, let link, let url = URL(string: link), let text = await Relay.preview(url)?.text, !text.isEmpty {
-                lines += text.components(separatedBy: .newlines).prefix(400)
+                lines += EmailRules.unwrap(text).components(separatedBy: "\n").prefix(400)
             }
 
             // Many dates (a school newsletter, a season schedule): one post per date that is about your people.
@@ -168,15 +168,11 @@ enum Inbox {
         s.emailReceivedAt = received
     }
 
-    /// Comes back 5 days before, the day before and on the day; on screen now if the day is here.
+    /// Seen once when it arrives; flicked up, it waits for 5 days before, the day before and the day itself.
     private static func schedule(_ s: Save, on day: Date, now: Date) {
         s.eventDate = day
-        if let first = SaveActions().reminders(for: day).first(where: { $0 > now }) {
-            s.status = .away
-            s.returnDate = first
-        } else {
-            s.status = .today
-        }
+        s.status = .today
+        s.returnDate = nil
     }
 
     /// One attachment of a waiting mail, fetched before the mail is acknowledged (which deletes it).
