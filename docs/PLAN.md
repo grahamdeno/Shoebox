@@ -53,7 +53,8 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
-| Palette | Onyx, Wheat, Oceanic and Nectarine: Wheat light, Onyx dark. Neumorphic depth, Liquid Glass on opened posts | October 30 evening, replacing Peach and slate. SPEC section 5 has the table. |
+| Palette | Onyx, Wheat, Oceanic and Nectarine: Wheat light, Onyx dark. Neumorphic depth, Liquid Glass on opened posts | October 30 evening, replacing Peach and slate. Replaced November 1 (next row). |
+| Palette | Wheat, Plum Night, Plum Ink, Plum and Nectarine. Plum box in both modes and the logo; no black; Onyx and Oceanic retired | November 1. SPEC section 5.1 |
 | Type | SF Pro (system) throughout | Chosen October 30. Native, nothing to bundle. |
 | Names | Today (the feed) and Box (put away, kept, search) | Chosen October 30. |
 | Actions | Words, not pills or icon-only buttons: Done, Later | Same rule as Scales. Every control on screen is a labeled word. |

@@ -31,6 +31,7 @@ struct ShoeboxApp: App {
         WindowGroup {
             RootView()
                 .appearance()
+                .tint(Theme.accent)
         }
         .modelContainer(container)
     }

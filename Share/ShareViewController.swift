@@ -25,7 +25,7 @@ final class ShareViewController: UIViewController {
     private func show() {
         let model = ShareModel(url: url, pageTitle: pageTitle, texts: texts, photos: photos, comment: comment)
         model.onClose = { [weak self] in self?.extensionContext?.completeRequest(returningItems: nil) }
-        let host = UIHostingController(rootView: ShareSheet(model: model))
+        let host = UIHostingController(rootView: ShareSheet(model: model).tint(Theme.accent))
         host.view.backgroundColor = .clear
         switch Prefs.appearance {
         case 1: host.overrideUserInterfaceStyle = .light

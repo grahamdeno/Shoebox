@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// One post, full screen: its picture fills the screen and the words sit on Liquid Glass near the bottom.
-/// A post with no picture gets Onyx lit warm from the top corner so the glass still has something to sit on.
+/// A post with no picture gets Plum Night lit warm from the top corner so the glass still has something to sit on.
 struct PostCard: View {
     let save: Save
     let now: Date
@@ -22,7 +22,7 @@ struct PostCard: View {
                 .padding(.bottom, insets.bottom + bottomRoom + 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.onyx)
+        .background(Theme.plumNight)
         .environment(\.colorScheme, .dark)
     }
 
@@ -32,23 +32,23 @@ struct PostCard: View {
                 Text(save.note)
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.lid)
-                    .shadow(color: .black.opacity(0.35), radius: 1.5, y: 1)
+                    .shadow(color: Theme.shade.opacity(0.35), radius: 1.5, y: 1)
             }
             Text(save.headline)
                 .font(.system(size: save.imageData == nil ? 34 : 30, weight: .bold))
                 .tracking(-0.6)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onPhoto)
                 .lineLimit(5)
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
-                .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+                .shadow(color: Theme.shade.opacity(0.4), radius: 2, y: 1)
             if !save.snippet.isEmpty {
                 Text(save.snippet)
                     .font(.system(size: 17))
                     .lineSpacing(3)
-                    .foregroundStyle(.white.opacity(0.95))
+                    .foregroundStyle(Theme.onPhoto.opacity(0.95))
                     .lineLimit(3)
-                    .shadow(color: .black.opacity(0.35), radius: 1.5, y: 1)
+                    .shadow(color: Theme.shade.opacity(0.35), radius: 1.5, y: 1)
             }
             if let event = save.eventDate {
                 Text(comesBack(event))
@@ -57,12 +57,12 @@ struct PostCard: View {
             }
             Text(save.byline(now: now))
                 .font(.system(size: 13))
-                .foregroundStyle(.white.opacity(0.82))
+                .foregroundStyle(Theme.onPhoto.opacity(0.82))
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .glassEffect(.regular.tint(Theme.onyx.opacity(grade.glassTint)), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .glassEffect(.regular.tint(Theme.shade.opacity(grade.glassTint)), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     /// "Oct 30 at 4:00 PM. Back Oct 25, Oct 29 and Oct 30."
