@@ -45,14 +45,10 @@ enum Relay {
         return thumbnail(data)
     }
 
+    /// A JPEG at most `maxWidth` pixels wide, made while reading so the full picture is never decoded in memory.
+    /// Nil for anything small enough to be an icon or logo.
     static func thumbnail(_ data: Data, maxWidth: CGFloat = 1200) -> Data? {
-        guard let image = UIImage(data: data), image.size.width >= 300, image.size.height >= 160 else { return nil }
-        let scale = min(1, maxWidth / image.size.width)
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let out = UIGraphicsImageRenderer(size: size, format: format).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
-        return out.jpegData(compressionQuality: 0.8)
+        ImageDownsample.jpeg(from: data, maxWidth: Int(maxWidth), minimum: (300, 160))
     }
 
     /// Fills in a link save from its page: title, snippet, text and picture. Your own words are never replaced.
