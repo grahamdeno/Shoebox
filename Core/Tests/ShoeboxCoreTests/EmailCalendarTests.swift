@@ -115,7 +115,7 @@ struct EmailCalendarTests {
         let items = EmailCalendar.items(in: text, received: Self.received, calendar: Self.cal)
         #expect(items.count == 2)
         #expect(items[0].line.hasSuffix("Maple Grove Park. Runners report by 7:30 AM."))
-        #expect(items[1].line.hasSuffix("North Carolina trip."))
+        #expect(items[1].line.hasSuffix("Science Museum trip."))
     }
 
     @Test func shortSourceNames() {
