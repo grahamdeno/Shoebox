@@ -25,7 +25,8 @@
 - [ ] Age rating questionnaire: no objectionable content; 4+
 - [ ] Copyright line; seller name
 - [ ] Version 1.0 on the existing record (`com.grahamdeno.shoebox`); `MARKETING_VERSION` set to 1.0.0
-- [ ] Availability: every storefront except the 27 EU countries
+- [x] Availability: US, Canada, Mexico, UK, Australia, New Zealand; no EU; future countries off (set November 2)
+- [ ] Price set to Free in Pricing (needed before submission)
 - [x] Small Business Program submitted (November 2); approval email pending
 - [ ] Paid Apps Agreement active (W-9 and bank account)
 - [ ] In-app purchase "Shoebox Plus" (non-consumable) created, priced, with review screenshot
