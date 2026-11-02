@@ -1,0 +1,11 @@
+{
+  "suite": "DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-256-GCM, base mode (RFC 9180)",
+  "info": "shoebox-mail-v1",
+  "aad": "0123456789abcdef0123:mail1-abc",
+  "plaintext": "{\"from\":\"school@example.com\",\"fromName\":\"School\",\"subject\":\"Band concert\",\"text\":\"The band concert is Thursday at 7 pm in the gym. Please arrive by 6:30.\",\"links\":[\"https://example.com/band\"],\"attachments\":[{\"n\":0,\"name\":\"flyer.pdf\",\"type\":\"application/pdf\",\"size\":1234}]}",
+  "recipientSecret": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=",
+  "recipientPublic": "B6N8vBQgk8i3VdwbEOhstCY3StFqqFPtC9/AsrhtHHw=",
+  "ephemeralSeed": "4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=",
+  "enc": "cp1lYdLyePTXCgQQUC+BJJt1aJp7Df601Imu1tSB42I=",
+  "ct": "RJ2kc+zald1tOWEBagpu3CQB7yHTVtCKKFlq6itD+eze09oc+hLZiLSOKceJjUDTNpw8jQvXz2eBgtxuhjJT9BO9Wf/YPwVpIa/gWxueAOrMM62dpYarRhNok6lFL2utzitlenOIBWM3UIV8HLfPngisLpk8ceve1eoZ3R8Bi9B1sBD+J3PqgzhRfPFxYxjR+RVzj1cLzXVjxgDgQBSjnlI+7PjgGFwHiwI/X1nGNAglBs5OqzL8djwRQmQbJAW207ktKlLOwelaEteMULJ/vvM+GOX7HAfN8YQ7Hb1DuKJVRE+IVIKuhK0GUzF9GbrHbdkxPbzrsjVtfle5L8VkJQ7VuWSltbldx/4rzqgQPG5IkS0hotVrP4S0Pow+asoM"
+}
