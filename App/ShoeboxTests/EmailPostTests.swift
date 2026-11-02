@@ -21,4 +21,15 @@ final class EmailPostTests: XCTestCase {
         XCTAssertEqual(w.title, "Dentist reminder for Heidi")
         XCTAssertTrue(w.text.contains("3:15"))
     }
+
+    func testPlainReadsQuotedRepliesAndCleansTheSubject() {
+        let lines = ["> On Sun, Oct 25, Rita Cole wrote:", "> > Hi Dan, can you send over the quote for the dock?",
+                     "> Replace 2 pilings: $2,800", "> Total: $4,150", "Thoughts? Need to decide by the 15th.", "Sent from my iPhone"]
+        let w = EmailPost.plain(subject: "[List] Fwd: Fwd: Re: Dock repair quote", lines: lines)
+        XCTAssertEqual(w.title, "Dock repair quote")
+        XCTAssertTrue(w.text.contains("$4,150"))
+        XCTAssertFalse(w.text.contains(">"))
+        XCTAssertFalse(w.text.contains("wrote:"))
+        XCTAssertFalse(w.text.contains("iPhone"))
+    }
 }

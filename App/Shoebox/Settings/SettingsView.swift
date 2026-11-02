@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var firstName = ""
     @State private var addressNote = ""
     @State private var copied = false
+    @State private var mailFor = Prefs.mailFor
     @State private var importing = false
     @State private var importNote = ""
     @State private var exportURL: URL?
@@ -250,6 +251,15 @@ struct SettingsView: View {
                 .padding(.top, 22)
                 if !addressNote.isEmpty { line(addressNote) }
             }
+            question("Who it's about")
+            card {
+                TextField("Gunner, 8th grade: cross country, band", text: $mailFor, axis: .vertical)
+                    .lineLimit(1...4)
+                    .foregroundStyle(Theme.ink)
+                    .padding(.vertical, 14)
+                    .onChange(of: mailFor) { _, new in Prefs.mailFor = new }
+            }
+            line("A newsletter makes posts only for their dates.")
         }
     }
 

@@ -103,7 +103,7 @@ Reached from Today and the Box. No paragraphs. One short list in a card one step
 - **Each day:** How many (5, 10 or All; default All). Remind me (the time, or Off).
 - **Look:** Auto, Light or Dark. The share sheet follows it too.
 - **Pictures:** On or Off. "Your words stay on your phone."
-- **Email:** the address and Copy, or a first name and "Get address".
+- **Email:** the address and Copy, or a first name and "Get address". Below it, "Who it's about": one line in your words ("Gunner, 8th grade: cross country, band").
 - **Backups:** Last copy; Save a copy now; Bring one back (takes any Shoebox 1 or 2 file).
 - **How to use Shoebox:** The three moves; Share, then Shoebox.
 - Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first; it also asks the relay to delete your email address and waiting mail, `POST /me/delete`).
@@ -146,7 +146,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 |---|---|
 | Share sheet | Safari or any app: Share, then Shoebox (section 2.5). Reads the page while you type. Pages, links, text and up to 10 photos. |
 | + New | Link, note or photo, with a reason (section 2.5). |
-| Email | Forward to your Shoebox address. Each email is one post; your words above the forward are the reason. The post is a short title and two or three sentences written on the phone from what matters in the email (Apple Intelligence; without it, the first few useful lines). The email itself is not kept. Ads are skipped unless you wrote a note. A date in the email makes it a dated post. The same email twice is kept once. Mail waits on the relay up to 30 days. |
+| Email | Forward to your Shoebox address. Your words above the forward are the reason. An ordinary email is one post: a short title and two to five sentences written on the phone from what matters (Apple Intelligence, greedy, and refused if it holds a number or day word the email does not; then the first few useful lines, quoted replies included). Codes, amounts, deadlines and each leg of a trip are kept; card numbers are not. A PDF attachment is read and kept on the post; an email that is only a link reads the page. An email with four or more dated lines (a newsletter, a season schedule) becomes one post per date that matters: lines naming your grade or your words, and school-wide days; other grades and other activities are left out; with no "Who it's about" only school-wide days. The email itself is not kept. Ads, sign-in codes and account notices are skipped unless you wrote a note. Subjects lose `[tags]` and `Fwd:`/`Re:`. The same email twice is kept once. Mail waits on the relay up to 30 days. |
 | Shoebox 1 | On first run, the newest Shoebox 1 backup (`shoebox-backup-*.json` in Files or iCloud Drive, Shoebox › Backups) is brought in. Importing twice adds nothing. The email address and its key come over too. |
 | Backups | Settings › Bring in a backup takes any Shoebox 1 or 2 file. |
 
