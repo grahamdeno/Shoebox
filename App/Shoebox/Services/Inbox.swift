@@ -135,10 +135,14 @@ enum Inbox {
             }
 
             // The post is what matters in the email, written on the phone. The email itself is not kept.
-            let written = await EmailPost.write(subject: subject, lines: lines, received: received)
+            let written = await EmailPost.write(subject: subject, lines: lines, received: received, reader: readerName)
+            // A post about a date leads with that day, so it never comes back for the wrong Thursday.
+            let when = EmailRules.days(in: subject + "\n" + lines.joined(separator: "\n"), received: received, calendar: .current)
+                .filter { $0 > now }.min()
+            let text = EmailRules.leadWithDay(written.text, day: when, calendar: .current)
             let s = Save(title: String(written.title.prefix(140)),
-                         snippet: String(written.text.replacingOccurrences(of: "\n", with: " ").prefix(240)),
-                         body: written.text, note: reason,
+                         snippet: String(text.replacingOccurrences(of: "\n", with: " ").prefix(240)),
+                         body: text, note: reason,
                          origin: "via your Shoebox email", kind: .email, createdAt: received)
             s.urlString = link
             stamp(s, mail: m, subject: subject, received: received, now: now)
@@ -168,6 +172,13 @@ enum Inbox {
             _ = try? await URLSession.shared.data(for: Relay.request("inbox/ack", method: "POST", body: body, key: key))
         }
         return added
+    }
+
+    /// The first name in your address ("Graham-keep@..." gives "Graham"), so posts can say "you". Empty when unknown.
+    private static var readerName: String {
+        guard let local = Prefs.inboxAddress?.split(separator: "@").first else { return "" }
+        let name = local.split(separator: "-").first.map { String($0.filter(\.isLetter)) } ?? ""
+        return name.count >= 2 ? name.prefix(1).uppercased() + name.dropFirst().lowercased() : ""
     }
 
     private static func stamp(_ s: Save, mail m: Mail, subject: String, received: Date, now: Date) {

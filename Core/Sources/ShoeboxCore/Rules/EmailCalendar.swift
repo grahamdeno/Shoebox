@@ -58,14 +58,18 @@ public enum EmailCalendar {
         for raw in text.components(separatedBy: .newlines) {
             let line = tidy(raw)
             guard !line.isEmpty else { continue }
-            // A line that starts in lowercase, or follows a line left open on a comma, carries on the one above
-            // (a PDF or a mail program wraps long lines).
+            // A line that starts in lowercase, or follows a line that stopped mid-sentence (no full stop), carries on
+            // the one above: a PDF or a mail program wraps long lines. A new bullet or an ALL CAPS heading never does.
             let day = firstDay(in: line, received: received, calendar: calendar)
-            let open = lastWasItem && day == nil && (out.last?.line.hasSuffix(",") ?? false)
-            if let f = line.first, f.isLowercase || open {
-                if lastWasItem, var last = out.popLast() { last.line += " " + line; out.append(last) }
+            let isBullet = raw.trimmingCharacters(in: .whitespaces).first.map { "-•*·–".contains($0) } ?? false
+            let allCaps = line == line.uppercased() && line.contains(where: \.isLetter)
+            let endsOpen = !(out.last?.line.last.map { ".!?".contains($0) } ?? true)
+            let lowercase = line.first?.isLowercase ?? false
+            if lastWasItem, !isBullet, lowercase || (day == nil && endsOpen && !allCaps) {
+                if var last = out.popLast() { last.line += " " + line; out.append(last) }
                 continue
             }
+            if lowercase { continue }
             lastWasItem = false
             if let day {
                 out.append(Item(line: line, section: section, title: title(of: line), day: day, link: link(in: line)))
@@ -215,6 +219,15 @@ public enum EmailCalendar {
             details.append(String(s[p.lowerBound...]).trimmingCharacters(in: .whitespaces))
             s = String(s[..<p.lowerBound])
         }
+        // A time in the name ("Early release at 12:30 PM") is a detail, not part of the title.
+        if let t = s.range(of: #"\s+(?:at|by|from|starts?|starting)?\s*\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b.*$"#,
+                           options: [.regularExpression, .caseInsensitive]),
+           s[..<t.lowerBound].split(separator: " ").count >= 1 {
+            let tail = String(s[t]).trimmingCharacters(in: .whitespaces)
+            let time = tail.replacingOccurrences(of: #"^(?:at|by|from|starts?|starting)\s+"#, with: "", options: [.regularExpression, .caseInsensitive])
+            details.append(time)
+            s = String(s[..<t.lowerBound])
+        }
         let words = s.split(separator: " ")
         if words.count > 7 { s = words.prefix(7).joined(separator: " ") }
         details += rest.components(separatedBy: CharacterSet(charactersIn: ",;"))
@@ -236,7 +249,11 @@ public enum EmailCalendar {
         f.timeZone = calendar.timeZone
         f.dateFormat = "EEEE, MMM d"
         var day = f.string(from: item.day)
-        if let end = p.rangeEnd { day += " to \(end)" }
+        if let end = p.rangeEnd, let n = Int(end) {
+            var c = calendar.dateComponents([.year, .month], from: item.day)
+            c.day = n
+            if let endDay = calendar.date(from: c), endDay > item.day { day += " to " + f.string(from: endDay) }
+        }
         let weekdays = Set(f.weekdaySymbols.map { $0.lowercased() })
         let kept = p.details.filter { d in
             firstDay(in: d, received: received, calendar: calendar) == nil && !weekdays.contains(d.lowercased())

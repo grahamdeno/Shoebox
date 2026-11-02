@@ -9,23 +9,27 @@ import FoundationModels
 enum EmailPost {
     struct Written: Equatable { var title: String; var text: String }
 
-    static func write(subject: String, lines: [String], received: Date = Date()) async -> Written {
+    /// `reader` is the first name of the person the mail is for (from their address), so the post can say "you".
+    static func write(subject: String, lines: [String], received: Date = Date(), reader: String = "") async -> Written {
         let fallback = plain(subject: subject, lines: lines)
         #if canImport(FoundationModels)
         guard OnDeviceAI.isAvailable else { return fallback }
         let email = (["Subject: \(subject)"] + lines).joined(separator: "\n")
         let source = String(email.prefix(3_500))
+        let who = reader.isEmpty ? "" : " The reader is \(reader). Write to them as \"you\" and never use the name \(reader)."
         let session = LanguageModelSession(instructions: """
             You turn an email into a short post for the reader's own feed, so they can act on it without opening the email. \
-            Start with what it is or what to do. Keep every date, time, place and amount that matters, any confirmation, \
-            order or reference code, a deadline to reply or decide, and each leg of a trip. Leave out greetings, signatures, \
-            ads, statistics, unsubscribe and legal text, and card or account numbers. Use only words and numbers from the email: \
-            never add a day, time, place or detail it does not state. Write plainly, without saying "this email".
+            Lead with the day and time when there are any, then what it is or what to do. Keep every date, time, place and \
+            amount that matters, any confirmation, order or reference code, a deadline to reply or decide, and for a trip \
+            each flight or stop with its time. Leave out greetings, signatures, ads, statistics, unsubscribe and legal text, \
+            and card or account numbers. Use only words and numbers from the email: never add a day, time, place or detail \
+            it does not state, and never add a label such as "Location:" or "Trip leg:" that the email does not use. \
+            Write plainly and briefly, without saying "this email".\(who)
             """)
         guard let r = try? await session.respond(to: source, generating: EmailGist.self, options: GenerationOptions(sampling: .greedy))
         else { return fallback }
-        let title = EmailRules.cleanSubject(r.content.title.trimmingCharacters(in: .whitespacesAndNewlines))
-        let text = r.content.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = EmailRules.sentenceCase(EmailRules.cleanSubject(r.content.title.trimmingCharacters(in: .whitespacesAndNewlines)), source: source)
+        let text = EmailRules.dropInventedLabels(r.content.text.trimmingCharacters(in: .whitespacesAndNewlines), source: source)
         // A year the email implies is fine; anything else the email does not hold means the post is not used.
         let year = Calendar.current.component(.year, from: received)
         let check = source + " \(year) \(year + 1)"
@@ -75,9 +79,9 @@ enum EmailPost {
 #if canImport(FoundationModels)
 @Generable
 struct EmailGist {
-    @Guide(description: "A short title, at most eight words, naming the thing to remember.")
+    @Guide(description: "A short title in sentence case, at most six words, naming the specific thing (what, who or which item). Never a time, and never a generic word like update, confirmation or terms alone.")
     var title: String
-    @Guide(description: "Two to five short plain sentences with only the details that matter: what, when, where, what to do, and any code or amount.")
+    @Guide(description: "One to three short plain sentences with only the details that matter, the day and time first: when, what, where, what to do, and any code or amount. No labels.")
     var text: String
 }
 #endif

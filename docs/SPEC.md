@@ -54,10 +54,10 @@ A Plum glass box across the bottom, the same in light and dark and the same box 
 
 #### Edit
 
-- Laid out like Keep something: **Close** and **Keep** at the top, hairline fields (title, words for your own notes, why you kept it, the date it is about), nothing rides the keyboard.
-- It saves on its own a moment after you stop typing and again when you leave. **Keep** saves, taps a haptic and the post shows "Saved". A line under the title says "Changes save as you go" and then "Saved".
-- The date can be added, changed, given a time, or cleared. New words that name a date are read, unless you cleared one yourself.
-- **Delete** is the last word, bottom left, in thumb reach. One tap closes the post and shows Undo for 5 seconds. A delete is soft: the post is hidden from every list and stays in backups.
+- Opens on the same surface as Keep something (section 2.5): the post itself, with **Close** and **Keep** at the top and one glass panel holding the title (large), your notes, the why, and the return line.
+- It saves on its own a moment after you stop typing and again when you leave. **Keep** saves, taps a haptic and the line under the title says "Saved".
+- A Date line holds the date it is about: Add a date, or the date with Add a time and Clear date. With a date, it says it comes back 5 days before and stays until put away. New words that name a date are read, unless you cleared one yourself.
+- **Delete** is the last word, bottom left of the panel, in thumb reach. One tap closes the post and shows Undo for 5 seconds. A delete is soft: the post is hidden from every list and stays in backups.
 
 ### 2.4 Shoebox (the library)
 
@@ -71,14 +71,21 @@ A Plum glass box across the bottom, the same in light and dark and the same box 
 - Tap a post to open it. Everything else (Next, Put away, Bring back, Edit, Delete) is on the opened post, so each is learned once.
 - The count on the box at the bottom of Today is the posts in this list.
 
-### 2.5 Keep something, and the share sheet
+### 2.5 Writing on the post: Keep something, the share sheet, and Edit
 
-Laid out like Scales: full screen on the app's own ground (Wheat or Plum Night), **Cancel** top left and **Keep** top right, a large title, then fields as a label over a hairline with no box.
+Every screen where you write is the post you are making. What you see while you write is what comes back. Agreed November 2, 2026 (mock: the "Shoebox Keep screen" canvas); it replaces the Scales-style form.
 
-- Fields: "Link or note" and "Why are you keeping it?" ("Optional. Before the trip"). The share sheet shows what was found (title, site, picture) in place of the first field.
-- Under the field: "Or add" Photos, Files, Camera (the camera opens in the lower half). Then the why, and an optional "Start showing it on" day: until then it waits in the Shoebox. The scroll stops at the keyboard so every field can be reached.
-- "Your why decides when it comes back. Say nothing and it comes back tomorrow."
-- Nothing rides up with the keyboard, and one swipe down closes it.
+- **The ground is the post.** Its photo, full-bleed and graded as on Today, or Plum Night lit warm with Nectarine. The same in light and dark, as posts are.
+- **Top:** **Cancel** (**Close** in Edit) at the left and **Keep** at the right, words on Liquid Glass as on the opened post. Keep is quiet until there is something to keep, then Nectarine.
+- **One Liquid Glass panel** holds everything, in this order:
+  1. The words, large. One field: "Paste a link or write a note". No screen title; the placeholder says it.
+  2. **Why**, one line, shown once there are words. Your why is Nectarine.
+  3. A bottom row: **Photo or file** at the left, the return line at the right.
+- **The return line** says when it comes back and changes as you type: "Back tomorrow", "Back Saturday", "Back Nov 9 · 5 days before". Tap it for one small screen of choices as words: Tomorrow, This weekend, Next week, Pick a day; for a dated save also its date, Add a time and Clear. It replaces "Start showing it on" and the paragraph about the why.
+- **Photo or file** opens the standard menu: Photo Library, Take Photo (the system camera), Choose File. A photo becomes the ground and Photo or file becomes **Remove photo**. A file shows as one line in the panel with **Remove**.
+- **The panel rides the keyboard.** With the keyboard down it sits at the bottom in thumb reach. One swipe down closes the screen.
+- **Read on the phone.** After a photo, the phone suggests the words and the why: Vision reads the text in it, Apple Intelligence writes a short title, the details and the why (refused if it holds a number or day word the photo does not), and the date reader finds the date in those words. Suggestions show lighter under one line, "Read from the photo. Tap to change." Typing makes them yours and solid. Keep keeps what is shown; nothing is kept on its own. Nothing leaves the phone for this. Without Apple Intelligence the first line is the title and the next lines the details; a photo with no readable text stays "A photo". A suggested why is used only when most of its words are in the photo, and "not stated" claims, half-read first words and anything that reads like an instruction are dropped. Files and links are read after they are kept, as before (the page's title and picture, a file's text, dates in the words).
+- **The share sheet** is the same surface: the page's picture is the ground, the page's title is the words once read, and your own words go under it ("Add a note").
 - Several links pasted together become several saves. A link that's already kept isn't kept twice.
 
 ### 2.6 Today's clear
@@ -146,7 +153,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 |---|---|
 | Share sheet | Safari or any app: Share, then Shoebox (section 2.5). Reads the page while you type. Pages, links, text and up to 10 photos. |
 | + New | Link, note or photo, with a reason (section 2.5). |
-| Email | Forward to your Shoebox address. Your words above the forward are the reason. An ordinary email is one post: a short title and two to five sentences written on the phone from what matters (Apple Intelligence, greedy, and refused if it holds a number or day word the email does not; then the first few useful lines, quoted replies included). Codes, amounts, deadlines and each leg of a trip are kept; card numbers are not. A PDF attachment is read and kept on the post; an email that is only a link reads the page. An email with four or more dated lines (a newsletter, a season schedule) becomes one post per date that matters (each shown once when it arrives, then back 5 days before and every day after until put away): lines naming your grade or your words, and school-wide days; other grades and other activities are left out; with no "Who it's about" only school-wide days. Each date post reads as a short title (up to six words) and one line that starts with the day: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." Where it came from is in the byline ("from Roosevelt newsletter"). Its picture names its own subject (trumpet, lacrosse) or there is none, and no stock picture is used twice. A date already made into a post (same day, a matching name) is not made again when the newsletter comes back next week: new details replace the words quietly, and a new time shows it once more with "Changed: 6:30 PM to 7:00 PM", even if it was put away. The email itself is not kept. Ads, sign-in codes and account notices are skipped unless you wrote a note. Subjects lose `[tags]` and `Fwd:`/`Re:`. The same email twice is kept once. Mail waits on the relay up to 30 days. |
+| Email | Forward to your Shoebox address. Your words above the forward are the reason. An ordinary email is one post: a short title and two to five sentences written on the phone from what matters (Apple Intelligence, greedy, and refused if it holds a number or day word the email does not; then the first few useful lines, quoted replies included). Codes, amounts, deadlines and each leg of a trip are kept; card numbers are not. A PDF attachment is read and kept on the post; an email that is only a link reads the page. An email with four or more dated lines (a newsletter, a season schedule) becomes one post per date that matters (each shown once when it arrives, then back 5 days before and every day after until put away): lines naming your grade or your words, and school-wide days; other grades and other activities are left out; with no "Who it's about" only school-wide days. Each date post reads as a short title (up to six words) and one line that starts with the day: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." Where it came from is in the byline ("from Roosevelt newsletter"). Its picture names its own subject (trumpet, lacrosse) or there is none, and no stock picture is used twice. A date already made into a post (same day, a matching name) is not made again when the newsletter comes back next week: new details replace the words quietly, and a new time shows it once more with "Changed: 6:30 PM to 7:00 PM", even if it was put away. A post about a date leads with that day ("Thursday, Nov 12 · ...") when its words do not. Titles are in sentence case and never carry a time. A label the email never used ("Location:", "Trip leg:") is taken out. Posts say "you" for the person the mail is for, read from the first name in their Shoebox address; a mail with no known name just keeps the email's own words. Lines of a newsletter that the mail program wrapped mid-sentence are joined back. A date range reads "Wednesday, Nov 25 to Friday, Nov 27". The email itself is not kept. Ads, sign-in codes and account notices are skipped unless you wrote a note. Subjects lose `[tags]` and `Fwd:`/`Re:`. The same email twice is kept once. Mail waits on the relay up to 30 days. |
 | Shoebox 1 | On first run, the newest Shoebox 1 backup (`shoebox-backup-*.json` in Files or iCloud Drive, Shoebox › Backups) is brought in. Importing twice adds nothing. The email address and its key come over too. |
 | Backups | Settings › Bring in a backup takes any Shoebox 1 or 2 file. |
 
@@ -199,7 +206,7 @@ No black anywhere. Each color has one job:
 
 - SF Pro throughout.
 - Post headline 30 pt bold (34 pt with no photo). Screen titles 34 pt bold.
-- Glass panels 20 pt corners; Settings cards 16 pt; the lid 6 pt.
+- Glass panels 20 pt corners (the writing panel too); Settings cards 16 pt; the lid 6 pt.
 - Touch targets at least 44 pt.
 - Actions are words: never pills, never icon-only buttons.
 - No neumorphic shadows in v1.

@@ -167,4 +167,57 @@ public enum EmailRules {
         let lines = s.components(separatedBy: "\n").map { $0.split(separator: " ", omittingEmptySubsequences: true).joined(separator: " ") }
         return lines.filter { !$0.isEmpty }.joined(separator: "\n")
     }
+
+    // MARK: Tidying what the phone wrote
+
+    /// Takes out a label the email never used ("Trip leg:", "Location:") but keeps the words after it.
+    public static func dropInventedLabels(_ text: String, source: String) -> String {
+        guard let re = try? NSRegularExpression(pattern: #"(^|[.!?]\s+)([A-Z][A-Za-z]*(?:\s[A-Za-z]+){0,2}):\s+"#) else { return text }
+        let lowerSource = source.lowercased()
+        var out = text
+        for m in re.matches(in: text, range: NSRange(text.startIndex..., in: text)).reversed() {
+            guard let whole = Range(m.range, in: out), let lead = Range(m.range(at: 1), in: out),
+                  let label = Range(m.range(at: 2), in: out) else { continue }
+            if lowerSource.contains(out[label].lowercased() + ":") { continue }
+            let leadText = String(out[lead])
+            let startOffset = out.distance(from: out.startIndex, to: whole.lowerBound)
+            out.replaceSubrange(whole, with: leadText)
+            // The sentence now starts with whatever followed the label: it starts in a capital.
+            let pos = out.index(out.startIndex, offsetBy: startOffset + leadText.count)
+            if pos < out.endIndex { out.replaceSubrange(pos...pos, with: out[pos].uppercased()) }
+        }
+        return out
+    }
+
+    /// "Lease Renewal Terms" becomes "Lease renewal terms". Words with digits, all capitals, or that the email
+    /// writes in capitals itself (names, places) are left alone.
+    public static func sentenceCase(_ title: String, source: String) -> String {
+        let words = title.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        guard words.count > 1 else { return title }
+        var out = [words[0]]
+        for w in words.dropFirst() {
+            let letters = w.filter(\.isLetter)
+            let capitalised = w.first?.isUppercase == true && letters.dropFirst().allSatisfy(\.isLowercase)
+            let keep = !capitalised || w.contains(where: \.isNumber)
+                || (source.contains(w) && !source.contains(w.lowercased()))
+            out.append(keep ? w : w.lowercased())
+        }
+        return out.joined(separator: " ")
+    }
+
+    /// A post about a date leads with that day when its words do not already name it: "Thursday, Nov 12 · ...".
+    public static func leadWithDay(_ text: String, day: Date?, calendar: Calendar) -> String {
+        guard let day else { return text }
+        let n = calendar.component(.day, from: day)
+        let m = calendar.component(.month, from: day)
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.calendar = calendar
+        f.timeZone = calendar.timeZone
+        let long = f.monthSymbols[m - 1], short = f.shortMonthSymbols[m - 1]
+        let pattern = "\\b(?:\(long)|\(short))\\.?\\s+\(n)(?:st|nd|rd|th)?\\b"
+        if text.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil { return text }
+        f.dateFormat = "EEEE, MMM d"
+        return f.string(from: day) + " \u{00B7} " + text
+    }
 }

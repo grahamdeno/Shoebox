@@ -95,6 +95,8 @@ final class ShareModel {
     var kept = false
     var keptLabel = ""
     var onClose: () -> Void = {}
+    /// When it starts coming back. Automatic: your words decide.
+    var choice: ReturnChoice = .auto
 
     private var preview: Relay.Preview?
     private var pictureData: Data?
@@ -148,6 +150,7 @@ final class ShareModel {
         } else if !texts.isEmpty {
             saves = Capture.saves(fromText: texts.joined(separator: "\n"), note: note, origin: "a share")
         }
+        choice.apply(to: saves, now: Date())
         var added = 0
         for s in saves where !Capture.isDuplicate(s, in: context) {
             context.insert(s)
@@ -167,66 +170,72 @@ final class ShareModel {
 struct ShareSheet: View {
     @Bindable var model: ShareModel
     @FocusState private var focused: Bool
+    @State private var showReturn = false
 
     var body: some View {
-        // Laid out like Keep something: Cancel and Keep at the top, so nothing rides the keyboard.
-        VStack(alignment: .leading, spacing: 0) {
-            if model.kept {
-                Spacer()
-                Text(model.keptLabel)
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(Theme.formInk)
-                Spacer()
-            } else {
-                FormTopBar(onLeading: model.onClose, trailing: "Keep", onTrailing: model.keep)
-                    .padding(.top, 14)
-                Text("Keep it")
-                    .font(.system(size: 34, weight: .bold))
-                    .tracking(-0.6)
-                    .foregroundStyle(Theme.formInk)
-                    .padding(.top, 28)
-                found
-                    .padding(.top, 24)
-                LineField(label: "Why are you keeping it?") {
-                    TextField("", text: $model.why, prompt: formPrompt("Optional. Before the trip"), axis: .vertical)
-                        .lineLimit(1...3)
-                        .focused($focused)
-                        .submitLabel(.done)
-                        .onSubmit { model.keep() }
-                }
-                .padding(.top, 28)
-                Text("Your why decides when it comes back. Say nothing and it comes back tomorrow.")
-                    .font(.system(size: 15))
-                    .foregroundStyle(Theme.formQuiet)
-                    .padding(.top, 20)
-                Spacer(minLength: 0)
-            }
+        Group {
+            if model.kept { keptView } else { surface }
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.formGround.ignoresSafeArea())
+        // The host already ends above the keyboard.
         .ignoresSafeArea(.keyboard)
         .onAppear { focused = true }
     }
 
-    private var found: some View {
-        HStack(alignment: .top, spacing: 12) {
-            if let picture = model.picture {
-                Image(uiImage: picture)
-                    .resizable().scaledToFill()
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
+    private var keptView: some View {
+        ZStack {
+            SurfaceGround(picture: model.picture).ignoresSafeArea()
+            Text(model.keptLabel)
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(Theme.onPhoto)
+                .multilineTextAlignment(.center)
+                .padding(24)
+        }
+        .environment(\.colorScheme, .dark)
+    }
+
+    private var event: Date? { DateReader.read(model.title, created: Date())?.event }
+
+    /// The same surface as Keep something: what was found is the post, your reason goes under it.
+    private var surface: some View {
+        WritingSurface(onLeading: model.onClose, onTrailing: model.keep) {
+            SurfaceGround(picture: model.picture)
+        } panel: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.formInk)
-                    .lineLimit(2)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(Theme.onPhoto)
+                    .lineLimit(4)
                 if !model.site.isEmpty {
-                    Text(model.site).font(.system(size: 14)).foregroundStyle(Theme.formQuiet).lineLimit(1)
+                    Text(model.site)
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.onPhoto.opacity(0.6))
+                        .lineLimit(1)
                 }
             }
-            Spacer(minLength: 0)
+            SurfaceLine(label: "Why") {
+                TextField("", text: $model.why,
+                          prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)),
+                          axis: .vertical)
+                    .lineLimit(1...3)
+                    .focused($focused)
+                    .submitLabel(.done)
+                    .onSubmit { model.keep() }
+            }
+            HStack {
+                Spacer()
+                Button { focused = false; showReturn = true } label: {
+                    Text(ReturnLine.text(model.choice, event: event, why: model.why))
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.onPhoto.opacity(0.85))
+                        .frame(minHeight: Metrics.touchMin)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .sheet(isPresented: $showReturn) {
+            ReturnSheet(choice: $model.choice, autoLine: ReturnLine.text(.auto, event: event, why: model.why))
+                .presentationDetents([.height(420)])
         }
     }
 }
