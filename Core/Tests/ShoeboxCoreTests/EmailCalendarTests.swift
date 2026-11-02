@@ -32,7 +32,8 @@ struct EmailCalendarTests {
         #expect(titles.contains("Trumpet and brass sectional"))
         #expect(titles.contains("Winter band concert"))
         #expect(titles.contains("Lacrosse interest meeting for spring"))
-        #expect(titles.contains("8th grade field trip to the Battleship North Carolina"))
+        #expect(titles.contains("8th grade field trip"))
+        #expect(titles.contains("High school course selection night"))
         #expect(titles.contains("No school"))
         #expect(!titles.contains(where: { $0.contains("6th grade") || $0.contains("orchestra") || $0.contains("Chess") || $0.contains("Drama") || $0.contains("Swim") }))
     }
@@ -89,6 +90,24 @@ struct EmailCalendarTests {
                                          to: "Thu Dec 10: Winter band concert, 7:00 PM in the gym.") == "6:30 PM to 7:00 PM")
         #expect(EmailCalendar.timeChange(from: "Fri Dec 4: Yearbook order deadline.", to: "Fri Dec 4: Yearbook order deadline, room 12.") == nil)
         #expect(EmailCalendar.timeChange(from: "Sat Nov 14: Cross country banquet, 5:00 PM.", to: "Sat Nov 14: Cross country banquet, 5:00 PM, cafeteria.") == nil)
+    }
+
+    @Test func postWordsLeadWithTheDay() {
+        func words(_ line: String) -> String {
+            let item = EmailCalendar.items(in: line, received: Self.received, calendar: Self.cal)[0]
+            return EmailCalendar.details(of: item, received: Self.received, calendar: Self.cal)
+        }
+        #expect(words("Sat Nov 14: Cross country banquet, 5:00 PM, cafeteria. Potluck.") == "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck.")
+        #expect(words("Nov 25 to 27: No school, Thanksgiving break.") == "Wednesday, Nov 25 to 27 · Thanksgiving break.")
+        #expect(words("Tue Nov 24: 8th grade field trip to the Battleship North Carolina, buses leave at 8:15 AM.")
+                == "Tuesday, Nov 24 · To the Battleship North Carolina · Buses leave at 8:15 AM.")
+        #expect(words("Picture retake day is Wednesday, November 4. Forms were sent home.") == "Wednesday, Nov 4 · Forms were sent home.")
+    }
+
+    @Test func shortSourceNames() {
+        #expect(EmailCalendar.sourceName("Roosevelt Middle School Family Newsletter, November 2026") == "Roosevelt newsletter")
+        #expect(EmailCalendar.sourceName("November newsletter (PDF)") == "a newsletter")
+        #expect(EmailCalendar.sourceName("Fwd: Cape Fear Running Club Weekly") == "Cape Fear Running")
     }
 
     @Test func titlesDropTheDate() {

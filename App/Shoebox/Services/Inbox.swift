@@ -114,15 +114,15 @@ enum Inbox {
                 let today = Calendar.current.startOfDay(for: now)
                 let keep = EmailCalendar.relevant(items, to: EmailCalendar.Profile(Prefs.mailFor)).filter { $0.day >= today }
                 for item in keep {
+                    let words = EmailCalendar.details(of: item, received: received, calendar: .current)
                     if let old = known.first(where: { Calendar.current.isDate($0.eventDate ?? .distantPast, inSameDayAs: item.day)
                         && EmailCalendar.sameEvent($0.title, item.title) }) {
-                        refresh(old, with: item, now: now)
+                        refresh(old, with: words, now: now)
                         continue
                     }
-                    let s = Save(title: String(item.title.prefix(140)),
-                                 snippet: String(item.line.prefix(240)),
-                                 body: item.line + (subject.isEmpty ? "" : "\n\nFrom \(subject)"),
-                                 note: reason, origin: "via your Shoebox email", kind: .email, createdAt: received)
+                    // Where it came from goes in the byline ("You, today, from Roosevelt newsletter"), not the words.
+                    let s = Save(title: String(item.title.prefix(140)), snippet: String(words.prefix(240)), body: words,
+                                 note: reason, origin: EmailCalendar.sourceName(subject), kind: .email, createdAt: received)
                     s.urlString = (item.link?.absoluteString).map(Detection.unwrapLink)
                     stamp(s, mail: m, subject: subject, received: received, now: now)
                     schedule(s, on: item.day, now: now)
@@ -186,19 +186,18 @@ enum Inbox {
 
     /// The same event sent again. New details replace the old words quietly; a new time shows it once more,
     /// even if it was put away, with what changed on top. Otherwise a put away post stays put away.
-    private static func refresh(_ s: Save, with item: EmailCalendar.Item, now: Date) {
-        let oldLine = s.body.components(separatedBy: "\n").first(where: { !$0.hasPrefix("Changed:") && !$0.isEmpty }) ?? ""
-        guard oldLine != item.line else { return }
-        let from = s.body.components(separatedBy: "\n").last(where: { $0.hasPrefix("From ") }).map { "\n\n" + $0 } ?? ""
-        if let change = EmailCalendar.timeChange(from: oldLine, to: item.line) {
-            s.body = "Changed: \(change).\n" + item.line + from
+    private static func refresh(_ s: Save, with words: String, now: Date) {
+        let old = s.body.components(separatedBy: "\n").filter { !$0.hasPrefix("Changed:") && !$0.isEmpty }.joined(separator: " ")
+        guard old != words else { return }
+        if let change = EmailCalendar.timeChange(from: old, to: words) {
+            s.body = "Changed: \(change).\n" + words
             s.status = .today
             s.returnDate = nil
             s.seenOn = nil
         } else {
-            s.body = item.line + from
+            s.body = words
         }
-        s.snippet = String(item.line.prefix(240))
+        s.snippet = String(words.prefix(240))
         s.updatedAt = now
     }
 

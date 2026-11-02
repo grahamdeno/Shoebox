@@ -185,21 +185,79 @@ public enum EmailCalendar {
     }
 
     /// "Sat Nov 7: Cross country regional championship, 8:30 AM start" gives "Cross country regional championship".
-    static func title(of line: String) -> String {
+    static func title(of line: String) -> String { pieces(of: line).title }
+
+    /// A line taken apart: a short title (up to six words, cut at "for", "to", "at" when longer), what follows
+    /// it as separate details, and the end of a date range written in front ("Nov 25 to 27" gives "27").
+    static func pieces(of line: String) -> (title: String, details: [String], rangeEnd: String?) {
         var s = line
+        var rangeEnd: String?
         // Drop a leading date ("Mon Nov 2:", "Nov 25 to 27:", "11/14 -") when a colon or dash follows it.
-        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*\d{1,2})?\s*[:\-–]\s+"#, options: .regularExpression) {
+        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*(\d{1,2}))?\s*[:\-–]\s+"#, options: .regularExpression) {
+            let prefix = String(s[r])
+            if let e = prefix.range(of: #"(?:to|-|–)\s*\d{1,2}"#, options: .regularExpression) {
+                rangeEnd = String(prefix[e]).filter(\.isNumber)
+            }
             s = String(s[r.upperBound...])
         }
         s = s.replacingOccurrences(of: #"https?://\S+"#, with: "", options: .regularExpression)
-        if let cut = s.range(of: #"(, |\. | - | – )"#, options: .regularExpression) { s = String(s[..<cut.lowerBound]) }
-        s = s.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ".:,-")))
-        if s.count > 60 {
-            let words = s.prefix(60).split(separator: " ").dropLast()
-            s = words.joined(separator: " ")
+        var rest = ""
+        if let cut = s.range(of: #"(, |\. | - | – |; )"#, options: .regularExpression) {
+            rest = String(s[cut.upperBound...])
+            s = String(s[..<cut.lowerBound])
         }
-        guard let first = s.first else { return line }
-        return first.uppercased() + s.dropFirst()
+        s = s.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ".:,-")))
+        var details: [String] = []
+        // Long names are cut at their first "for", "to", "at", "with" or "on"; the tail becomes a detail.
+        if s.split(separator: " ").count > 6,
+           let p = s.range(of: #" (for|to|at|with|on) "#, options: .regularExpression),
+           s[..<p.lowerBound].split(separator: " ").count >= 2 {
+            details.append(String(s[p.lowerBound...]).trimmingCharacters(in: .whitespaces))
+            s = String(s[..<p.lowerBound])
+        }
+        let words = s.split(separator: " ")
+        if words.count > 7 { s = words.prefix(7).joined(separator: " ") }
+        details += rest.components(separatedBy: CharacterSet(charactersIn: ",;"))
+            .flatMap { $0.components(separatedBy: ". ") }
+            .map { $0.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "."))) }
+            .filter { !$0.isEmpty }
+        details = details.map { d in d.prefix(1).uppercased() + d.dropFirst() }
+        guard let first = s.first else { return (line, [], nil) }
+        return (first.uppercased() + s.dropFirst(), details, rangeEnd)
+    }
+
+    /// The words of a dated post: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." The day comes first,
+    /// spelled out; pieces that only repeat the date are left out.
+    public static func details(of item: Item, received: Date, calendar: Calendar) -> String {
+        let p = pieces(of: item.line)
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.calendar = calendar
+        f.timeZone = calendar.timeZone
+        f.dateFormat = "EEEE, MMM d"
+        var day = f.string(from: item.day)
+        if let end = p.rangeEnd { day += " to \(end)" }
+        let weekdays = Set(f.weekdaySymbols.map { $0.lowercased() })
+        let kept = p.details.filter { d in
+            firstDay(in: d, received: received, calendar: calendar) == nil && !weekdays.contains(d.lowercased())
+        }
+        return ([day] + kept).joined(separator: " · ") + "."
+    }
+
+    /// A short name for where the dates came from: "Roosevelt Middle School Family Newsletter, November 2026"
+    /// gives "Roosevelt newsletter". Months, years, dates and words like "family" or "weekly" are dropped.
+    public static func sourceName(_ subject: String) -> String {
+        let drop: Set<String> = ["family", "families", "weekly", "monthly", "update", "updates", "the", "pdf", "middle", "elementary",
+                                 "high", "school", "news", "for", "and", "of", "your", "our", "week", "issue", "edition"]
+        let words = EmailRules.cleanSubject(subject)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty && monthNames[$0.lowercased()] == nil && !$0.allSatisfy(\.isNumber) }
+        let kept = words.filter { !drop.contains($0.lowercased()) }
+        if let n = kept.firstIndex(where: { $0.lowercased() == "newsletter" }) {
+            return n > 0 ? "\(kept[0]) newsletter" : "a newsletter"
+        }
+        let name = kept.prefix(3).joined(separator: " ")
+        return name.isEmpty ? "via your Shoebox email" : name
     }
 
     /// The same event under slightly different words: "Winter band concert" and "Winter Band Concert, gym".
