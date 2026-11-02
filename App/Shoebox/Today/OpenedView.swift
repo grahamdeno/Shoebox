@@ -13,6 +13,9 @@ struct OpenedView: View {
     var onBringBack: () -> Void
     var onDelete: () -> Void
 
+    /// Close asks the host to clear its item, and also dismisses this cover itself, so the button works
+    /// even when the host's state change is swallowed by another presentation in flight.
+    @Environment(\.dismiss) private var dismiss
     @State private var showEdit = false
     @State private var savedFlash = false
     /// One move per opening. A second tap before the post closes would take its Undo copy after the first move,
@@ -81,6 +84,8 @@ struct OpenedView: View {
                                 .glassEffect(.regular.tint(Theme.shade.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
+                        // Attached here, not to the whole screen, so it does not compete with the Edit sheet.
+                        .quickLookPreview($previewFile)
                     }
 
                     if let url = save.url {
@@ -129,7 +134,6 @@ struct OpenedView: View {
         }
         .environment(\.colorScheme, .dark)
         .task { if save.enrichedAt == nil { await Relay.enrich(save) } }
-        .quickLookPreview($previewFile)
         .onChange(of: previewFile) { old, new in if new == nil { FileKeeper.cleanUp(old) } }
         // Outside the dark override, so the edit screen follows the app's own look.
         .sheet(isPresented: $showEdit) {
@@ -188,7 +192,10 @@ struct OpenedView: View {
     private var topWords: some View {
         VStack {
             HStack {
-                glassWord("Close", action: onClose)
+                glassWord("Close") {
+                    onClose()
+                    dismiss()
+                }
                 Spacer()
                 glassWord("Edit") { showEdit = true }
             }
