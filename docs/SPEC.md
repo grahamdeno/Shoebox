@@ -261,7 +261,7 @@ From the release-readiness audit (`docs/audit/`) and Graham's answers.
 | Mail retention on the relay | 7 days, plus a background refresh that collects mail without opening the app |
 | Notification actions | Next and Put away on the notification, in v1.0 |
 | AI | On the phone only. No cloud AI and no relay AI fallback in v1.0 |
-| Relay | The new app gets its own Worker with only the routes it uses; Shoebox 1's routes stay on the old Worker until build 36 is gone. Workers Paid on the day a public beta link goes out |
+| Relay | The new app gets its own Worker (`relay/app`, `https://api.inmyshoebox.com`) with only the seven routes it uses; Shoebox 1's routes stay on the old Worker (`shoebox-api.tangomike.app`) until build 36 is gone. Workers Paid on the day a public beta link goes out |
 | Seller and policy | Graham DeNoyer as an individual. Support mail reaches Graham's Gmail under Support/Shoebox |
 | Storefronts | v1.0: United States, Canada, Mexico, United Kingdom, Australia, New Zealand. No EU (the trader rule would publish a home address). Future countries are not added automatically |
 | Repo | Stays public while CI needs free Mac minutes; family names come out of tests and fixtures now; private later |
@@ -279,7 +279,7 @@ From the release-readiness audit (`docs/audit/`) and Graham's answers.
 
 - **The model for each step.** Graham picks it: Opus for feel, data safety and judgment; Sonnet for building and shipping. Name the next step's model at every handoff.
 - **Shipping.** Don't merge or ship until Graham says "ship". Claude opens and merges pull requests itself, on branches, never on `main`.
-- **Submit for Review.** Graham presses it. TestFlight uploads are fine once he has said ship. Push `main` to the `testflight` branch; build numbers are 1000 plus the run number.
+- **Submit for Review.** Graham presses it. TestFlight uploads are fine once he has said ship. Push `main` to the `testflight` branch; tests run first, and build numbers are 1000 + run number x 10 + attempt.
 - **Irreversible steps.** Submit, publish, delete and deploy go first in any handoff and stand out.
 - **Writing.** Plain and compact. No em-dashes. No military metaphors in published text.
 - **Checks.** Iterate fast: batch changes, build once when Graham asks. CI screenshots only when they're worth it: put `[screens]` in a commit message, then read the `ci-screens` branch.
