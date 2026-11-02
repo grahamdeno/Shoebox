@@ -54,12 +54,12 @@ enum Capture {
     }
 
     /// A new save is put away until your reason says, or tomorrow morning. A save whose words name a date
-    /// still ahead is dated: it comes back 5 days before, 1 day before and on the day, unless your reason names a time.
+    /// still ahead is dated: it is seen now, then back 5 days before and every day until put away, unless your reason names a time.
     static func place(_ s: Save, note: String, now: Date) {
         let planner = LaterPlanner()
         DateReader.apply(to: s)
         if s.eventDate != nil, planner.match(words: note, now: now) == nil {
-            // Seen once now; flicked up, it waits for 5 days before, the day before and the day itself.
+            // Seen once now; flicked up, it waits for 5 days before, then is back every day until put away.
             s.status = .today
             s.returnDate = nil
             return

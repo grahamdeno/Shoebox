@@ -91,12 +91,26 @@ final class RulesTests: XCTestCase {
         let s = Save(title: "Picture day", status: .away, returnDate: date(2026, 11, 7, 8), eventDate: event)
         XCTAssertFalse(rules.isOnToday(s, now: date(2026, 11, 6, 20)))
         XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 7, 9)))
+        // From 5 days before, Next only skips today: it is back every day until put away.
         actions.pass(s, now: date(2026, 11, 7, 9))
-        XCTAssertEqual(s.returnDate, date(2026, 11, 11, 8))
-        actions.pass(s, now: date(2026, 11, 11, 9))
-        XCTAssertEqual(s.returnDate, date(2026, 11, 12, 8))
+        XCTAssertEqual(s.status, .today)
+        XCTAssertFalse(rules.isOnToday(s, now: date(2026, 11, 7, 20)))
+        XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 8, 7)))
         actions.pass(s, now: date(2026, 11, 12, 9))
+        XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 12, 9)) == false)
+        // After its day it is past, off Today, and moves to Kept.
+        XCTAssertFalse(rules.isOnToday(s, now: date(2026, 11, 13, 9)))
+        XCTAssertEqual(rules.retirePast([s], now: date(2026, 11, 13, 9)), 1)
         XCTAssertEqual(s.status, .kept)
+    }
+
+    func testDatedSaveSeenOnArrivalWaitsForFiveDaysBefore() {
+        let s = Save(title: "Band concert", eventDate: date(2026, 12, 10))
+        XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 2, 9)))
+        XCTAssertEqual(actions.next(s, planner: LaterPlanner(), now: date(2026, 11, 2, 9)), "Back 5 days before")
+        XCTAssertEqual(s.returnDate, date(2026, 12, 5, 8))
+        XCTAssertFalse(rules.isOnToday(s, now: date(2026, 12, 4, 20)))
+        XCTAssertTrue(rules.isOnToday(s, now: date(2026, 12, 5, 9)))
     }
 
     func testQueueOrdersReturningFirstThenOldest() {

@@ -131,19 +131,17 @@ struct SaveActions {
         }
     }
 
-    /// Swipe up. Seen once, gone until tomorrow. Dated saves move to their next reminder.
+    /// Swipe up. Seen once, gone until tomorrow. A dated save seen before its window waits for 5 days before
+    /// the day; from then on it comes back every day until you put it away (after its day it moves to Kept).
     func pass(_ s: Save, now: Date) {
         s.seenOn = now
-        if let event = s.eventDate {
-            let next = reminders(for: event).first { calendar.startOfDay(for: $0) > calendar.startOfDay(for: now) }
-            if let next {
-                s.status = .away
-                s.returnDate = next
-            } else {
-                // The day itself has been seen. Nothing left to remind.
-                s.status = .kept
-                s.returnDate = nil
-            }
+        if let event = s.eventDate, let start = reminders(for: event).first,
+           calendar.startOfDay(for: now) < calendar.startOfDay(for: start) {
+            s.status = .away
+            s.returnDate = start
+        } else if s.eventDate != nil {
+            s.status = .today
+            s.returnDate = nil
         }
         s.updatedAt = now
     }
@@ -191,7 +189,7 @@ extension SaveActions {
             return "Back " + (when.label == "Tomorrow" ? "tomorrow" : when.label)
         }
         pass(s, now: now)
-        return s.eventDate == nil ? "Back tomorrow" : "Back before the date"
+        return s.status == .away ? "Back 5 days before" : "Back tomorrow"
     }
 }
 

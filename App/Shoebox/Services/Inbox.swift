@@ -142,7 +142,7 @@ enum Inbox {
                 // Only a link: let the page's own picture come in later, as for a shared link.
                 s.enrichedAt = nil
             }
-            // A date in the email: it comes back 5 days before, the day before and on the day.
+            // A date in the email: seen now, then back 5 days before and every day until put away.
             let days = EmailRules.days(in: subject + "\n" + lines.joined(separator: "\n"), received: received, calendar: .current).filter { $0 > now }.sorted()
             if let day = days.first {
                 schedule(s, on: day, now: now)
@@ -168,7 +168,7 @@ enum Inbox {
         s.emailReceivedAt = received
     }
 
-    /// Seen once when it arrives; flicked up, it waits for 5 days before, the day before and the day itself.
+    /// Seen once when it arrives; flicked up, it waits for 5 days before, then is back every day until put away.
     private static func schedule(_ s: Save, on day: Date, now: Date) {
         s.eventDate = day
         s.status = .today
