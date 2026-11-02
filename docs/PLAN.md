@@ -2,6 +2,8 @@
 
 Written October 30, 2026. This is the brief for every build step. Read it before doing anything in this repo. When a decision here changes, change it here first.
 
+**Release decisions of November 2, 2026 are in `docs/SPEC.md` section 8 and the audit in `docs/audit/`. Parts of this file describe earlier designs (the bar, Later and Done, the quiet rule, Peach and slate, relay AI as a fallback); SPEC is current.**
+
 **The detailed design and behavior are in `docs/SPEC.md`, with the agreed screens in `docs/design/screens/`. Where this file and SPEC.md disagree, SPEC.md wins.**
 
 ## 1. What Shoebox is
@@ -49,7 +51,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Platform | Native iPhone (SwiftUI) only | Lock Screen, Live Activities, Siri, Action Button and on-device AI are native-only. |
 | PWA, web, Android | Not now | Can come later. See section 8 for what keeps that cheap. |
 | Repo | New repo, `Shoebox` | Clean structure around "a save is a moment". The old repo becomes the archive. |
-| App Store | Same record and bundle ID (`com.grahamdeno.shoebox`); this ships as version 2.0 | Keeps the name and listing. Never create a new app record. |
+| App Store | Same record and bundle ID (`com.grahamdeno.shoebox`); ships as version 1.0 (changed November 2: the record's only version is 1.0 and nothing was ever released) | Keeps the name and listing. Never create a new app record or remove this one. |
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
 | Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
@@ -73,7 +75,7 @@ The design changed on October 31, 2026 to the stack: Scales' moves, full-screen 
 - App Intents (in the app target): Action Button capture, Siri questions, Shortcuts, Spotlight.
 - Later: a Watch app; CarPlay audio (needs Apple's audio entitlement).
 
-**Minimum iOS:** 26. That gives Foundation Models (on-device AI), current Live Activities and App Intents. Devices without Apple Intelligence fall back to the relay's AI. Open decision 1 in section 9.
+**Minimum iOS:** 26. That gives Foundation Models (on-device AI), current Live Activities and App Intents. Devices without Apple Intelligence fall back to plain rules on the phone; there is no relay AI in v1.0 (decided November 2). Open decision 1 in section 9.
 
 **Storage:** SwiftData in the shared App Group (`group.com.grahamdeno.shoebox`), so the app, share extension and widgets read one store. Files and photos live as files in the group container.
 - Every record has a UUID, `createdAt`, `updatedAt`, and a soft-delete marker. This makes sync possible later without a migration.

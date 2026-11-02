@@ -4,7 +4,7 @@ Written October 30, 2026, from the design sessions with Graham. This is the deta
 
 **Keep it. It comes back to you.**
 
-App Store name: **Shoebox: Your Own Feed**. One app. There is no Shoebox Me (decided October 30 and confirmed again the same day).
+App Store name: **Shoebox: Your Own Feed**, subtitle "Keep it. Come back to it." It ships as **version 1.0** on the existing App Store record (`com.grahamdeno.shoebox`); no new record. One app. There is no Shoebox Me (decided October 30 and confirmed again the same day).
 
 ## 1. What it is, in one breath
 
@@ -90,14 +90,14 @@ Every screen where you write is the post you are making. What you see while you 
 
 ### 2.6 Today's clear
 
-"That's N for today." or "That's all for today." When posts remain in the Shoebox, one row: **Go through your Shoebox**. It brings the rest out one at a time, soonest first, each once, with Today's moves; when they are done the screen returns. When nothing remains it says when the next one comes back. With nothing kept yet: "Nothing kept yet." and how to start. No "Keep something" row (+ New is at the top).
+"That's N for today." or "That's all for today." When posts remain in the Shoebox, one row: **Go through your Shoebox**. It brings the rest out one at a time, soonest first, each once, with Today's moves; when they are done the screen returns. When nothing remains it says when the next one comes back. With nothing kept yet, Today shows one welcome post on the same full-screen card as any post: "Pull me down to put me away. Flick up to see the next one." It teaches the moves by doing them once and is gone after either move. No "Keep something" row (+ New is at the top).
 
 ### 2.7 First run
 
 One idea per screen, one clear choice. The words sit along the bottom on the ground, a quiet word on the left and the action on the right, with no bar behind them.
 
 1. **Welcome.** The app logo, "Keep it. It comes back to you.", one line on how it works. If Shoebox 1's saves were found, it says so in a Nectarine tint. Start.
-2. **Save from anywhere.** Three numbered steps, then "Or forward email" with your address or "Get my address". Skip, Next.
+2. **Save from anywhere.** Three numbered steps for the share sheet. Skip, Next. (The email address is not offered here; it comes with Shoebox Plus, offered after the first week.)
 3. **When should they come out?** A time wheel and one line about the daily notification. Not now, Turn on.
 4. **Three moves. That's the whole app.** Swipe up: Next, it comes back when your why says, or tomorrow. Pull down: Put it away, done, kept, and search finds it. Tap it: Open it, Edit is there too.
 
@@ -107,10 +107,10 @@ Settings › How to use Shoebox › The three moves shows it again.
 
 Reached from Today and the Box. No paragraphs. One short list in a card one step off the ground (deeper Wheat in light, lighter Plum Night in dark), no outline; each row shows its answer on the right. A row opens one small screen: a title, its question, the choices as words, at most one quiet line.
 
-- **Each day:** How many (5, 10 or All; default All). Remind me (the time, or Off).
+- **Each day:** How many (5, 10 or All; default 10). Remind me (the time, or Off).
 - **Look:** Auto, Light or Dark. The share sheet follows it too.
 - **Pictures:** On or Off. "Your words stay on your phone."
-- **Email:** the address and Copy, or a first name and "Get address". Below it, "Who it's about": one line in your words ("Gunner, 8th grade: cross country, band").
+- **Email:** the address and Copy, or a first name and "Get address". Below it, "Who it's about": one line in your words ("Sam, 4th grade: soccer, band"). Getting an address needs Shoebox Plus (section 9).
 - **Backups:** Last copy; Save a copy now; Bring one back (takes any Shoebox 1 or 2 file).
 - **How to use Shoebox:** The three moves; Share, then Shoebox.
 - Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first; it also asks the relay to delete your email address and waiting mail, `POST /me/delete`).
@@ -124,14 +124,16 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
 
 1. **Today is a daily pick.**
    - Everything coming back always comes out: posts put away until now, and dated steps.
-   - The rest of the pile follows, up to the daily limit if one is set in Settings. By default there is no limit, and anything kept during the day joins Today.
+   - Anything new since the morning (kept, shared or emailed today) always joins Today, and so does anything dated within 5 days. The daily limit never holds these back.
+   - A newsletter's dates more than a week out go straight to Coming up in the Shoebox, with one line on Today ("6 dates from the school newsletter are in Coming up"), so one email never floods Today.
+   - The rest of the pile follows, up to the daily limit (default 10; All is a setting).
    - Posts you passed before go first, then the oldest never seen.
    - Bringing something back from the Box puts it first.
 2. **Flick up = Next.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
 3. **Pull down = Put away.** Done, kept, and found by search in the Shoebox.
 4. **Every action is instant, with Undo for 5 seconds.** No confirm dialogs, except Delete everything.
 5. **Dated posts** show once when they arrive, then come back on their own 5 days before at 8 AM and stay on Today every day (Next skips a day) until put away. Every save is read for the date it is about (section 4.2). The nearest event comes first. Once the day has gone by, the post moves to Kept on its own (never deleted) and stays searchable.
-6. **A new save** comes back when its reason says, or tomorrow.
+6. **A new save** shows on Today the day it is kept (rule 1). After you flick it up, it comes back when your reason says, or tomorrow.
 7. **Never delete on its own.** Shoebox never removes a save without you saying so.
 
 ### 3.1 Reasons to times (plain rules, on the phone)
@@ -153,7 +155,7 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 |---|---|
 | Share sheet | Safari or any app: Share, then Shoebox (section 2.5). Reads the page while you type. Pages, links, text and up to 10 photos. |
 | + New | Link, note or photo, with a reason (section 2.5). |
-| Email | Forward to your Shoebox address. Your words above the forward are the reason. An ordinary email is one post: a short title and two to five sentences written on the phone from what matters (Apple Intelligence, greedy, and refused if it holds a number or day word the email does not; then the first few useful lines, quoted replies included). Codes, amounts, deadlines and each leg of a trip are kept; card numbers are not. A PDF attachment is read and kept on the post; an email that is only a link reads the page. An email with four or more dated lines (a newsletter, a season schedule) becomes one post per date that matters (each shown once when it arrives, then back 5 days before and every day after until put away): lines naming your grade or your words, and school-wide days; other grades and other activities are left out; with no "Who it's about" only school-wide days. Each date post reads as a short title (up to six words) and one line that starts with the day: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." Where it came from is in the byline ("from Roosevelt newsletter"). Its picture names its own subject (trumpet, lacrosse) or there is none, and no stock picture is used twice. A date already made into a post (same day, a matching name) is not made again when the newsletter comes back next week: new details replace the words quietly, and a new time shows it once more with "Changed: 6:30 PM to 7:00 PM", even if it was put away. A post about a date leads with that day ("Thursday, Nov 12 · ...") when its words do not. Titles are in sentence case and never carry a time. A label the email never used ("Location:", "Trip leg:") is taken out. Posts say "you" for the person the mail is for, read from the first name in their Shoebox address; a mail with no known name just keeps the email's own words. Lines of a newsletter that the mail program wrapped mid-sentence are joined back. A date range reads "Wednesday, Nov 25 to Friday, Nov 27". The email itself is not kept. Ads, sign-in codes and account notices are skipped unless you wrote a note. Subjects lose `[tags]` and `Fwd:`/`Re:`. The same email twice is kept once. Mail waits on the relay up to 30 days. |
+| Email | Forward to your Shoebox address. Your words above the forward are the reason. An ordinary email is one post: a short title and two to five sentences written on the phone from what matters (Apple Intelligence, greedy, and refused if it holds a number or day word the email does not; then the first few useful lines, quoted replies included). Codes, amounts, deadlines and each leg of a trip are kept; card numbers are not. A PDF attachment is read and kept on the post; an email that is only a link reads the page. An email with four or more dated lines (a newsletter, a season schedule) becomes one post per date that matters (each shown once when it arrives, then back 5 days before and every day after until put away): lines naming your grade or your words, and school-wide days; other grades and other activities are left out; with no "Who it's about" only school-wide days. Each date post reads as a short title (up to six words) and one line that starts with the day: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." Where it came from is in the byline ("from Roosevelt newsletter"). Its picture names its own subject (trumpet, lacrosse) or there is none, and no stock picture is used twice. A date already made into a post (same day, a matching name) is not made again when the newsletter comes back next week: new details replace the words quietly, and a new time shows it once more with "Changed: 6:30 PM to 7:00 PM", even if it was put away. A post about a date leads with that day ("Thursday, Nov 12 · ...") when its words do not. Titles are in sentence case and never carry a time. A label the email never used ("Location:", "Trip leg:") is taken out. Posts say "you" for the person the mail is for, read from the first name in their Shoebox address; a mail with no known name just keeps the email's own words. Lines of a newsletter that the mail program wrapped mid-sentence are joined back. A date range reads "Wednesday, Nov 25 to Friday, Nov 27". The email itself is not kept. Ads, sign-in codes and account notices are skipped unless you wrote a note. Subjects lose `[tags]` and `Fwd:`/`Re:`. The same email twice is kept once. Mail waits on the relay up to 7 days. Forwarding needs Shoebox Plus. |
 | Shoebox 1 | On first run, the newest Shoebox 1 backup (`shoebox-backup-*.json` in Files or iCloud Drive, Shoebox › Backups) is brought in. Importing twice adds nothing. The email address and its key come over too. |
 | Backups | Settings › Bring in a backup takes any Shoebox 1 or 2 file. |
 
@@ -229,12 +231,12 @@ The Nectarine bar with Later and Open, the Later list and date picker, neumorphi
 - **One store.** SwiftData in the App Group `group.com.grahamdeno.shoebox`, shared by the app and the share sheet. CloudKit sync is off.
 - **Sync-ready.** Every save has a UUID, created and updated times, and a soft-delete marker.
 - **Daily automatic backup.** Once a day, the whole store is written as JSON (photos included) to Files and to iCloud Drive (Shoebox › Backups). The last 7 are kept, plus the biggest. Shoebox 1's backups are never touched.
-- **Privacy.** No account, no ads, no tracking. Saves stay on the phone. Link previews and email pass through the relay (`https://shoebox-api.tangomike.app`) and aren't kept there once collected.
+- **Privacy.** No account, no ads, no tracking. Saves stay on the phone. Link previews and email pass through the relay (`https://shoebox-api.tangomike.app`). Email waits there until the phone collects it, up to 7 days, then it is deleted; link previews are cached by Cloudflare for 24 hours. The policy is at `https://inmyshoebox.com/privacy`.
 
 ## 7. Not built yet, in order
 
 1. Home Screen and Lock Screen widgets.
-2. Later and Open on the notification itself.
+2. Next and Put away on the notification itself (in v1.0).
 3. The relay's source moved into this repo (`relay/`), so a deploy from the frozen edition repo can't remove `/stock`.
 4. School newsletters turned into short dated posts by AI, with the child's name masked as `{child}` (Core `NameMask` is ready).
 5. The richer return planner: Core rules R1 to R20 plus Foundation Models, and "before the meeting" from the calendar.
@@ -243,7 +245,37 @@ The Nectarine bar with Later and Open, the Later list and date picker, neumorphi
 8. Deep links (`shoebox://`).
 9. Moving the relay into this repo.
 
-## 8. How we work
+## 8. Release decisions (November 2, 2026)
+
+From the release-readiness audit (`docs/audit/`) and Graham's answers.
+
+| Decision | Choice |
+|---|---|
+| Who it's for | Busy parents and working adults, about 28 to 50 |
+| Version | 1.0 on the existing record (`MARKETING_VERSION` 1.0.0). Never create a new record or remove the old one |
+| Price | Free download. **Shoebox Plus**, a one-time $9.99 lifetime unlock with Restore Purchases, adds the email address (forwarding, newsletter dates, pictures for email posts). The relay mints an address only for a verified purchase |
+| Language | US English for v1.0. Spanish (screens and reading Spanish dates, reasons and newsletters) together in v1.1 |
+| First save | Shows on Today the day it is kept (section 3, rules 1 and 6) |
+| Empty Today | One welcome post that teaches the moves (section 2.6) |
+| Daily limit | Default 10; new and soon-dated posts always join (section 3, rule 1) |
+| Mail retention on the relay | 7 days, plus a background refresh that collects mail without opening the app |
+| Notification actions | Next and Put away on the notification, in v1.0 |
+| AI | On the phone only. No cloud AI and no relay AI fallback in v1.0 |
+| Relay | The new app gets its own Worker with only the routes it uses; Shoebox 1's routes stay on the old Worker until build 36 is gone. Workers Paid on the day a public beta link goes out |
+| Seller and policy | Graham DeNoyer as an individual. Support mail reaches Graham's Gmail under Support/Shoebox |
+| Storefronts | All except the 27 EU countries in v1.0 (the EU trader rule would publish a home address) |
+| Repo | Stays public while CI needs free Mac minutes; family names come out of tests and fixtures now; private later |
+| Small Business Program | Submitted November 2 |
+
+## 9. Shoebox Plus
+
+- One non-consumable in-app purchase, $9.99, bought once and restored on any phone with the same Apple Account.
+- Without it: everything except getting a Shoebox email address. With it: the address, newsletter dates and pictures for email posts.
+- Settings › Email shows "Get address with Shoebox Plus" until bought; Settings gets **Restore purchases** as a quiet word.
+- The phone sends the signed purchase to the relay when it asks for an address; the relay checks it before minting.
+- Offered after the first week of use, never in the first run.
+
+## 10. How we work
 
 - **The model for each step.** Graham picks it: Opus for feel, data safety and judgment; Sonnet for building and shipping. Name the next step's model at every handoff.
 - **Shipping.** Don't merge or ship until Graham says "ship". Claude opens and merges pull requests itself, on branches, never on `main`.

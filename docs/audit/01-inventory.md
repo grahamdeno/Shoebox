@@ -74,7 +74,7 @@ Auth: the app sends a fixed `Origin: https://inmyshoebox.com` header (`Relay.swi
 
 | Area | Status | Evidence |
 |---|---|---|
-| Privacy policy URL and in-app link (5.1.1(i)) | **Missing** | Nothing in repo; Settings Privacy is three lines (`SettingsView.swift:317-326`) |
+| Privacy policy URL and in-app link (5.1.1(i)) | Policy exists at `https://inmyshoebox.com/privacy` and is set in App Store Connect; needs updates; **no in-app link**, no terms | Settings Privacy is three lines (`SettingsView.swift:317-326`) |
 | Privacy manifest, collected data | **Wrong** | `App/Shoebox/PrivacyInfo.xcprivacy:17-43` |
 | Required-reason APIs | **Missing** UserDefaults; share extension has no manifest | `PrivacyInfo.xcprivacy:44-45`; `Shared/Store.swift:15` |
 | Accurate in-app privacy claim | **False** ("Nothing is kept") | `SettingsView.swift:324` |

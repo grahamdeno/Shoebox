@@ -2,11 +2,13 @@
 
 Read-only audit of `main` at `45f1b30` (November 2, 2026), from TestFlight to a commercial App Store release. Fourteen lenses, reconciled into one plan. Nothing in the app or relay was changed, built, deployed or uploaded.
 
+**Update, November 2:** Graham answered the open questions; the decisions are in `docs/SPEC.md` section 8 and `06-open-questions.md`. A Shoebox 2 privacy policy already exists at `https://inmyshoebox.com/privacy` (the website lives outside this repo), so P-1 is an update, not a new policy. Version is 1.0, not 2.0.
+
 **Overall rating: not ready for a public TestFlight beta.** The app itself is close: the core loop, the on-device AI and the design are sound. What is missing is everything a stranger relies on: a privacy policy and honest disclosures, a relay that can't be abused, and data that survives a bad day.
 
 ## What blocks a public release
 
-1. **The privacy and compliance package is missing or wrong.** No privacy policy or terms exist (P-1). The privacy manifest declares analytics the app never sends and leaves out the email content, name and address the relay keeps for up to 30 days (P-2). UserDefaults is used but not declared as a required-reason API, and the share extension has no manifest (P-3). Settings tells users "Nothing is kept", which is false (P-4, `App/Shoebox/Settings/SettingsView.swift:324`). The Settings placeholder ships your son's name and grade to every user (P-5, `SettingsView.swift:256`).
+1. **The privacy and compliance package is missing or wrong.** The privacy policy at inmyshoebox.com/privacy needs updates (7-day retention, children's details, the preview cache, rights for EU and California users), there are no terms, and the app doesn't link to it (P-1). The privacy manifest declares analytics the app never sends and leaves out the email content, name and address the relay keeps for up to 30 days (P-2). UserDefaults is used but not declared as a required-reason API, and the share extension has no manifest (P-3). Settings tells users "Nothing is kept", which is false (P-4, `App/Shoebox/Settings/SettingsView.swift:324`). The Settings placeholder ships your son's name and grade to every user (P-5, `SettingsView.swift:256`).
 2. **The relay is built for one person and isn't deployed.** The live relay has no `/stock`, so stock pictures fail today (R-2). Anyone can mint unlimited inbox addresses (R-3, `relay/perplexity-relay.js:755-763`), take over the shared owner mailbox after a Delete everything (R-4, `relay:737`, `relay:959-960`), guess valid addresses from bounces (R-5), or use legacy open routes such as the Perplexity proxy and the Apple Music token (R-1, `relay:125-143`, `relay:940`). Split the new app onto its own Worker with only the seven routes it calls.
 3. **Data safety has three single points of loss.** No SwiftData schema version, and a store that fails to open crashes every launch with no way to reach Backups (D-1, `Shared/Store.swift:29`, `App/Shoebox/ShoeboxApp.swift:17`). Mail is acknowledged (deleted on the relay) even when saving it failed (D-2, `App/Shoebox/Services/Inbox.swift:165-168`). The share extension decodes up to 10 full-size photos on the main thread and will exceed its memory limit on modern camera photos (D-3, `Share/ShareViewController.swift:81,112,147`).
 
@@ -68,10 +70,10 @@ All three are mostly S-effort work. The full beta list is 24 items, tagged `phas
 
 ## Assumptions
 
-1. Target user is busy parents and working adults, 30 to 55, as the brief says. Unconfirmed (question 1).
-2. Price intent is a one-time purchase or low annual subscription, no ads, no tracking. Unconfirmed (question 2).
-3. Shoebox 1.0 was never released publicly (`docs/PLAN.md:53`, `:163`), so 2.0.0 is the first public version on the existing record and the update-path risk (D-10) affects TestFlight testers only.
-4. US English only for v1.0 unless you say otherwise (decision C-10, question 4).
+1. Target user: busy parents and working adults, about 28 to 50 (confirmed).
+2. Price: free download plus Shoebox Plus, a one-time $9.99 unlock (decided).
+3. Shoebox 1.0 was never released publicly (`docs/PLAN.md:53`, `:163`). Confirmed November 2: the record's only version is 1.0 (Prepare for Submission), 45 TestFlight builds, highest 1043, and Graham is the only user. Ships as 1.0.
+4. US English only for v1.0; Spanish in v1.1 (decided).
 5. Cloudflare prices are from Cloudflare's pricing page today: Workers Paid $5 a month with 10M requests; KV includes 10M reads and 1M writes, deletes and lists, then $5 per million. Pixabay: 100 requests per 60 seconds per key, results cached 24 hours, images downloaded not hotlinked.
 6. Domains cost about $15 a year each (two: inmyshoebox.com, tangomike.app). Not checked against your registrar.
 7. Open PR #28 ("Write on the post") was being updated while this audit ran. It adds photo text reading (`PhotoRead.swift`), a return choice in the share sheet and an invented-label filter. Findings are against `main`; where PR #28 overlaps (C-1, A-1, photo-to-post), check after it merges. Note that `PhotoRead.recognizedText` also decodes the full image with `UIImage(data:)`, the same memory pattern as D-3.
