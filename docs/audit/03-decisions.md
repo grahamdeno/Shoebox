@@ -1,6 +1,8 @@
 # Phase 2: decision log
 
-Each decision: options, recommendation, and what would change it. Recommendations are mine; nothing here is decided until you say so.
+Each decision: options, recommendation, and what would change it.
+
+**Status, November 2:** Graham decided C (one-time $9.99 Shoebox Plus, lifetime), E (first saves on Today the same day, a welcome post, daily limit 10 with new and soon-dated posts always joining), the name (keep "Shoebox: Your Own Feed"), version 1.0 on the existing record (no new record), US English for v1.0 with Spanish in v1.1, 7-day mail retention, notification actions in v1.0, and leaving the EU out of v1.0. The recorded list is `docs/SPEC.md` section 8. A, B, D and F stand as recommended.
 
 ---
 

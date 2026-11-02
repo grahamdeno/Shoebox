@@ -4,9 +4,12 @@
 
 ## Before external TestFlight
 
-- [ ] Privacy policy published at a stable URL (suggest `https://inmyshoebox.com/privacy`) and linked from Settings › Privacy
+- [x] Privacy policy at `https://inmyshoebox.com/privacy`, set in App Store Connect
+- [ ] Policy updated for 7-day retention, children's details, preview cache, EU and California rights
+- [ ] Policy linked from Settings › Privacy
 - [ ] Terms published (suggest `https://inmyshoebox.com/terms`)
-- [ ] Support URL live (`https://inmyshoebox.com/support`) with `support@inmyshoebox.com` receiving mail
+- [ ] Support URL live (`https://inmyshoebox.com/support`)
+- [x] `support@inmyshoebox.com` reaches Graham's Gmail under Support/Shoebox (tested November 2)
 - [ ] Beta App Description and What to Test written
 - [ ] Beta App Review contact and demo notes (same as review notes below)
 - [ ] Relay split and deployed from this repo; `/stock` and `/me/delete` answer correctly
@@ -14,15 +17,17 @@
 
 ## Metadata
 
-- [ ] Name: "Shoebox: Your Own Feed" (checked available) or the alternative in decision PS-3
-- [ ] Subtitle (30 chars), for example "Keep it. It comes back to you."
+- [x] Name "Shoebox: Your Own Feed" on the record; subtitle "Keep it. Come back to it."
 - [ ] Description that promises only built features: share sheet, Keep something, forwarding email (Plus), dates read from what you keep, one post at a time, daily notification, backups. No Siri, Watch, Lock Screen, widgets or flyer reading until built
 - [ ] "Best on iPhones with Apple Intelligence" in the description
 - [ ] Keywords (100 chars)
 - [ ] Category: Productivity; secondary Lifestyle
 - [ ] Age rating questionnaire: no objectionable content; 4+
 - [ ] Copyright line; seller name
-- [ ] Version 2.0.0 on the existing record (`com.grahamdeno.shoebox`), as PLAN.md decided
+- [ ] Version 1.0 on the existing record (`com.grahamdeno.shoebox`); `MARKETING_VERSION` set to 1.0.0
+- [ ] Availability: every storefront except the 27 EU countries
+- [x] Small Business Program submitted (November 2); approval email pending
+- [ ] Paid Apps Agreement active (W-9 and bank account)
 - [ ] In-app purchase "Shoebox Plus" (non-consumable) created, priced, with review screenshot
 
 ## Privacy nutrition label
@@ -30,7 +35,7 @@
 Collected, all **linked to the user? No account, but the address identifies them: answer Linked**, **not used for tracking**, purpose **App Functionality**:
 - [ ] Contact Info › Email Address (the sender address inside forwarded mail)
 - [ ] Contact Info › Name (first name in the forwarding address)
-- [ ] User Content › Emails or Text Messages (forwarded mail, until collected, up to 30 days)
+- [ ] User Content › Emails or Text Messages (forwarded mail, until collected, up to 7 days)
 - [ ] User Content › Other User Content (attachments, link URLs sent for previews)
 
 Not collected: usage data, diagnostics, identifiers, location, contacts, health, financial. Match `PrivacyInfo.xcprivacy` to this list (P-2).

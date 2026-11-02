@@ -134,7 +134,7 @@ Test coverage: Core about 105 tests (planner, rules, email calendar, importer, n
 
 | ID | Sev | Finding | Evidence | Recommendation | Eff |
 |---|---|---|---|---|---|
-| AS-1 | critical | No privacy policy URL or in-app link (5.1.1(i)); external TestFlight also needs it | none in repo | [P-1] | M |
+| AS-1 | high | Policy exists (`inmyshoebox.com/privacy`, set in App Store Connect) but the app has no link to it and there are no terms (corrected November 2; the site is outside this repo) | `SettingsView.swift:317-326` | [P-1] | S |
 | AS-2 | high | Privacy manifest and nutrition label would misstate collection | `PrivacyInfo.xcprivacy:17-43` | Labels in `05-release-checklist.md` [P-2] | S |
 | AS-3 | high | False in-app privacy claim | `SettingsView.swift:324` | [P-4] | S |
 | AS-4 | high | Missing required-reason declarations may block upload (ITMS-91053). TestFlight uploads have succeeded, so check App Store Connect email for warnings | `PrivacyInfo.xcprivacy:44-45` | [P-3] | S |
@@ -186,7 +186,7 @@ Processors: Cloudflare, Pixabay. Anthropic is not used by the new app (the share
 
 | ID | Sev | Finding | Evidence | Recommendation | Eff |
 |---|---|---|---|---|---|
-| PRIV-1 | critical | No privacy policy or terms | none | [P-1]; cover the data map, 30-day retention, processors, GDPR access and erasure, CCPA no sale, children's details, contact | M |
+| PRIV-1 | high | Policy exists (effective November 1) but says 30 days, omits children's details, the 24 h preview cache and the key in backups, and has no rights section; no terms (corrected November 2) | `inmyshoebox.com/privacy` | [P-1]; cover the data map, 30-day retention, processors, GDPR access and erasure, CCPA no sale, children's details, contact | M |
 | PRIV-2 | high | Manifest declares the wrong data | `PrivacyInfo.xcprivacy:17-43`; `relay:92,693,197` | [P-2] | S |
 | PRIV-3 | high | "Nothing is kept" is false | `SettingsView.swift:324`; `relay:90-92,692-693` | "Email waits on our server until your phone collects it, up to 30 days, then it's deleted." [P-4] | S |
 | PRIV-4 | med | Mail in plain text in KV; key in plain backups | `Store.swift:79-81`; `Backups.swift:234,261` | Keychain now [D-5]; seal mail to a device key later [R-13] | M |
