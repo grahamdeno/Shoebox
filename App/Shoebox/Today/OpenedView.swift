@@ -57,8 +57,8 @@ struct OpenedView: View {
                             .font(.system(size: 15))
                             .opacity(0.8)
                     }
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.35), radius: 12, y: 2)
+                    .foregroundStyle(Theme.onPhoto)
+                    .shadow(color: Theme.shade.opacity(0.35), radius: 12, y: 2)
                     .padding(.horizontal, 12)
 
                     if !save.note.isEmpty {
@@ -74,11 +74,11 @@ struct OpenedView: View {
                         Button { previewFile = FileKeeper.tempURL(for: save) } label: {
                             Text("Open \(save.fileName ?? "the file")")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.onPhoto)
                                 .lineLimit(1)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
-                                .glassEffect(.regular.tint(Theme.onyx.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
@@ -87,10 +87,10 @@ struct OpenedView: View {
                         Link(destination: url) {
                             Text("Open the page on \(save.host ?? "the web")")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.onPhoto)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
-                                .glassEffect(.regular.tint(Theme.onyx.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                     }
 
@@ -98,12 +98,12 @@ struct OpenedView: View {
                         Text(reading)
                             .font(.system(size: 18))
                             .lineSpacing(6)
-                            .foregroundStyle(.white)
-                            .tint(.white)
+                            .foregroundStyle(Theme.onPhoto)
+                            .tint(Theme.onPhoto)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(22)
-                            .glassEffect(.regular.tint(Theme.onyx.opacity(min(0.7, grade.glassTint + 0.2))), in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+                            .glassEffect(.regular.tint(Theme.shade.opacity(min(0.7, grade.glassTint + 0.2))), in: RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
                     }
 
                     if save.imageSource == "stock", let credit = save.imageCredit {
@@ -148,19 +148,19 @@ struct OpenedView: View {
     }
 
     /// The photo, full screen and still while the words scroll over it. Without one,
-    /// Onyx lit warm from the top corner so the glass still has something to sit on.
+    /// Plum Night lit warm from the top corner so the glass still has something to sit on.
     private var backdrop: some View {
         GeometryReader { geo in
             // The words start about 330 pt down, so the subject sits in the space above them.
             ZStack {
                 PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: max(0, geo.size.height - 330))
                 // Darker than on Today: a little over everything, a lot behind the words.
-                Color.black.opacity(save.imageData == nil ? 0 : 0.22)
+                Theme.shade.opacity(save.imageData == nil ? 0 : 0.22)
                 if save.imageData != nil {
                     LinearGradient(stops: [.init(color: .clear, location: 0.0),
-                                           .init(color: .black.opacity(0.28), location: 0.34),
-                                           .init(color: .black.opacity(0.52), location: 0.7),
-                                           .init(color: .black.opacity(0.62), location: 1)],
+                                           .init(color: Theme.shade.opacity(0.28), location: 0.34),
+                                           .init(color: Theme.shade.opacity(0.52), location: 0.7),
+                                           .init(color: Theme.shade.opacity(0.62), location: 1)],
                                    startPoint: .top, endPoint: .bottom)
                 }
             }
@@ -173,8 +173,8 @@ struct OpenedView: View {
     private func creditLine(_ credit: String) -> some View {
         let text = Text(credit)
             .font(.system(size: 13))
-            .foregroundStyle(.white.opacity(0.75))
-            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+            .foregroundStyle(Theme.onPhoto.opacity(0.75))
+            .shadow(color: Theme.shade.opacity(0.4), radius: 2, y: 1)
         if let s = save.imageCreditURL, let url = URL(string: s) {
             Link(destination: url) { text.underline() }
         } else {
@@ -202,7 +202,7 @@ struct OpenedView: View {
         Button(action: action) {
             Text(text)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onPhoto)
                 .padding(.horizontal, 16)
                 .frame(minHeight: Metrics.touchMin)
                 .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -229,7 +229,7 @@ struct OpenedView: View {
             }
         }
         .font(.system(size: 18, weight: .semibold))
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.onPhoto)
         .buttonStyle(.plain)
         .padding(.horizontal, 22)
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))

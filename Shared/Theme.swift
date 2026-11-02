@@ -1,10 +1,10 @@
 import SwiftUI
 import UIKit
 
-// Colors and sizes from design/tokens.json. Four colors, each with one job:
-// Wheat is the light ground, Onyx is the dark ground and the light text, Oceanic is the box
-// in the logo, Nectarine is the bottom bar. Your own words get a pale tint of Nectarine.
-// Depth comes from soft paired shadows on the ground color (neumorphic), not from more colors.
+// Colors and sizes from design/tokens.json. Five colors, each with one job, and no black anywhere:
+// Wheat is the light ground and the text on dark; Plum Night is the dark ground; Plum Ink is the text on light;
+// Plum is the box, in the app and the logo; Nectarine is the lid and your reason.
+// Shadows and scrims are a deep plum shade, never black, so even the dark parts of a photo stay warm.
 extension UIColor {
     convenience init(hex: UInt32) {
         self.init(
@@ -23,20 +23,33 @@ private func adaptive(light: UInt32, dark: UInt32) -> Color {
 }
 
 enum Theme {
-    static let ground = adaptive(light: 0xFFF6E9, dark: 0x0A171D)
-    static let sheet = adaptive(light: 0xFFF9F0, dark: 0x111F26)
-    static let ink = adaptive(light: 0x0A171D, dark: 0xFFF6E9)
-    static let quiet = adaptive(light: 0x5A6B6E, dark: 0x93A4A6)
-    static let line = adaptive(light: 0xEADFCC, dark: 0x1E3036)
-    /// A group's card: one step off the ground. Darker Wheat in light, lighter Onyx in dark. No outline.
-    static let card = adaptive(light: 0xF2E7D3, dark: 0x14252D)
+    // The palette, by name.
+    static let wheat = Color(UIColor(hex: 0xFFF6E9))
+    static let plumNight = Color(UIColor(hex: 0x2F2036))
+    static let plumInk = Color(UIColor(hex: 0x2A1C30))
+    static let plum = Color(UIColor(hex: 0x56395F))
+    static let nectarine = Color(UIColor(hex: 0xFFBD76))
+    /// The deepest plum: shadows, scrims over photos and glass tints where words sit on a picture.
+    static let shade = Color(UIColor(hex: 0x1A1020))
 
-    // Neumorphic light and shade. Light falls from the top left.
+    static let ground = adaptive(light: 0xFFF6E9, dark: 0x2F2036)
+    static let sheet = adaptive(light: 0xFFF9F0, dark: 0x36263E)
+    static let ink = adaptive(light: 0x2A1C30, dark: 0xFFF6E9)
+    static let quiet = adaptive(light: 0x6E6170, dark: 0xBBAEBF)
+    static let line = adaptive(light: 0xEADCCB, dark: 0x45344D)
+    /// A group's card: one step off the ground. Deeper Wheat in light, lighter Plum Night in dark. No outline.
+    static let card = adaptive(light: 0xF3E5D3, dark: 0x3B2A44)
+    /// System controls (date pickers, links, selections): Plum on Wheat, Nectarine on Plum Night.
+    static let accent = adaptive(light: 0x56395F, dark: 0xFFBD76)
+    /// Words that sit on a photo: Wheat, so they stay warm against the picture.
+    static let onPhoto = wheat
+
+    // Light and shade. Light falls from the top left; the shade is plum, never black.
     static let lightSide = Color(UIColor { t in
-        t.userInterfaceStyle == .dark ? UIColor(hex: 0x1C3038).withAlphaComponent(0.9) : UIColor.white.withAlphaComponent(0.9)
+        t.userInterfaceStyle == .dark ? UIColor(hex: 0x45334D).withAlphaComponent(0.9) : UIColor.white.withAlphaComponent(0.9)
     })
     static let shadeSide = Color(UIColor { t in
-        t.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.75) : UIColor(hex: 0x7A5A36).withAlphaComponent(0.22)
+        t.userInterfaceStyle == .dark ? UIColor(hex: 0x1A1020).withAlphaComponent(0.75) : UIColor(hex: 0x7A5A36).withAlphaComponent(0.22)
     })
 
     // The user's own words: a pale Nectarine, 28% Nectarine in dark.
@@ -45,46 +58,30 @@ enum Theme {
             ? UIColor(red: 1, green: 189 / 255, blue: 118 / 255, alpha: 0.28)
             : UIColor(hex: 0xFFD7AA)
     })
-    static let noteInk = adaptive(light: 0x0A171D, dark: 0xFFE2BD)
+    static let noteInk = adaptive(light: 0x2A1C30, dark: 0xFFE2BD)
 
-    // The bottom bar. Same Nectarine in both modes.
-    static let lid = Color(UIColor(hex: 0xFFBD76))
+    // The lid. Same Nectarine in both modes.
+    static let lid = nectarine
     /// The lid's folded-down edge, a step deeper than the top.
     static let lidLip = Color(UIColor(hex: 0xE9A35C))
-    static let lidSuggested = Color(UIColor(hex: 0xFFDBB4))
-    static let lidInk = Color(UIColor(hex: 0x0A171D))
-    static let lidQuiet = Color(UIColor(hex: 0x534938))
+    static let lidInk = plumInk
 
-    // The palette, by name.
-    static let onyx = Color(UIColor(hex: 0x0A171D))
-    static let oceanic = Color(UIColor(hex: 0x003F47))
+    // Your Shoebox, the box across the bottom of Today: Plum in both modes, like the logo, with Wheat words.
+    static let boxGlass = plum
+    static let boxText = wheat
 
-    // Your Shoebox, the box across the bottom of Today. Oceanic in both modes, its lid line edge to edge.
-    static let box = Color(UIColor(hex: 0x003F47))
-    static let boxInk = Color(UIColor(hex: 0xFFF6E9))
-    static let boxQuiet = Color(UIColor(hex: 0x9CC3C6))
-    static let boxLid = Color(UIColor(hex: 0xFFF6E9)).opacity(0.45)
-
-    // The box in the logo. Oceanic, and a lighter Oceanic on Onyx so it shows.
-    static let logoBox = adaptive(light: 0x003F47, dark: 0x2F7E88)
-    static let logoLid = Color(UIColor(hex: 0xFFBD76))
-    /// The bottom box: Wheat in both modes, with the Nectarine lid on top.
-    static let boxBody = Color(UIColor(hex: 0xFFF6E9))
-    /// The box's smoked glass: the warm grey it takes over Wheat, kept the same in dark mode and over photos.
-    /// The box under the lid: the screen's own ground, one tint lighter in dark (one step deeper in light,
-    /// where the ground is already the lightest), so the box reads as part of the same app.
-    static let boxGlass = adaptive(light: 0xEFE3CF, dark: 0x22363E)
-    static let boxText = adaptive(light: 0x0A171D, dark: 0xFFF6E9)
-    static let boxBodyQuiet = Color(UIColor(hex: 0x5A6B6E))
-    static let logoCards = adaptive(light: 0x5A6B6E, dark: 0xB8C4BF)
+    // The logo. The box is Plum; on the dark ground it lifts one step so it still shows at icon size.
+    static let logoBox = adaptive(light: 0x56395F, dark: 0x6B4A76)
+    static let logoLid = nectarine
+    static let logoCards = adaptive(light: 0x6E6170, dark: 0xC9BCCB)
 
     // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
     // hairline fields, words for actions. Laid out like Scales.
     static let formGround = ground
     static let formInk = ink
     static let formQuiet = quiet
-    static let formLine = adaptive(light: 0xD9CCB6, dark: 0x24363C)
-    static let formAction = adaptive(light: 0x0A171D, dark: 0xFFBD76)
+    static let formLine = adaptive(light: 0xDCCAB8, dark: 0x4A3852)
+    static let formAction = adaptive(light: 0x2A1C30, dark: 0xFFBD76)
 }
 
 enum Metrics {

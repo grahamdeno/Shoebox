@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The app's own icon, drawn from the same artwork as the home screen icon:
-/// the cards, the Oceanic box and the Nectarine lid on the icon's ground.
+/// the cards, the Plum box and the Nectarine lid on the icon's ground.
 struct AppLogo: View {
     var size: CGFloat = 120
     /// Draw the icon tile behind the mark. Off when it sits on a colored surface.
@@ -12,7 +12,7 @@ struct AppLogo: View {
             if tile {
                 RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
                     .fill(Theme.ground)
-                    .shadow(color: .black.opacity(0.18), radius: size * 0.08, y: size * 0.03)
+                    .shadow(color: Theme.shade.opacity(0.18), radius: size * 0.08, y: size * 0.03)
             }
             layer("LogoCards", Theme.logoCards)
             layer("LogoBox", Theme.logoBox)
@@ -28,6 +28,6 @@ struct AppLogo: View {
             .renderingMode(.template)
             .scaledToFit()
             .foregroundStyle(color)
-            .shadow(color: .black.opacity(0.22), radius: size * 0.012, y: size * 0.008)
+            .shadow(color: Theme.shade.opacity(0.22), radius: size * 0.012, y: size * 0.008)
     }
 }
