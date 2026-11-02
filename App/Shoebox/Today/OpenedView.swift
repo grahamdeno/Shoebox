@@ -81,9 +81,10 @@ struct OpenedView: View {
                                 .lineLimit(1)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
-                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(GlassPress())
                         // Attached here, not to the whole screen, so it does not compete with the Edit sheet.
                         .quickLookPreview($previewFile)
                     }
@@ -95,8 +96,10 @@ struct OpenedView: View {
                                 .foregroundStyle(Theme.onPhoto)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
-                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .glassEffect(.regular.tint(Theme.shade.opacity(0.35)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
+                        .buttonStyle(GlassPress())
                     }
 
                     if !reading.characters.isEmpty {
@@ -212,9 +215,12 @@ struct OpenedView: View {
                 .foregroundStyle(Theme.onPhoto)
                 .padding(.horizontal, 16)
                 .frame(minHeight: Metrics.touchMin)
-                .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                // Not .interactive(): interactive glass takes the touch for its own bounce, and the button
+                // then often never gets the tap. That was the Close that pressed but did not close.
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(GlassPress())
     }
 
     /// The two moves, as words on glass. A put away post has one: Bring back.
@@ -242,5 +248,15 @@ struct OpenedView: View {
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
+    }
+}
+
+/// A press you can see without interactive glass: the word dips a little while held.
+private struct GlassPress: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.snappy(duration: 0.15), value: configuration.isPressed)
     }
 }

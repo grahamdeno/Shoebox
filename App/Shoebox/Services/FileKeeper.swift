@@ -48,24 +48,30 @@ enum FileKeeper {
     }
 
     nonisolated private static func prepare(_ file: inout PickedFile) {
-        if file.type?.conforms(to: .pdf) == true, let pdf = PDFDocument(data: file.data) {
-            var parts: [String] = []
-            var count = 0
-            for i in 0..<min(pdf.pageCount, maxPages) {
-                guard let t = pdf.page(at: i)?.string, !t.isEmpty else { continue }
-                parts.append(t)
-                count += t.count
-                if count > 20_000 { break }
-            }
-            file.text = String(parts.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines).prefix(20_000))
-            if let page = pdf.page(at: 0) {
-                file.picture = page.thumbnail(of: CGSize(width: 900, height: 1200), for: .mediaBox).jpegData(compressionQuality: 0.8)
-            }
+        if file.type?.conforms(to: .pdf) == true, let read = pdf(file.data) {
+            file.text = read.text
+            file.picture = read.picture
         } else if file.type?.conforms(to: .image) == true {
             file.picture = Relay.thumbnail(file.data, maxWidth: 1600)
         } else if file.type?.conforms(to: .text) == true, let text = String(data: file.data, encoding: .utf8) {
             file.text = String(text.prefix(20_000))
         }
+    }
+
+    /// A PDF's text (up to 20 pages) and a picture of its first page. Also used for PDFs that arrive by email.
+    nonisolated static func pdf(_ data: Data) -> (text: String, picture: Data?)? {
+        guard let pdf = PDFDocument(data: data) else { return nil }
+        var parts: [String] = []
+        var count = 0
+        for i in 0..<min(pdf.pageCount, maxPages) {
+            guard let t = pdf.page(at: i)?.string, !t.isEmpty else { continue }
+            parts.append(t)
+            count += t.count
+            if count > 20_000 { break }
+        }
+        let text = String(parts.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines).prefix(20_000))
+        let picture = pdf.page(at: 0)?.thumbnail(of: CGSize(width: 900, height: 1200), for: .mediaBox).jpegData(compressionQuality: 0.8)
+        return (text, picture)
     }
 
     static func save(_ file: PickedFile, note: String, now: Date = Date()) -> Save {

@@ -21,6 +21,52 @@ public enum EmailRules {
         return hits >= 3 ? .promotional : .other
     }
 
+    /// Sign-in codes and account notices: useful for minutes, never worth a post.
+    public static func isAccountNotice(subject: String, text: String) -> Bool {
+        let t = (subject + "\n" + text.prefix(1_500)).lowercased()
+        let signs = ["verification code", "security code", "one-time code", "one time code", "one-time password", "passcode",
+                     "your code is", "confirmation code is", "login code", "sign-in code", "sign in code", "2-step", "two-factor",
+                     "new sign-in", "new sign in", "new login", "sign-in attempt", "login attempt", "reset your password",
+                     "password reset", "verify your email", "confirm your email address"]
+        return signs.contains(where: t.contains)
+    }
+
+    /// A subject without the clutter in front: "[List] Fwd: Fwd: Re: Dock quote" gives "Dock quote".
+    public static func cleanSubject(_ subject: String) -> String {
+        var s = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        while true {
+            let before = s
+            s = s.replacingOccurrences(of: #"^\[[^\]]{0,60}\]\s*"#, with: "", options: .regularExpression)
+            s = s.replacingOccurrences(of: #"^(re|fwd?|fw|aw|wg)\s*:\s*"#, with: "", options: [.regularExpression, .caseInsensitive])
+            if s == before { break }
+        }
+        return s
+    }
+
+    /// True when a written post holds something the email does not: a number that is not in it, or a day
+    /// word (today, tomorrow, tonight) the email never used. Such a post is not used.
+    public static func invents(_ post: String, source: String) -> Bool {
+        let sourceNumbers = numbers(in: source)
+        if numbers(in: post).contains(where: { !sourceNumbers.contains($0) }) { return true }
+        let p = post.lowercased(), src = source.lowercased()
+        for w in ["today", "tomorrow", "tonight", "this morning", "this afternoon", "this evening", "this weekend"]
+            where p.contains(w) && !src.contains(w) { return true }
+        return false
+    }
+
+    static func numbers(in text: String) -> Set<String> {
+        var out = Set<String>()
+        var run = ""
+        for ch in text {
+            if ch.isASCII, ch.isNumber { run.append(ch) } else {
+                if !run.isEmpty { out.insert(String(run.drop { $0 == "0" }.isEmpty ? "0" : run.drop { $0 == "0" })) }
+                run = ""
+            }
+        }
+        if !run.isEmpty { out.insert(String(run.drop { $0 == "0" }.isEmpty ? "0" : run.drop { $0 == "0" })) }
+        return out
+    }
+
     /// Cuts ad blocks: lines that sell, sponsor sections, and everything from the unsubscribe footer down.
     public static func stripAds(_ text: String) -> String {
         var out: [String] = []

@@ -3,8 +3,9 @@ import ShoeboxCore
 import SwiftData
 
 /// Your Shoebox email address. Mail waits on the relay up to 30 days until the app collects it.
-/// Each email becomes one short post written from what matters in it (the email itself is not kept); your note above a forward is the reason; ads are skipped;
-/// a date in the email makes it come back on its own before that day.
+/// Each email becomes one short post written from what matters in it (the email itself is not kept); your note above a forward is the reason;
+/// ads and sign-in codes are skipped; a PDF or a lone link is read too; a date makes it come back before that day; an email with many
+/// dates (a school newsletter) becomes one post per date that is about the people named in Settings.
 @MainActor
 enum Inbox {
     private static var running = false
@@ -17,7 +18,10 @@ enum Inbox {
         var text: String?
         var at: Double?
         var links: [String]?
+        var attachments: [Attachment]?
     }
+    struct Attachment: Decodable { var n: Int; var name: String?; var type: String?; var size: Int? }
+    struct FileResponse: Decodable { var data: String? }
     struct Response: Decodable { var mails: [Mail]?; var address: String? }
     struct AddressResponse: Decodable { var address: String? }
     struct Problem: Decodable { var error: Message?; struct Message: Decodable { var message: String? } }
@@ -67,7 +71,7 @@ enum Inbox {
         var added = 0
         let now = Date()
         for m in r.mails ?? [] {
-            let subject = (m.subject ?? "").replacingOccurrences(of: #"^((re|fwd?|fw):\s*)+"#, with: "", options: [.regularExpression, .caseInsensitive])
+            let subject = EmailRules.cleanSubject(m.subject ?? "")
             let received = m.at.map { Date(timeIntervalSince1970: $0 / 1000) } ?? now
             // The same message twice: keep one.
             if existing.contains(where: { $0.emailSubject == subject && $0.emailFrom == m.from
@@ -79,30 +83,69 @@ enum Inbox {
             if EmailRules.kind(from: m.from ?? "", fromName: m.fromName ?? "", subject: subject, text: m.text ?? "", hasOwnNote: !reason.isEmpty) == .promotional {
                 done.append(m.id); continue
             }
+            // Sign-in codes and account notices: never a post.
+            if reason.isEmpty, EmailRules.isAccountNotice(subject: subject, text: m.text ?? "") {
+                done.append(m.id); continue
+            }
             let body = EmailRules.stripAds(rawBody)
-            let firstLines = body.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            var lines = body.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && !$0.hasPrefix("From:") && !$0.hasPrefix("Date:") && !$0.hasPrefix("Subject:") && !$0.hasPrefix("To:") && !$0.contains("Forwarded message") }
+            let link = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
+
+            // A PDF sent by email is read like the email itself, and kept on the post so you can open it.
+            var pdf: (data: Data, name: String, picture: Data?)?
+            if let a = m.attachments?.first(where: { ($0.type ?? "").contains("pdf") }), let data = await attachment(mail: m.id, n: a.n, key: key) {
+                let read = await Task.detached { FileKeeper.pdf(data) }.value
+                pdf = (data, FileKeeper.safeName(a.name ?? "attachment.pdf"), read?.picture)
+                if let text = read?.text, !text.isEmpty { lines += text.components(separatedBy: .newlines) }
+            }
+            // An email that is only a link ("have a look at this"): read the page, so the post is about it.
+            let thin = lines.filter { !$0.hasPrefix("http") }.joined(separator: " ").count < 120
+            if thin, pdf == nil, let link, let url = URL(string: link), let text = await Relay.preview(url)?.text, !text.isEmpty {
+                lines += text.components(separatedBy: .newlines).prefix(400)
+            }
+
+            // Many dates (a school newsletter, a season schedule): one post per date that is about your people.
+            let items = EmailCalendar.items(in: lines.joined(separator: "\n"), received: received, calendar: .current)
+            if items.count >= EmailCalendar.minimumDates {
+                let today = Calendar.current.startOfDay(for: now)
+                let keep = EmailCalendar.relevant(items, to: EmailCalendar.Profile(Prefs.mailFor)).filter { $0.day >= today }
+                for item in keep {
+                    let s = Save(title: String(item.title.prefix(140)),
+                                 snippet: String(item.line.prefix(240)),
+                                 body: item.line + (subject.isEmpty ? "" : "\n\nFrom \(subject)"),
+                                 note: reason, origin: "via your Shoebox email", kind: .email, createdAt: received)
+                    s.urlString = (item.link?.absoluteString).map(Detection.unwrapLink)
+                    stamp(s, mail: m, subject: subject, received: received, now: now)
+                    schedule(s, on: item.day, now: now)
+                    context.insert(s)
+                    added += 1
+                }
+                done.append(m.id)
+                continue
+            }
+
             // The post is what matters in the email, written on the phone. The email itself is not kept.
-            let written = await EmailPost.write(subject: subject, lines: firstLines)
+            let written = await EmailPost.write(subject: subject, lines: lines, received: received)
             let s = Save(title: String(written.title.prefix(140)),
                          snippet: String(written.text.replacingOccurrences(of: "\n", with: " ").prefix(240)),
                          body: written.text, note: reason,
                          origin: "via your Shoebox email", kind: .email, createdAt: received)
-            s.urlString = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
-            s.enrichedAt = now
-            s.emailFrom = m.from
-            s.emailSubject = subject
-            s.emailReceivedAt = received
+            s.urlString = link
+            stamp(s, mail: m, subject: subject, received: received, now: now)
+            if let pdf {
+                s.fileData = pdf.data
+                s.fileName = pdf.name
+                s.fileType = "com.adobe.pdf"
+                if let picture = pdf.picture { s.imageData = picture; s.imageSource = "photo" }
+            } else if thin, link != nil {
+                // Only a link: let the page's own picture come in later, as for a shared link.
+                s.enrichedAt = nil
+            }
             // A date in the email: it comes back 5 days before, the day before and on the day.
-            let days = EmailRules.days(in: subject + "\n" + firstLines.joined(separator: "\n"), received: received, calendar: .current).filter { $0 > now }.sorted()
+            let days = EmailRules.days(in: subject + "\n" + lines.joined(separator: "\n"), received: received, calendar: .current).filter { $0 > now }.sorted()
             if let day = days.first {
-                s.eventDate = day
-                if let first = SaveActions().reminders(for: day).first(where: { $0 > now }) {
-                    s.status = .away
-                    s.returnDate = first
-                } else {
-                    s.status = .today
-                }
+                schedule(s, on: day, now: now)
             } else {
                 Capture.place(s, note: reason, now: now)
             }
@@ -116,6 +159,32 @@ enum Inbox {
             _ = try? await URLSession.shared.data(for: Relay.request("inbox/ack", method: "POST", body: body, key: key))
         }
         return added
+    }
+
+    private static func stamp(_ s: Save, mail m: Mail, subject: String, received: Date, now: Date) {
+        s.enrichedAt = now
+        s.emailFrom = m.from
+        s.emailSubject = subject
+        s.emailReceivedAt = received
+    }
+
+    /// Comes back 5 days before, the day before and on the day; on screen now if the day is here.
+    private static func schedule(_ s: Save, on day: Date, now: Date) {
+        s.eventDate = day
+        if let first = SaveActions().reminders(for: day).first(where: { $0 > now }) {
+            s.status = .away
+            s.returnDate = first
+        } else {
+            s.status = .today
+        }
+    }
+
+    /// One attachment of a waiting mail, fetched before the mail is acknowledged (which deletes it).
+    private static func attachment(mail id: String, n: Int, key: String) async -> Data? {
+        let req = Relay.request("inbox/file", query: [.init(name: "id", value: id), .init(name: "n", value: String(n))], key: key)
+        guard let (data, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200,
+              let b64 = try? JSONDecoder().decode(FileResponse.self, from: data).data else { return nil }
+        return Data(base64Encoded: b64, options: .ignoreUnknownCharacters)
     }
 
     /// Your words above a forwarded message are the reason; the rest is the email.
