@@ -8,9 +8,10 @@ struct Toast: Identifiable {
     let undo: () -> Void
 }
 
-/// A post being read. Wraps the save so the full-screen cover has a stable identity.
+/// A post being read. Wraps the save so the full-screen cover has a stable identity: the same post opened twice
+/// (a double tap) is the same item, so SwiftUI does not present a second cover over the first.
 struct OpenedPost: Identifiable {
-    let id = UUID()
+    var id: UUID { save.id }
     let save: Save
 }
 
@@ -175,7 +176,7 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity, minHeight: 28)
                 .contentShape(Rectangle())
                 .gesture(drag)
-            BoxView(planner: planner, pull: pull, onClose: { closeBox() }, onBringBack: { bringBack($0) },
+            BoxView(planner: planner, pull: pull, otherPostOpen: opened != nil, onClose: { closeBox() }, onBringBack: { bringBack($0) },
                     onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
                     onHandOff: { if toast == nil { show($0) } },
                     pullGesture: AnyGesture(headerDrag.map { _ in () }))
@@ -499,7 +500,7 @@ struct TodayView: View {
                 let moved = abs(dy) >= 6 || abs(v.translation.width) >= 6
                 if !moved && Date().timeIntervalSince(dragStart) < 0.35 {
                     drag = 0
-                    opened = OpenedPost(save: current)
+                    if opened == nil { opened = OpenedPost(save: current) }
                     return
                 }
                 if dy <= -Self.upDistance { goNext(current, height: height) }
@@ -649,7 +650,7 @@ struct TodayView: View {
         switch UserDefaults.standard.string(forKey: "screen") {
         case "up": drag = -110; crossed = 1
         case "away": drag = 170; crossed = -1
-        case "opened": if let first = queue.first { opened = OpenedPost(save: first) }
+        case "opened": if let first = queue.first, opened == nil { opened = OpenedPost(save: first) }
         case "box": pull.mounted = true; pull.progress = 1
         case "settings": pull.mounted = true; pull.progress = 1; showSettings = true
         case "add": showAdd = true
