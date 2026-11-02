@@ -1,25 +1,54 @@
 name: testflight
 # Uploads a build to TestFlight. Runs only when the `testflight` branch is pushed.
-# Does not submit for review. That stays manual.
+# The tests run first, on the same commit, and a failing test stops the upload.
+# The build goes into the internal tester group. Does not submit for review. That stays manual.
 on:
   push:
     branches: [testflight]
 
+# One upload at a time. A second push waits; it never cancels an upload in progress.
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
 jobs:
   upload:
     runs-on: macos-26
-    timeout-minutes: 40
+    timeout-minutes: 75
+    env:
+      # A released Xcode, pinned (same value as ios.yml).
+      XCODE_APP: /Applications/Xcode_26.6.app
+      APP_ID: "6827411421"
     steps:
       - uses: actions/checkout@v4
-      - name: Select the newest Xcode 26
-        run: |
-          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
-          sudo xcode-select -s "$XC"
-          xcodebuild -version
+      - name: Build number
+        # Unique and always rising: the run number, then the attempt, so a re-run of the same push gets a new number.
+        # (Rises faster than the old 1000 + run number, so it is above every build already uploaded.)
+        run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER * 10 + GITHUB_RUN_ATTEMPT))" >> "$GITHUB_ENV"
+      - name: Select the pinned Xcode
+        run: Scripts/ci-select-xcode.sh
       - name: Tools
         run: brew install xcodegen
+      - name: Core rules tests
+        run: |
+          set -o pipefail
+          swift test --package-path Core 2>&1 | tail -n 40
       - name: Generate project
         run: xcodegen generate
+      - name: Pick an iPhone simulator on iOS 26
+        id: sim
+        run: |
+          UDID=$(Scripts/ci-pick-simulator.sh)
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: App tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Shoebox.xcodeproj \
+            -scheme Shoebox \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -n 120
       - name: Write API key
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
@@ -40,7 +69,7 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER" \
-            CURRENT_PROJECT_VERSION=$((1000 + ${{ github.run_number }})) \
+            CURRENT_PROJECT_VERSION=${{ env.BUILD_NUMBER }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 | tee "$RUNNER_TEMP/archive.log" \
             || { grep -E "error:|Error|No profiles|No Accounts|certificate|provisioning" "$RUNNER_TEMP/archive.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - name: Stamp entitlements
@@ -51,32 +80,63 @@ jobs:
           codesign -f -s - --entitlements Share/Share.entitlements "$APP/PlugIns/ShoeboxShare.appex"
           codesign -f -s - --entitlements App/Shoebox.entitlements "$APP"
           codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q group.com.grahamdeno.shoebox && echo "::notice::Archive carries the App Group"
-      - name: Export and upload
+      - name: Export
         env:
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ISSUER: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -o pipefail
-          cat > "$RUNNER_TEMP/export.plist" <<'P'
+          write_plist() { # destination
+            cat > "$RUNNER_TEMP/export-$1.plist" <<P
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
             <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>7MHDTK68M2</string>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>$1</string>
             <key>signingStyle</key><string>automatic</string>
           </dict></plist>
           P
+          }
+          write_plist export
+          write_plist upload
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+            -exportOptionsPlist "$RUNNER_TEMP/export-export.plist" \
             -exportPath "$RUNNER_TEMP/export" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER" 2>&1 | tee "$RUNNER_TEMP/export.log" \
             || { grep -E "error:|Error|failed|certificate|provisioning" "$RUNNER_TEMP/export.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
-          echo "::notice::Uploaded build $((1000 + ${{ github.run_number }})) to App Store Connect"
+      - name: Check the exported entitlements
+        run: Scripts/check_entitlements.sh "$RUNNER_TEMP/export/Shoebox.ipa"
+      - name: Upload
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Shoebox.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export-upload.plist" \
+            -exportPath "$RUNNER_TEMP/uploaded" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER" 2>&1 | tee "$RUNNER_TEMP/upload.log" \
+            || { grep -E "error:|Error|failed|certificate|provisioning" "$RUNNER_TEMP/upload.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+          echo "::notice::Uploaded build ${{ env.BUILD_NUMBER }} to App Store Connect"
+      - name: Add the build to the internal tester group
+        # The build is already uploaded; a problem here is a warning to finish by hand, not a failed upload.
+        continue-on-error: true
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          WHAT_TO_TEST_FILE: docs/testflight/what-to-test.md
+        run: |
+          pip3 install --quiet --break-system-packages pyjwt cryptography || pip3 install --quiet pyjwt cryptography
+          ASC_KEY_PATH="$RUNNER_TEMP/keys/AuthKey.p8" python3 Scripts/asc_testflight.py
       - name: Remove key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"
