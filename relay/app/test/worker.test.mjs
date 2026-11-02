@@ -131,11 +131,33 @@ test("mail waits 7 days, reaches only its phone, and is gone once acknowledged",
   assert.equal((await (await call(env, "/inbox", { key: KEY_A })).json()).mails.length, 0);
 });
 
-test("one box takes only so many mails a day", async () => {
+test("one box takes only so many mails a day, and says so", async () => {
   const kv = memoryKV(), env = { SHOEBOX: kv, MAILBOX_DAILY_CAP: "3" };
   const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
-  for (let i = 0; i < 6; i++) await RELAY.email(mail(address, `Note ${i}`), env);
+  const sent = [];
+  for (let i = 0; i < 5; i++) { const m = mail(address, `Note ${i}`); await RELAY.email(m, env); sent.push(m.rejected); }
   assert.equal([...kv.m.keys()].filter((k) => k.startsWith("m:")).length, 3);
+  assert.deepEqual(sent.slice(0, 3), [null, null, null]);
+  assert.match(sent[3], /enough mail today/);
+});
+
+test("mail too large for a real address is bounced with a reason, not lost silently", async () => {
+  const kv = memoryKV(), env = { SHOEBOX: kv };
+  const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
+  const big = mail(address);
+  big.rawSize = 13e6;
+  await RELAY.email(big, env);
+  assert.match(big.rejected, /Too large/);
+  assert.equal([...kv.m.keys()].filter((k) => k.startsWith("m:")).length, 0);
+});
+
+test("an IPv6 network counts as its first 64 bits", async () => {
+  const env = { SHOEBOX: memoryKV() };
+  const statuses = [];
+  for (let i = 0; i < 6; i++) {
+    statuses.push((await call(env, "/inbox/address", { method: "POST", key: `sb-${String(i).repeat(40)}`, body: { name: "a" }, ip: `2001:db8:1:2::${i + 1}` })).status);
+  }
+  assert.deepEqual(statuses, [200, 200, 200, 200, 200, 429]);
 });
 
 test("the shared address belongs to a pinned owner, never to the first caller", async () => {

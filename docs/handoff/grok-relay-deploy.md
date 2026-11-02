@@ -35,7 +35,7 @@ Do not touch the old Worker `shoebox-relay`, its KV namespace `SHOEBOX`, its dom
 >
 > **5. Attach the domain.** Settings, Domains & Routes, Add, Custom domain, `api.inmyshoebox.com`. Wait until its status is Active. This makes the DNS record by itself.
 >
-> **6. ASK: move the email.** Tell Graham what the catch-all points to now, and that moving it means every address is delivered by the new Worker. After his yes: Email Routing, Routing rules, Catch-all address, Edit, Action: Send to a Worker, Destination `shoebox-app-relay`, Save, and make sure it is Active. Do not change any other rule. In particular leave `support@inmyshoebox.com` forwarding to Graham's Gmail exactly as it is.
+> **6. ASK: move the email.** Tell Graham what the catch-all points to now, and that moving it means every address is delivered by the new Worker. Mail to an old address (any address made before today, including `graham-keep@`) is then dropped without a bounce. So before saying yes, Graham should: install the new build, open Settings > Email and get a new address, and change any Gmail filters or forwards to use it. After his yes: Email Routing, Routing rules, Catch-all address, Edit, Action: Send to a Worker, Destination `shoebox-app-relay`, Save, and make sure it is Active. Do not change any other rule. In particular leave `support@inmyshoebox.com` forwarding to Graham's Gmail exactly as it is.
 >
 > **7. ASK: the plan.** Only if Graham says a public TestFlight link is going out today: Billing, upgrade the account to Workers Paid. Otherwise skip and say so.
 >

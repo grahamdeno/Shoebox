@@ -6,12 +6,14 @@ import UniformTypeIdentifiers
 /// A 48 megapixel photo is about 190 MB decoded; the share sheet may only use about 120 MB.
 /// ImageIO reads straight from the file or bytes and builds the small version in one step.
 enum ImageDownsample {
-    /// The picture's size in pixels, read from its header without decoding it.
+    /// The picture's size in pixels as it is shown, read from its header without decoding it. iPhone photos are
+    /// often stored sideways with an orientation flag (5 to 8 turn it a quarter), so width and height swap for those.
     static func pixelSize(of source: CGImageSource) -> (width: Int, height: Int)? {
         guard let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let w = props[kCGImagePropertyPixelWidth] as? Int, let h = props[kCGImagePropertyPixelHeight] as? Int,
               w > 0, h > 0 else { return nil }
-        return (w, h)
+        let orientation = props[kCGImagePropertyOrientation] as? Int ?? 1
+        return (5...8).contains(orientation) ? (h, w) : (w, h)
     }
 
     /// The longest side to use so that the picture is `width` pixels wide at most (the way pictures were sized

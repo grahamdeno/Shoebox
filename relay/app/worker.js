@@ -61,11 +61,17 @@ async function sha256(text) {
 const dayOf = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
 async function spent(kv, key) { return parseInt(await kv.get(key), 10) || 0; }
 
+/** The network a request came from: the address, or its first 64 bits for IPv6 (one home or phone gets a whole /64). */
+export function networkOf(request) {
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  return ip.includes(":") ? ip.toLowerCase().split(":").slice(0, 4).join(":") : ip;
+}
+
 /** Counts one use against `scope` for this network. Returns true while under `max` for the window (seconds). */
 export async function underLimit(env, request, scope, max, window) {
   const kv = env.SHOEBOX;
   if (!kv) return true;
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const ip = networkOf(request);
   const slot = Math.floor(Date.now() / (window * 1000));
   const key = `lim:${scope}:${(await sha256(`${scope}:${ip}`)).slice(0, 24)}:${slot}`;
   const used = await spent(kv, key);
@@ -81,13 +87,14 @@ const RELAY = {
     if (!env.SHOEBOX) return;
     const box = await mailBox(env, message.to);
     if (!box) return;
-    // One box takes only so many mails a day; the rest are dropped.
+    // A real address that can't take this mail says so, so the person who forwarded it knows it did not arrive.
+    // (Only someone who already sent to a real address learns that it exists.)
     const capKey = `cap:${box}:${dayOf()}`;
     const used = await spent(env.SHOEBOX, capKey);
-    if (used >= (parseInt(env.MAILBOX_DAILY_CAP, 10) || MAILBOX_DAILY_CAP)) return;
-    if (message.rawSize && message.rawSize > 12e6) return;
+    if (used >= (parseInt(env.MAILBOX_DAILY_CAP, 10) || MAILBOX_DAILY_CAP)) { message.setReject("This Shoebox has had enough mail today. Try again tomorrow."); return; }
+    if (message.rawSize && message.rawSize > 12e6) { message.setReject("Too large for Shoebox (12 MB)."); return; }
     const raw = await new Response(message.raw).arrayBuffer();
-    if (raw.byteLength > 12e6) return;
+    if (raw.byteLength > 12e6) { message.setReject("Too large for Shoebox (12 MB)."); return; }
     await env.SHOEBOX.put(capKey, String(used + 1), { expirationTtl: 2 * 86400 });
     const { files, ...mail } = parseMail(new TextDecoder("utf-8", { fatal: false }).decode(raw));
     const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -413,7 +420,7 @@ export async function mintAddress(env, request, box, name) {
     await kv.put(k, String(n + 1), { expirationTtl: 2 * 86400 });
   }
   // New addresses are limited per network and for everyone.
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const ip = networkOf(request);
   const netKey = `mintnet:${(await sha256(`mint:${ip}`)).slice(0, 24)}:${day}`, net = await spent(kv, netKey);
   if (net >= MINT_PER_NETWORK_DAILY) return { status: 429, message: "Too many new addresses from this network today. Try again tomorrow." };
   const allKey = `mintall:${day}`, all = await spent(kv, allKey);

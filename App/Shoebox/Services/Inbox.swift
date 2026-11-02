@@ -65,7 +65,8 @@ enum Inbox {
         let req = Relay.request("inbox", key: key)
         guard let (data, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200,
               let r = try? JSONDecoder().decode(Response.self, from: data) else { return 0 }
-        if let a = r.address { Prefs.inboxAddress = a }
+        // No address on the server (a new relay, or it expired): stop showing one that no longer delivers.
+        Prefs.inboxAddress = r.address
         let existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         var done: [String] = []
         var added = 0
@@ -167,15 +168,14 @@ enum Inbox {
             done.append(m.id)
         }
         // Mail is acknowledged (and so deleted from the relay) only after the posts made from it are saved.
-        // If the save fails, the new posts are dropped and the mail stays on the relay for the next try.
+        // If the save fails, the mail stays on the relay for the next try. The context is not rolled back: it is the
+        // app's main context, and a rollback would also throw away anything else not yet saved, such as an edit.
+        // If the new posts are saved later, the next collection finds them and does not make them twice.
         let saved = await commit(done: done, save: { try context.save() }, acknowledge: { ids in
             let body = try? JSONSerialization.data(withJSONObject: ["ids": ids])
             _ = try? await URLSession.shared.data(for: Relay.request("inbox/ack", method: "POST", body: body, key: key))
         })
-        if !saved {
-            context.rollback()
-            return 0
-        }
+        if !saved { return 0 }
         return added
     }
 

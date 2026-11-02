@@ -36,7 +36,7 @@ Search words, link addresses and mail text are never logged.
 | Mails one box accepts per day | 40 | `MAILBOX_DAILY_CAP` |
 | Mail size | 12 MB | in code |
 
-Mail to an address nobody holds is dropped without a bounce, so the relay never says which addresses exist.
+Mail to an address nobody holds is dropped without a bounce, so the relay never says which addresses exist. Mail to a real address that is over the size or the daily limit is bounced with a short reason, so the person who forwarded it knows. Limits per network count an IPv6 network as its first 64 bits.
 
 ## Owner
 

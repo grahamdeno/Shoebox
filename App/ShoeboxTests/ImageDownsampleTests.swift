@@ -53,6 +53,24 @@ final class ImageDownsampleTests: XCTestCase {
         XCTAssertEqual(ImageDownsample.longestSide(width: 500, height: 400, maxWidth: 1200), 500)
     }
 
+    /// iPhone portraits are stored sideways (4000 x 3000) with orientation 6. They are sized as shown: 1600 wide.
+    func testASidewaysStoredPortraitIsSizedAsShown() throws {
+        let raw = jpeg(width: 4000, height: 3000)
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(raw as CFData, nil))
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let out = NSMutableData()
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithData(out, "public.jpeg" as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, image, [kCGImagePropertyOrientation: 6] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        let turned = out as Data
+        let s = try XCTUnwrap(size(of: turned))
+        XCTAssertEqual(s.0, 3000, "shown width")
+        XCTAssertEqual(s.1, 4000, "shown height")
+        let thumb = try XCTUnwrap(size(of: try XCTUnwrap(Relay.thumbnail(turned, maxWidth: 1600))))
+        XCTAssertEqual(thumb.0, 1600, accuracy: 1)
+        XCTAssertEqual(thumb.1, 2133, accuracy: 1)
+    }
+
     func testThumbnailKeepsTheOldRules() throws {
         let landscape = try XCTUnwrap(Relay.thumbnail(jpeg(width: 4000, height: 3000), maxWidth: 1200))
         let l = try XCTUnwrap(size(of: landscape))

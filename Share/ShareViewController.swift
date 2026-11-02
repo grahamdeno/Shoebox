@@ -81,9 +81,17 @@ final class ShareViewController: UIViewController {
     /// file only exists inside this callback, so it is shrunk there. A 48 megapixel photo never sits in memory whole.
     private func loadPhoto(_ p: NSItemProvider) async -> Data? {
         let t = p.registeredContentTypes.first { $0.conforms(to: .image) } ?? .image
-        return await withCheckedContinuation { c in
+        let fromFile: Data? = await withCheckedContinuation { c in
             _ = p.loadFileRepresentation(forTypeIdentifier: t.identifier) { url, _ in
                 c.resume(returning: url.flatMap { ImageDownsample.jpeg(fromFile: $0) })
+            }
+        }
+        if let fromFile { return fromFile }
+        // Some apps hand over only the bytes. They are shrunk straight from the bytes, so the photo is still never
+        // decoded whole, and a photo is never lost because it did not come as a file.
+        return await withCheckedContinuation { c in
+            _ = p.loadDataRepresentation(for: t) { d, _ in
+                c.resume(returning: d.flatMap { ImageDownsample.jpeg(from: $0, maxWidth: 2400, quality: 0.85) ?? $0 })
             }
         }
     }
