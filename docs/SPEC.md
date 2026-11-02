@@ -56,7 +56,7 @@ A Plum glass box across the bottom, the same in light and dark and the same box 
 
 - Opens on the same surface as Keep something (section 2.5): the post itself, with **Close** and **Keep** at the top and one glass panel holding the title (large), your notes, the why, and the return line.
 - It saves on its own a moment after you stop typing and again when you leave. **Keep** saves, taps a haptic and the line under the title says "Saved".
-- The return line shows the date it is about or when it comes back; tapping it adds, changes, gives a time to, or clears the date. New words that name a date are read, unless you cleared one yourself.
+- A Date line holds the date it is about: Add a date, or the date with Add a time and Clear date. With a date, it says it comes back 5 days before and stays until put away. New words that name a date are read, unless you cleared one yourself.
 - **Delete** is the last word, bottom left of the panel, in thumb reach. One tap closes the post and shows Undo for 5 seconds. A delete is soft: the post is hidden from every list and stays in backups.
 
 ### 2.4 Shoebox (the library)
@@ -84,7 +84,7 @@ Every screen where you write is the post you are making. What you see while you 
 - **The return line** says when it comes back and changes as you type: "Back tomorrow", "Back Saturday", "Back Nov 9 · 5 days before". Tap it for one small screen of choices as words: Tomorrow, This weekend, Next week, Pick a day; for a dated save also its date, Add a time and Clear. It replaces "Start showing it on" and the paragraph about the why.
 - **Add** opens the standard menu: Photo Library, Take Photo (the system camera), Choose File. A photo becomes the ground and Add becomes **Remove photo**. A file shows as one line in the panel with **Remove**.
 - **The panel rides the keyboard.** With the keyboard down it sits at the bottom in thumb reach. One swipe down closes the screen.
-- **Read on the phone.** After a photo, a file or a link, the phone suggests the words, the why and the date: Vision reads the text in a photo, Apple Intelligence writes the words and the why, and the date reader finds the date. Suggestions show lighter under one line, "Read from the photo. Tap to change." ("from the page", "from the file"). Typing or tapping makes them yours and solid. Keep keeps what is shown; nothing is kept on its own. Nothing leaves the phone for this. Without Apple Intelligence, the page title and the date reader fill what they can.
+- **Read on the phone.** After a photo, the phone suggests the words and the why: Vision reads the text in it, Apple Intelligence writes a short title, the details and the why (refused if it holds a number or day word the photo does not), and the date reader finds the date in those words. Suggestions show lighter under one line, "Read from the photo. Tap to change." Typing makes them yours and solid. Keep keeps what is shown; nothing is kept on its own. Nothing leaves the phone for this. Without Apple Intelligence the first line is the title and the next lines the details; a photo with no readable text stays "A photo". Files and links are read after they are kept, as before (the page's title and picture, a file's text, dates in the words).
 - **The share sheet** is the same surface: the page's picture is the ground, the page's title is the words once read, and your own words go under it ("Add a note").
 - Several links pasted together become several saves. A link that's already kept isn't kept twice.
 
