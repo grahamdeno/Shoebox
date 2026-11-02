@@ -112,9 +112,14 @@ public enum EmailCalendar {
         return out
     }
 
+    /// Whole words, with hyphens and spaces alike and a plural allowed: "cross-country" finds "Cross country",
+    /// "soccer" finds "Soccer:", "game" finds "games".
     static func contains(_ text: String, word: String) -> Bool {
-        let escaped = NSRegularExpression.escapedPattern(for: word)
-        return text.range(of: "\\b\(escaped)\\b", options: .regularExpression) != nil
+        let flat = { (s: String) in s.replacingOccurrences(of: #"[-–—_]+"#, with: " ", options: .regularExpression) }
+        let parts = flat(word).split(separator: " ").map { NSRegularExpression.escapedPattern(for: String($0)) }
+        guard !parts.isEmpty else { return false }
+        let pattern = "\\b" + parts.joined(separator: "\\s+") + "(s|es)?\\b"
+        return flat(text).range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     static func tidy(_ raw: String) -> String {

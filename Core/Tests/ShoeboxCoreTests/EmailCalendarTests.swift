@@ -56,6 +56,13 @@ struct EmailCalendarTests {
         #expect(items[0].line.hasSuffix("concert black."))
     }
 
+    @Test func hyphensAndSpacesMatchAlike() {
+        #expect(EmailCalendar.contains("sat nov 7: cross country regional championship", word: "cross-country"))
+        #expect(EmailCalendar.contains("cross-country banquet", word: "cross country"))
+        #expect(EmailCalendar.contains("lacrosse games start", word: "lacrosse game"))
+        #expect(!EmailCalendar.contains("husband", word: "band"))
+    }
+
     @Test func titlesDropTheDate() {
         #expect(EmailCalendar.title(of: "Sat Nov 7: Cross country regional championship, 8:30 AM start") == "Cross country regional championship")
         #expect(EmailCalendar.title(of: "Nov 25 to 27: No school, Thanksgiving break.") == "No school")
