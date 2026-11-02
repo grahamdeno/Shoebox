@@ -1,10 +1,10 @@
 import Foundation
 import UIKit
 
-/// Shoebox's relay (the Cloudflare Worker from Shoebox 1). Used for link previews and the email inbox.
+/// Shoebox's relay (its own Cloudflare Worker, relay/app). Used for link previews and the email inbox.
 /// It answers only requests from Shoebox, which it checks by the Origin header.
 enum Relay {
-    static let base = URL(string: "https://shoebox-api.tangomike.app")!
+    static let base = URL(string: "https://api.inmyshoebox.com")!
     static let origin = "https://inmyshoebox.com"
 
     static func request(_ path: String, query: [URLQueryItem] = [], method: String = "GET", body: Data? = nil, key: String? = nil) -> URLRequest {
