@@ -105,20 +105,26 @@ public enum EmailCalendar {
 
     static let schoolWide = ["no school", "early release", "school closed", "schools closed", "last day", "first day",
                              "winter break", "spring break", "thanksgiving break", "holiday break", "all students",
-                             "all grades", "school-wide", "schoolwide", "all families", "report card", "conferences"]
+                             "all grades", "school-wide", "schoolwide", "all families", "report card", "conferences",
+                             "all years", "whole school", "inset day", "half term", "bank holiday", "term starts", "term ends"]
     static let generalHeadings = ["all grades", "all students", "everyone", "school-wide", "schoolwide", "general",
-                                  "reminders", "important dates", "calendar", "dates to remember", "dear", "upcoming", "families"]
+                                  "reminders", "important dates", "calendar", "dates to remember", "dear", "upcoming", "families",
+                                  "all years", "all year groups", "whole school"]
 
     static func grades(in lower: String) -> [Int] {
         var out: [Int] = []
         // "4th grade", "grade 4", and the school years used in the UK, Australia and New Zealand ("Year 4", "Yr 4", up to 13).
-        // "this year 5 times" is not a school year.
-        let notAYear = "(?<!this )(?<!next )(?<!last )(?<!every )(?<!each )(?<!per )(?<!a )(?<!the )(?<!one )"
-        for pattern in [#"\b(\d{1,2})(?:st|nd|rd|th)\s*grade"#, #"\bgrade\s*(\d{1,2})\b"#,
-                        notAYear + #"\b(?:year|yr)\.?\s*(\d{1,2})\b"#] {
+        for (pattern, isYear) in [(#"\b(\d{1,2})(?:st|nd|rd|th)\s*grade"#, false), (#"\bgrade\s*(\d{1,2})\b"#, false),
+                                  (#"\b(?:year|yr)\.?\s*(\d{1,2})\b"#, true)] {
             guard let re = try? NSRegularExpression(pattern: pattern) else { continue }
             for m in re.matches(in: lower, range: NSRange(lower.startIndex..., in: lower)) {
-                if let r = Range(m.range(at: 1), in: lower), let n = Int(lower[r]), (1...13).contains(n) { out.append(n) }
+                guard let r = Range(m.range(at: 1), in: lower), let n = Int(lower[r]), (1...13).contains(n) else { continue }
+                // "this year 5 times" and "next year 8 of us" are not school years.
+                if isYear, let whole = Range(m.range, in: lower) {
+                    let before = lower[..<whole.lowerBound].split(whereSeparator: { !$0.isLetter }).last.map(String.init) ?? ""
+                    if ["this", "next", "last", "every", "each", "per", "a", "the", "one", "any", "that", "all"].contains(before) { continue }
+                }
+                out.append(n)
             }
         }
         return out
