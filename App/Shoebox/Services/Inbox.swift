@@ -174,7 +174,7 @@ enum Inbox {
         return added
     }
 
-    /// The first name in your address ("Graham-keep@..." gives "Graham"), so posts can say "you". Empty when unknown.
+    /// The first name in your address ("Sam-keep@..." gives "Sam"), so posts can say "you". Empty when unknown.
     private static var readerName: String {
         guard let local = Prefs.inboxAddress?.split(separator: "@").first else { return "" }
         let name = local.split(separator: "-").first.map { String($0.filter(\.isLetter)) } ?? ""

@@ -1,5 +1,5 @@
-# Shoebox 2.0, native. `xcodegen generate` makes Shoebox.xcodeproj (not checked in).
-# Same bundle ids as 1.0, so 2.0 is an update and can read 1.0's backups.
+# Shoebox 1.0 (App Store), native. `xcodegen generate` makes Shoebox.xcodeproj (not checked in).
+# Same bundle ids as the TestFlight builds (2.0.x), so 1.0.0 replaces them and reads their backups.
 name: Shoebox
 options:
   bundleIdPrefix: com.grahamdeno
@@ -12,7 +12,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: 7MHDTK68M2
     CODE_SIGN_STYLE: Automatic

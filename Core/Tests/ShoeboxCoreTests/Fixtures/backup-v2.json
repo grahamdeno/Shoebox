@@ -152,9 +152,9 @@
  ],
  "settings": {
   "edition.inboxKey": "k123",
-  "edition.inboxAddress": "graham.x@inbox.inmyshoebox.com",
+  "edition.inboxAddress": "sam.x@inbox.inmyshoebox.com",
   "edition.aiToken": "t",
   "edition.statsOff": "1",
-  "edition.school": "{\"on\": true, \"child\": \"Alex\", \"school\": \"Noble\", \"about\": \"\", \"words\": [], \"days\": [1, 5]}"
+  "edition.school": "{\"on\": true, \"child\": \"Alex\", \"school\": \"Lincoln\", \"about\": \"\", \"words\": [], \"days\": [1, 5]}"
  }
 }

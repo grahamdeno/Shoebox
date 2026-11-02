@@ -1,7 +1,7 @@
 import Foundation
 
 /// SPEC 7.6b: a newsletter or school notice with many dates becomes one post per date that matters to you.
-/// Which dates matter comes from a short line in Settings ("Gunner, 8th grade: cross country, band, trumpet").
+/// Which dates matter comes from a short line in Settings ("Sam, 4th grade: soccer, band").
 /// Everything here is plain rules, so the same email always makes the same posts and nothing is invented.
 public enum EmailCalendar {
     /// Fewer dated lines than this is an ordinary email: one post.
@@ -29,8 +29,8 @@ public enum EmailCalendar {
             self.words = words
         }
 
-        /// "Gunner, 8th grade: cross country, band (trumpet), soccer, lacrosse" gives grade 8 and
-        /// the words gunner, cross country, band, trumpet, soccer, lacrosse.
+        /// "Sam, 8th grade: cross country, band (trumpet), soccer, lacrosse" gives grade 8 and
+        /// the words sam, cross country, band, trumpet, soccer, lacrosse.
         public init(_ text: String) {
             let lower = text.lowercased()
             grades = Set(EmailCalendar.grades(in: lower))

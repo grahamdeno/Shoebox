@@ -86,7 +86,7 @@ enum Prefs {
         set { d.set(newValue, forKey: "inboxAddress") }
     }
 
-    /// Who your mail is about, in your own words ("Gunner, 8th grade: cross country, band, trumpet").
+    /// Who your mail is about, in your own words ("Sam, 4th grade: soccer, band").
     /// A newsletter with many dates makes posts only for the ones that match.
     static var mailFor: String {
         get { d.string(forKey: "mailFor") ?? "" }

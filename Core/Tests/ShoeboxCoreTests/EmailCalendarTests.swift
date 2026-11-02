@@ -22,9 +22,9 @@ struct EmailCalendarTests {
 
     @Test func keepsOnlyWhatIsAboutYourSon() throws {
         let items = EmailCalendar.items(in: try Self.newsletter(), received: Self.received, calendar: Self.cal)
-        let profile = EmailCalendar.Profile("Gunner, 8th grade: cross country, band (trumpet), soccer, lacrosse")
+        let profile = EmailCalendar.Profile("Sam, 8th grade: cross country, band (trumpet), soccer, lacrosse")
         #expect(profile.grades == [8])
-        #expect(profile.words.contains("cross country") && profile.words.contains("trumpet") && profile.words.contains("gunner"))
+        #expect(profile.words.contains("cross country") && profile.words.contains("trumpet") && profile.words.contains("sam"))
         let kept = EmailCalendar.relevant(items, to: profile)
         let titles = kept.map(\.title)
         #expect(kept.count == 16)
@@ -99,8 +99,8 @@ struct EmailCalendarTests {
         }
         #expect(words("Sat Nov 14: Cross country banquet, 5:00 PM, cafeteria. Potluck.") == "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck.")
         #expect(words("Nov 25 to 27: No school, Thanksgiving break.") == "Wednesday, Nov 25 to Friday, Nov 27 · Thanksgiving break.")
-        #expect(words("Tue Nov 24: 8th grade field trip to the Battleship North Carolina, buses leave at 8:15 AM.")
-                == "Tuesday, Nov 24 · To the Battleship North Carolina · Buses leave at 8:15 AM.")
+        #expect(words("Tue Nov 24: 8th grade field trip to the Science Museum, buses leave at 8:15 AM.")
+                == "Tuesday, Nov 24 · To the Science Museum · Buses leave at 8:15 AM.")
         #expect(words("Picture retake day is Wednesday, November 4. Forms were sent home.") == "Wednesday, Nov 4 · Forms were sent home.")
     }
 
@@ -111,10 +111,10 @@ struct EmailCalendarTests {
     }
 
     @Test func aLineThatStopsMidSentenceCarriesOnEvenInCapitals() {
-        let text = "ATHLETICS\n- Sat Nov 7: Cross country regional championship, 8:30 AM start, Hugh\nMacRae Park. Runners report by 7:30 AM.\n- Fri Nov 13: Field trip permission slips due for the Battleship North\nCarolina trip."
+        let text = "ATHLETICS\n- Sat Nov 7: Cross country regional championship, 8:30 AM start, Maple\nGrove Park. Runners report by 7:30 AM.\n- Fri Nov 13: Field trip permission slips due for the Science\nMuseum trip."
         let items = EmailCalendar.items(in: text, received: Self.received, calendar: Self.cal)
         #expect(items.count == 2)
-        #expect(items[0].line.hasSuffix("Hugh MacRae Park. Runners report by 7:30 AM."))
+        #expect(items[0].line.hasSuffix("Maple Grove Park. Runners report by 7:30 AM."))
         #expect(items[1].line.hasSuffix("North Carolina trip."))
     }
 
