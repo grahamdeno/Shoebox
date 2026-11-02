@@ -6,14 +6,14 @@ import Vision
 /// flat one is lifted, and the shading and glass behind the words get stronger as the picture gets brighter
 /// where the words sit. Worked out once per picture from a 16 by 16 copy.
 struct PhotoGrade: Equatable {
-    /// Onyx laid over the picture, 0 to 1.
+    /// The plum shade laid over the picture, 0 to 1.
     var wash: Double
     var lift: Double
     var saturation: Double
     var contrast: Double
     /// How dark the shading at the bottom gets, where the words sit.
     var scrim: Double
-    /// How much Onyx tints the glass behind the words.
+    /// How much the plum shade tints the glass behind the words.
     var glassTint: Double
 
     static let neutral = PhotoGrade(wash: 0.12, lift: 0, saturation: 1.04, contrast: 1.04, scrim: 0.55, glassTint: 0.28)
@@ -157,9 +157,9 @@ enum PhotoCache {
 }
 
 /// The picture behind a post, full bleed. It is graded (toned down when bright, lifted when dark or flat),
-/// washed with a little Onyx and Oceanic so every photo belongs to the same app, shaded so the status bar and the
+/// washed with a little plum shade and Plum so every photo belongs to the same app, shaded so the status bar and the
 /// glass stay readable, and framed so the subject sits in the clear space above the words.
-/// With no picture it is Onyx lit warm from the top corner.
+/// With no picture it is Plum Night lit warm from the top corner.
 struct PostPhoto: View {
     let id: UUID
     let data: Data?
@@ -181,24 +181,24 @@ struct PostPhoto: View {
                         }
                     }
                     .clipped()
-                Theme.onyx.opacity(entry.grade.wash)
-                Theme.oceanic.opacity(0.30).blendMode(.softLight)
+                Theme.shade.opacity(entry.grade.wash)
+                Theme.plum.opacity(0.30).blendMode(.softLight)
                 // Darker toward the edges, so the middle of the picture leads.
-                RadialGradient(colors: [.clear, .black.opacity(0.32)],
+                RadialGradient(colors: [.clear, Theme.shade.opacity(0.32)],
                                center: .center, startRadius: 160, endRadius: 560)
             } else {
-                // No picture: Onyx lit warm from the top corner, so the words have something to sit on.
+                // No picture: Plum Night lit warm from the top corner, so the words have something to sit on.
                 ZStack {
-                    Theme.onyx
+                    Theme.plumNight
                     RadialGradient(colors: [Theme.lid.opacity(0.30), Theme.lid.opacity(0.06), .clear],
                                    center: .topLeading, startRadius: 0, endRadius: 620)
                 }
             }
             let scrim = entry?.grade.scrim ?? PhotoGrade.none.scrim
-            LinearGradient(stops: [.init(color: .black.opacity(0.30), location: 0),
+            LinearGradient(stops: [.init(color: Theme.shade.opacity(0.30), location: 0),
                                    .init(color: .clear, location: 0.22),
                                    .init(color: .clear, location: 0.42),
-                                   .init(color: .black.opacity(scrim), location: 1)],
+                                   .init(color: Theme.shade.opacity(scrim), location: 1)],
                            startPoint: .top, endPoint: .bottom)
         }
         .task(id: "\(id.uuidString)-\(data?.count ?? 0)") {

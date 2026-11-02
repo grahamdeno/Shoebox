@@ -19,13 +19,13 @@ The old app lives in `grahamdeno/edition` and is frozen. Read it for rules and e
 ## Design rules (short form)
 
 - Today: one full-screen post at a time, Scales' moves. Flick up = Next (back when the why says, or tomorrow). Pull down = Put away (done, archived, never deleted). Tap = open. Undo 5 s.
-- A post is a full-bleed graded photo with its words on one Liquid Glass panel. No photo: Onyx lit warm with Nectarine.
+- A post is a full-bleed graded photo with its words on one Liquid Glass panel. No photo: Plum Night lit warm with Nectarine.
 - The Shoebox is the library of everything not done; Put away posts sit behind one word (Put away (n)) and are found by search. Edit is a word on the opened post; it saves on its own and on Keep. Delete is the last word of Edit, soft, with Undo.
-- Your Shoebox across the bottom: a glass box tinted from the ground (a lighter tint of Onyx in dark, a deeper step of Wheat in light) under a tall Nectarine lid that casts a shadow down onto it, like a shoebox top over the sides. It rattles (shake plus rustling haptic) on every flick up and drop in.
+- Your Shoebox across the bottom: a Plum glass box (the same in both modes and in the logo) under a tall Nectarine lid that casts a shadow down onto it, like a shoebox top over the sides. It rattles (shake plus rustling haptic) on every flick up and drop in.
 - Photos are framed on their subject (faces, then saliency, on the phone) and shaded by how bright they are where the words sit. Posts without one get a stock picture chosen on the phone with Apple Intelligence first; only generic words leave the phone, never names, and health, money and legal posts are never looked up.
 - Every save is read for the date it is about (event day and time, deadlines). Past events move to Kept on their own.
 - Writing screens (Keep something, share) are laid out like Scales: full screen on the ground, Cancel and Keep at the top, hairline fields. Nothing rides the keyboard.
-- Colors: Wheat `#FFF6E9` light ground, Onyx `#0A171D` dark ground and light text, Nectarine `#FFBD76` the lid and your reason, Oceanic `#003F47` only in the logo. Never Oceanic as a surface. Full table in `docs/SPEC.md` section 5.1.
+- Colors: Wheat `#FFF6E9` light ground and text on dark; Plum Night `#2F2036` dark ground; Plum Ink `#2A1C30` text on light; Plum `#56395F` the box (app and logo) and light accent; Nectarine `#FFBD76` the lid, your reason, dark accent. No black anywhere: shadows and scrims use the plum shade `#1A1020`. Onyx and Oceanic are retired. Full table in `docs/SPEC.md` section 5.1.
 - Settings: no paragraphs. One short list in a card one step off the ground, each row showing its answer; a row opens one screen with a title and its choices as words. Privacy and Delete everything are quiet words below.
 - SF Pro throughout. Actions are words, never pills or icon-only buttons. No neumorphism.
 - Iterate fast: batch changes, build once when Graham asks. Don't run screenshots or watch CI for every small change.

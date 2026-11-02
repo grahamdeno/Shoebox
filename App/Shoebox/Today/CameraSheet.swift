@@ -10,7 +10,7 @@ struct CameraSheet: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color.black.ignoresSafeArea()
+            Theme.shade.ignoresSafeArea()
             CameraPreview(session: camera.session).ignoresSafeArea()
 
             if camera.denied {
@@ -27,7 +27,7 @@ struct CameraSheet: View {
                     .underline()
                     .frame(minHeight: Metrics.touchMin)
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onPhoto)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -35,7 +35,7 @@ struct CameraSheet: View {
             if !camera.problem.isEmpty {
                 Text(camera.problem)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPhoto)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .frame(maxHeight: .infinity, alignment: .center)
@@ -58,7 +58,7 @@ struct CameraSheet: View {
                 }
             }
             .font(.system(size: 18, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.onPhoto)
             .buttonStyle(.plain)
             .padding(.horizontal, 22)
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))

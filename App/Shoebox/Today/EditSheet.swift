@@ -155,7 +155,7 @@ struct EditSheet: View {
                 DatePicker("", selection: $date, in: dateFloor..., displayedComponents: hasTime ? [.date, .hourAndMinute] : [.date])
                     .labelsHidden()
                     .datePickerStyle(.compact)
-                    .tint(Theme.formAction)
+                    .tint(Theme.accent)
                 HStack(spacing: 22) {
                     word(hasTime ? "No time" : "Add a time") { hasTime.toggle() }
                     word("Clear date") { hasDate = false; hasTime = false }

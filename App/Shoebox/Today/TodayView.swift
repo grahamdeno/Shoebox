@@ -253,8 +253,8 @@ struct TodayView: View {
                         .opacity(0.8)
                 }
             }
-            .foregroundStyle(onPhoto ? Color.white : Theme.ink)
-            .shadow(color: onPhoto ? .black.opacity(0.35) : .clear, radius: 6)
+            .foregroundStyle(onPhoto ? Theme.onPhoto : Theme.ink)
+            .shadow(color: onPhoto ? Theme.shade.opacity(0.35) : .clear, radius: 6)
             .padding(.horizontal, 24)
             .padding(.top, 4)
             .opacity(drag > 0 ? max(0.35, 1 - drag / Self.downDistance) : 1)
@@ -277,8 +277,8 @@ struct TodayView: View {
     private func hint(_ text: String, progress p: CGFloat) -> some View {
         Text(text)
             .font(.system(size: 15, weight: p >= 1 ? .bold : .medium))
-            .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.45), radius: 6)
+            .foregroundStyle(Theme.onPhoto)
+            .shadow(color: Theme.shade.opacity(0.45), radius: 6)
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
     }
 
@@ -292,7 +292,7 @@ struct TodayView: View {
             Spacer()
             ZStack(alignment: .top) {
                 // Smoked glass: the photo blurs through, so the box belongs to every post.
-                // Tinted from the ground, so the box matches the Shoebox sheet that pulls out of it.
+                // Plum glass in both modes, the same box as the logo.
                 Color.clear
                     .glassEffect(.regular.tint(Theme.boxGlass.opacity(0.88)), in: Rectangle())
                     .padding(.top, 16)
@@ -349,14 +349,14 @@ struct TodayView: View {
                 Rectangle().fill(Theme.lidLip).frame(height: 11)
             }
             .overlay(alignment: .top) {
-                Rectangle().fill(.white.opacity(0.5)).frame(height: 1.5)
+                Rectangle().fill(Theme.onPhoto.opacity(0.5)).frame(height: 1.5)
             }
             .clipShape(shape)
             .compositingGroup()
             .frame(height: 54)
             .padding(.horizontal, -8)
-            .shadow(color: .black.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
-            .shadow(color: ready ? Theme.lid.opacity(0.65) : .black.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
+            .shadow(color: Theme.shade.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
+            .shadow(color: ready ? Theme.lid.opacity(0.65) : Theme.shade.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
             .rotationEffect(.degrees(ready ? -4 : -0.6), anchor: .leading)
             .offset(y: ready ? -6 : 0)
             .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in

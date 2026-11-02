@@ -101,7 +101,7 @@ struct AddSheet: View {
                                    in: Self.tomorrow..., displayedComponents: .date)
                             .labelsHidden()
                             .datePickerStyle(.compact)
-                            .tint(Theme.formAction)
+                            .tint(Theme.accent)
                         Spacer()
                         Button("Clear") { startDate = nil }
                             .font(.system(size: 15)).foregroundStyle(Theme.formQuiet)

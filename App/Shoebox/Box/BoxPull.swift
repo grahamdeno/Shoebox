@@ -44,7 +44,7 @@ struct BoxDim: View {
     let pull: BoxPull
 
     var body: some View {
-        Color.black.opacity(0.4 * pull.progress).ignoresSafeArea().allowsHitTesting(false)
+        Theme.shade.opacity(0.4 * pull.progress).ignoresSafeArea().allowsHitTesting(false)
     }
 }
 
@@ -71,7 +71,7 @@ enum Thumbs {
     }
 }
 
-/// The small tile at the left of a row: the post's own picture, or the warm Onyx tile when it has none.
+/// The small tile at the left of a row: the post's own picture, or a card-colored tile lit with Nectarine when it has none.
 struct RowThumb: View {
     let save: Save
     @State private var image: UIImage?
