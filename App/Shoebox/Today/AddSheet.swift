@@ -36,7 +36,7 @@ struct AddSheet: View {
             if let note = readNote {
                 Text(note)
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.nectarine)
+                    .foregroundStyle(Theme.sunflower)
             }
 
             if let pickedFile {

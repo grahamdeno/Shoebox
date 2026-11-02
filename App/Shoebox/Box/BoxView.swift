@@ -224,7 +224,7 @@ struct BoxView: View {
                 Button(role: .destructive) {
                     perform(on: s) { actions.letGo($0, now: now); return "Deleted" }
                 } label: {
-                    Text("Delete").foregroundStyle(Theme.wheat)
+                    Text("Delete").foregroundStyle(Theme.bone)
                 }
                 .tint(Theme.brick)
             }

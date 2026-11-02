@@ -1,10 +1,9 @@
 import SwiftUI
 import UIKit
 
-// Colors and sizes from design/tokens.json. Five colors, each with one job, and no black anywhere:
-// Wheat is the light ground and the text on dark; Plum Night is the dark ground; Plum Ink is the text on light;
-// Plum is the box, in the app and the logo; Nectarine is the lid and your reason.
-// Shadows and scrims are a deep plum shade, never black, so even the dark parts of a photo stay warm.
+// Colors and sizes from design/tokens.json. Plum is the dark ground and the light-mode box; Bone is the text on dark,
+// the dark-mode box and the words on photos; Sunflower is the lid and your reason on dark; Plum Ink is the text on light.
+// Pistachio is the light ground and the family of tints around it. No black anywhere: shadows and scrims are a deep plum.
 extension UIColor {
     convenience init(hex: UInt32) {
         self.init(
@@ -24,66 +23,70 @@ private func adaptive(light: UInt32, dark: UInt32) -> Color {
 
 enum Theme {
     // The palette, by name.
-    static let wheat = Color(UIColor(hex: 0xFFF6E9))
-    static let plumNight = Color(UIColor(hex: 0x2F2036))
-    static let plumInk = Color(UIColor(hex: 0x2A1C30))
-    static let plum = Color(UIColor(hex: 0x56395F))
-    static let nectarine = Color(UIColor(hex: 0xFFBD76))
-    /// Brick: the one red, only for Delete. Wheat words on it read at about 5.7 to 1.
+    static let plum = Color(UIColor(hex: 0x3B2240))
+    static let plumDeep = Color(UIColor(hex: 0x23132A))
+    static let bone = Color(UIColor(hex: 0xF1E9D8))
+    static let plumInk = Color(UIColor(hex: 0x2A1E2E))
+    static let sunflower = Color(UIColor(hex: 0xF9C93A))
+    static let pistachio = Color(UIColor(hex: 0xF6F3E8))
+    /// Brick: the one red, only for Delete. Bone words on it read at about 5.7 to 1.
     static let brick = Color(UIColor(hex: 0xA8402F))
     /// The deepest plum: shadows, scrims over photos and glass tints where words sit on a picture.
     static let shade = Color(UIColor(hex: 0x1A1020))
 
-    static let ground = adaptive(light: 0xFFF6E9, dark: 0x2F2036)
-    static let sheet = adaptive(light: 0xFFF9F0, dark: 0x36263E)
-    static let ink = adaptive(light: 0x2A1C30, dark: 0xFFF6E9)
-    static let quiet = adaptive(light: 0x6E6170, dark: 0xBBAEBF)
-    static let line = adaptive(light: 0xEADCCB, dark: 0x45344D)
-    /// A group's card: one step off the ground. Deeper Wheat in light, lighter Plum Night in dark. No outline.
-    static let card = adaptive(light: 0xF3E5D3, dark: 0x3B2A44)
-    /// System controls (date pickers, links, selections): Plum on Wheat, Nectarine on Plum Night.
-    static let accent = adaptive(light: 0x56395F, dark: 0xFFBD76)
-    /// Words that sit on a photo: Wheat, so they stay warm against the picture.
-    static let onPhoto = wheat
+    static let ground = adaptive(light: 0xF6F3E8, dark: 0x3B2240)
+    static let sheet = adaptive(light: 0xFBF9F1, dark: 0x442B4B)
+    static let ink = adaptive(light: 0x2A1E2E, dark: 0xF1E9D8)
+    static let quiet = adaptive(light: 0x6A6070, dark: 0xBBA7BE)
+    static let line = adaptive(light: 0xDEDAC9, dark: 0x54405A)
+    /// A group's card: one step off the ground. A deeper Pistachio in light, a lighter Plum in dark. No outline.
+    static let card = adaptive(light: 0xE8ECDA, dark: 0x4A3352)
+    /// System controls (date pickers, links, selections): Plum on Pistachio, Sunflower on Plum.
+    static let accent = adaptive(light: 0x3B2240, dark: 0xF9C93A)
+    /// Words that sit on a photo: Bone, so they stay warm against the picture.
+    static let onPhoto = bone
+    /// The ground of a post with no picture, and of the writing sheets: Plum in both modes, as posts are.
+    static let plumNight = plum
 
     // Light and shade. Light falls from the top left; the shade is plum, never black.
     static let lightSide = Color(UIColor { t in
-        t.userInterfaceStyle == .dark ? UIColor(hex: 0x45334D).withAlphaComponent(0.9) : UIColor.white.withAlphaComponent(0.9)
+        t.userInterfaceStyle == .dark ? UIColor(hex: 0x543A5C).withAlphaComponent(0.9) : UIColor.white.withAlphaComponent(0.9)
     })
     static let shadeSide = Color(UIColor { t in
-        t.userInterfaceStyle == .dark ? UIColor(hex: 0x1A1020).withAlphaComponent(0.75) : UIColor(hex: 0x7A5A36).withAlphaComponent(0.22)
+        t.userInterfaceStyle == .dark ? UIColor(hex: 0x1A1020).withAlphaComponent(0.75) : UIColor(hex: 0x3B2240).withAlphaComponent(0.20)
     })
 
-    // The user's own words: a pale Nectarine, 28% Nectarine in dark.
+    // The user's own words: a Pistachio tint in light, 28% Pistachio in dark.
     static let noteFill = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 1, green: 189 / 255, blue: 118 / 255, alpha: 0.28)
-            : UIColor(hex: 0xFFD7AA)
+            ? UIColor(hex: 0xB9C9A3).withAlphaComponent(0.28)
+            : UIColor(hex: 0xE3EBD7)
     })
-    static let noteInk = adaptive(light: 0x2A1C30, dark: 0xFFE2BD)
+    static let noteInk = adaptive(light: 0x2A1E2E, dark: 0xE3EBD7)
 
-    // The lid. Same Nectarine in both modes.
-    static let lid = nectarine
+    // The lid. Same Sunflower in both modes.
+    static let lid = sunflower
     /// The lid's folded-down edge, a step deeper than the top.
-    static let lidLip = Color(UIColor(hex: 0xE9A35C))
+    static let lidLip = Color(UIColor(hex: 0xD4A21E))
     static let lidInk = plumInk
 
-    // Your Shoebox, the box across the bottom of Today: Plum in both modes, like the logo, with Wheat words.
-    static let boxGlass = plum
-    static let boxText = wheat
+    // Your Shoebox, the box across the bottom of Today: Plum with Bone words in light, Bone with Plum words in dark, like the logo.
+    static let boxGlass = adaptive(light: 0x3B2240, dark: 0xF1E9D8)
+    static let boxText = adaptive(light: 0xF1E9D8, dark: 0x3B2240)
 
-    // The logo. The box is Plum; on the dark ground it lifts one step so it still shows at icon size.
-    static let logoBox = adaptive(light: 0x56395F, dark: 0x6B4A76)
-    static let logoLid = nectarine
-    static let logoCards = adaptive(light: 0x6E6170, dark: 0xC9BCCB)
+    // The logo. The box is Plum on the light tile and Bone on the Plum tile, so it shows at icon size.
+    static let logoBox = adaptive(light: 0x3B2240, dark: 0xF1E9D8)
+    static let logoLid = sunflower
+    static let logoTile = adaptive(light: 0xF1E9D8, dark: 0x3B2240)
+    static let logoCards = adaptive(light: 0xA798AD, dark: 0x8E7A92)
 
     // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
     // hairline fields, words for actions. Laid out like Scales.
     static let formGround = ground
     static let formInk = ink
     static let formQuiet = quiet
-    static let formLine = adaptive(light: 0xDCCAB8, dark: 0x4A3852)
-    static let formAction = adaptive(light: 0x2A1C30, dark: 0xFFBD76)
+    static let formLine = adaptive(light: 0xCFCBB6, dark: 0x5E4965)
+    static let formAction = adaptive(light: 0x2A1E2E, dark: 0xF9C93A)
 }
 
 enum Metrics {

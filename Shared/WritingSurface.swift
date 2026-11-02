@@ -2,11 +2,11 @@ import SwiftUI
 import UIKit
 
 // The writing surface: every screen where you write is the post you are making.
-// The post's picture (or Plum Night lit warm) is the ground, Cancel and Keep are glass words at the top,
+// The post's picture (or Plum lit warm) is the ground, Cancel and Keep are glass words at the top,
 // and one Liquid Glass panel holds the words. The panel rides the keyboard. SPEC 2.5.
 
 /// The ground behind a writing screen when there is no post to borrow it from: a picture graded plain
-/// and shaded so the glass reads, or Plum Night lit warm with Nectarine.
+/// and shaded so the glass reads, or Plum lit warm with Sunflower.
 struct SurfaceGround: View {
     var picture: UIImage?
 
@@ -59,7 +59,7 @@ struct SurfaceBar: View {
                 .buttonStyle(SurfacePress())
             Spacer()
             Button(action: onTrailing) {
-                word(trailing, color: trailingEnabled ? Theme.nectarine : Theme.onPhoto.opacity(0.45), weight: .semibold)
+                word(trailing, color: trailingEnabled ? Theme.sunflower : Theme.onPhoto.opacity(0.45), weight: .semibold)
             }
             .buttonStyle(SurfacePress())
             .disabled(!trailingEnabled)
@@ -124,15 +124,15 @@ struct WritingSurface<Ground: View, Panel: View>: View {
         }
         // Posts are the same in light and dark, so is the surface.
         .environment(\.colorScheme, .dark)
-        .tint(Theme.nectarine)
+        .tint(Theme.sunflower)
     }
 }
 
 /// A quiet label and the field beside it, on one line: "Why  Sign up for a dish first".
 struct SurfaceLine<Field: View>: View {
     var label: String
-    /// Your why is Nectarine; other fields are Wheat.
-    var tint: Color = Theme.nectarine
+    /// Your why is Sunflower; other fields are Bone.
+    var tint: Color = Theme.sunflower
     @ViewBuilder var field: Field
 
     var body: some View {
@@ -143,7 +143,7 @@ struct SurfaceLine<Field: View>: View {
             field
                 .font(.system(size: 17))
                 .foregroundStyle(tint)
-                .tint(Theme.nectarine)
+                .tint(Theme.sunflower)
         }
         .padding(.top, 12)
         .overlay(alignment: .top) { Rectangle().fill(Theme.onPhoto.opacity(0.22)).frame(height: 0.5) }

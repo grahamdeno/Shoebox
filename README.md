@@ -9,6 +9,6 @@ Native iPhone app (SwiftUI, iOS 26). Version 1.0 on the App Store as "Shoebox: Y
 - `docs/SPEC.md`: the design and behavior; section 8 holds the release decisions. Wins over everything else.
 - `docs/PLAN.md`: the original plan and architecture. Parts describe earlier designs.
 - `docs/audit/`: the release-readiness audit, backlog and checklist.
-- `design/tokens.json`: colors and type (Wheat, Plum Night, Plum, Nectarine).
+- `design/tokens.json`: colors and type (Pistachio, Plum, Bone, Sunflower).
 - `relay/`: the Cloudflare Worker for link previews, stock pictures and Shoebox email.
 - `docs/design/`: earlier design rounds, kept as history.

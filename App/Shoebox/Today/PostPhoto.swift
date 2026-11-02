@@ -159,7 +159,7 @@ enum PhotoCache {
 /// The picture behind a post, full bleed. It is graded (toned down when bright, lifted when dark or flat),
 /// washed with a little plum shade and Plum so every photo belongs to the same app, shaded so the status bar and the
 /// glass stay readable, and framed so the subject sits in the clear space above the words.
-/// With no picture it is Plum Night lit warm from the top corner.
+/// With no picture it is Plum lit warm from the top corner.
 struct PostPhoto: View {
     let id: UUID
     let data: Data?
@@ -187,7 +187,7 @@ struct PostPhoto: View {
                 RadialGradient(colors: [.clear, Theme.shade.opacity(0.32)],
                                center: .center, startRadius: 160, endRadius: 560)
             } else {
-                // No picture: Plum Night lit warm from the top corner, so the words have something to sit on.
+                // No picture: Plum lit warm from the top corner, so the words have something to sit on.
                 ZStack {
                     Theme.plumNight
                     RadialGradient(colors: [Theme.lid.opacity(0.30), Theme.lid.opacity(0.06), .clear],

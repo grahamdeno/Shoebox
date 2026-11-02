@@ -68,7 +68,7 @@ struct EditSheet: View {
         } panel: {
             Text(status)
                 .font(.system(size: 13, weight: status == "Saved" ? .semibold : .regular))
-                .foregroundStyle(status == "Saved" ? Theme.nectarine : Theme.onPhoto.opacity(0.6))
+                .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.6))
 
             TextField("", text: $title,
                       prompt: Text("Title").foregroundStyle(Theme.onPhoto.opacity(0.45)), axis: .vertical)
@@ -127,7 +127,7 @@ struct EditSheet: View {
                 DatePicker("", selection: $date, in: dateFloor..., displayedComponents: hasTime ? [.date, .hourAndMinute] : [.date])
                     .labelsHidden()
                     .datePickerStyle(.compact)
-                    .tint(Theme.nectarine)
+                    .tint(Theme.sunflower)
                 HStack(spacing: 22) {
                     word(hasTime ? "No time" : "Add a time") { hasTime.toggle() }
                     word("Clear date") { hasDate = false; hasTime = false }

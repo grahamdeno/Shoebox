@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// One post, full screen: its picture fills the screen and the words sit on Liquid Glass near the bottom.
-/// A post with no picture gets Plum Night lit warm from the top corner so the glass still has something to sit on.
+/// A post with no picture gets Plum lit warm from the top corner so the glass still has something to sit on.
 struct PostCard: View {
     let save: Save
     let now: Date
