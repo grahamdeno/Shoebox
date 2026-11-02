@@ -5,7 +5,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@hpke/core": "^1.7.0",
-    "@hpke/dhkem-x25519": "^1.6.0"
+    "@hpke/core": "1.9.0",
+    "@hpke/dhkem-x25519": "1.8.0"
   }
 }
