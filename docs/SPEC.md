@@ -254,7 +254,7 @@ From the release-readiness audit (`docs/audit/`) and Graham's answers.
 | Who it's for | Busy parents and working adults, about 28 to 50 |
 | Version | 1.0 on the existing record (`MARKETING_VERSION` 1.0.0). Never create a new record or remove the old one |
 | Price | Free download. **Shoebox Plus**, a one-time $9.99 lifetime unlock with Restore Purchases, adds the email address (forwarding, newsletter dates, pictures for email posts). The relay mints an address only for a verified purchase |
-| Language | US English for v1.0. Spanish (screens and reading Spanish dates, reasons and newsletters) together in v1.1 |
+| Language | English for v1.0. v1.1 adds Spanish for Mexico and French for Canada, each as screens plus reading that language's dates, reasons and newsletters |
 | First save | Shows on Today the day it is kept (section 3, rules 1 and 6) |
 | Empty Today | One welcome post that teaches the moves (section 2.6) |
 | Daily limit | Default 10; new and soon-dated posts always join (section 3, rule 1) |
@@ -263,7 +263,7 @@ From the release-readiness audit (`docs/audit/`) and Graham's answers.
 | AI | On the phone only. No cloud AI and no relay AI fallback in v1.0 |
 | Relay | The new app gets its own Worker with only the routes it uses; Shoebox 1's routes stay on the old Worker until build 36 is gone. Workers Paid on the day a public beta link goes out |
 | Seller and policy | Graham DeNoyer as an individual. Support mail reaches Graham's Gmail under Support/Shoebox |
-| Storefronts | All except the 27 EU countries in v1.0 (the EU trader rule would publish a home address) |
+| Storefronts | v1.0: United States, Canada, Mexico, United Kingdom, Australia, New Zealand. No EU (the trader rule would publish a home address). Future countries are not added automatically |
 | Repo | Stays public while CI needs free Mac minutes; family names come out of tests and fixtures now; private later |
 | Small Business Program | Submitted November 2 |
 

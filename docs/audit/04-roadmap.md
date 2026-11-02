@@ -36,7 +36,7 @@ About 25 items. PR #28 is merged; one beta build at the end (your one-big-releas
 | Activation | A-1 first save on Today, A-10 daily limit 10 with new posts joining, A-2 welcome post, A-3 confirmation, A-4 resting hint, A-5 notification timing, A-6 email later, A-7 past-date notice, A-8 Settings from Today |
 | Accessibility | X-1 Dynamic Type (the largest item), X-2 to X-7 |
 | Data safety | D-5 Keychain, D-6 Delete everything, D-7 backups off main, D-8 restore on a new phone, D-9 iCloud coordination |
-| Content | C-1 guard, C-3 dates, C-4 card numbers, C-5 rewrite fallbacks, C-6 ordering and delimiters, C-7 newsletters, C-8 moved events, C-9 one rollover rule, C-10 locale decision, C-11 small fixes |
+| Content | C-14 day-first dates and Year levels (CA, UK, AU, NZ are on sale), C-1 guard, C-3 dates, C-4 card numbers, C-5 rewrite fallbacks, C-6 ordering and delimiters, C-7 newsletters, C-8 moved events, C-9 one rollover rule, C-10 locale decision, C-11 small fixes |
 | Relay | R-6 KV efficiency, R-7 parser guard and logs, R-8 `/preview`, R-9 dedup, R-10 device limits, R-11 7-day retention, R-12 pictures via relay |
 | Platform | F-1 background refresh, F-5 notification actions |
 | Money | M-1 Shoebox Plus unlock, M-2 Paid Apps Agreement (Graham) |
@@ -48,7 +48,7 @@ About 47 items.
 
 ## Phase 3: post-launch
 
-1. C-12 Spanish (v1.1).
+1. **v1.1 languages:** C-12 Spanish for Mexico (and Spanish speakers in the US), C-13 French for Canada. Both are screens plus reading dates, reasons and newsletters in that language.
 2. F-2 Home and Lock Screen widget.
 3. F-3 App Intents: Keep, Find, Bring back; Action Button.
 4. R-13 mail sealed to a device key.
