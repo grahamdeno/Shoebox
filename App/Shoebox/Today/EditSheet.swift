@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 import UIKit
 
-/// Change a post. Laid out like the Keep screen. Everything saves on its own a moment after you stop typing
+/// Change a post, on the post itself (the Keep screen's surface). Everything saves on its own a moment after you stop typing
 /// and again the moment you leave, so nothing is lost. Keep is the sure way out: it saves, taps a haptic and
 /// the post shows "Saved". Delete is the last word, at the bottom left, within the thumb's reach.
 struct EditSheet: View {
@@ -63,78 +63,50 @@ struct EditSheet: View {
     private var editsWords: Bool { save.kind == .note || save.kind == .quote }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            FormTopBar(leading: "Close", onLeading: { dismiss() }, trailing: "Keep", onTrailing: keep)
-                .padding(.top, 14)
-
-            Text("Edit")
-                .font(.system(size: 34, weight: .bold))
-                .tracking(-0.6)
-                .foregroundStyle(Theme.formInk)
-                .padding(.top, 28)
-
+        WritingSurface(leading: "Close", canKeep: true, onLeading: { dismiss() }, onTrailing: keep) {
+            PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: 330)
+        } panel: {
             Text(status)
-                .font(.system(size: 15, weight: status == "Saved" ? .semibold : .regular))
-                .foregroundStyle(status == "Saved" ? Theme.formAction : Theme.formQuiet)
-                .padding(.top, 6)
+                .font(.system(size: 13, weight: status == "Saved" ? .semibold : .regular))
+                .foregroundStyle(status == "Saved" ? Theme.nectarine : Theme.onPhoto.opacity(0.6))
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    LineField(label: "Title") {
-                        TextField("", text: $title, prompt: formPrompt("Title"), axis: .vertical)
-                            .lineLimit(1...3)
-                    }
-                    .padding(.top, 28)
+            TextField("", text: $title,
+                      prompt: Text("Title").foregroundStyle(Theme.onPhoto.opacity(0.45)), axis: .vertical)
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(Theme.onPhoto)
+                .lineLimit(1...3)
 
-                    if editsWords {
-                        LineField(label: "Words") {
-                            TextField("", text: $words, prompt: formPrompt("What you wrote"), axis: .vertical)
-                                .lineLimit(1...8)
-                        }
-                        .padding(.top, 26)
-                    }
-
-                    LineField(label: "Why you kept it") {
-                        TextField("", text: $note, prompt: formPrompt("Optional. Before the trip"))
-                    }
-                    .padding(.top, 26)
-
-                    LineField(label: "The date it is about") {
-                        dateRow
-                    }
-                    .padding(.top, 26)
-                    Text("It comes back 5 days before and stays until you put it away.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.formQuiet)
-                        .padding(.top, 8)
-
-                    Color.clear.frame(height: 90)
+            if editsWords {
+                SurfaceLine(label: "Words", tint: Theme.onPhoto) {
+                    TextField("", text: $words,
+                              prompt: Text("What you wrote").foregroundStyle(Theme.onPhoto.opacity(0.4)), axis: .vertical)
+                        .lineLimit(1...6)
                 }
             }
-            .scrollIndicators(.hidden)
-            .scrollDismissesKeyboard(.interactively)
-        }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.formGround.ignoresSafeArea())
-        // The scroll stops at the keyboard so every field can be reached; Delete stays put behind it.
-        .overlay(alignment: .bottomLeading) {
-            // Within the thumb's reach, away from Keep at the top.
-            Button(action: delete) {
-                Text("Delete")
-                    .font(.system(size: 17, weight: .semibold))
-                    .underline()
-                    .foregroundStyle(Theme.formQuiet)
-                    .padding(.horizontal, 24)
-                    .frame(minHeight: 56, alignment: .leading)
-                    .contentShape(Rectangle())
+
+            SurfaceLine(label: "Why") {
+                TextField("", text: $note,
+                          prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)))
             }
-            .buttonStyle(.plain)
-            .padding(.bottom, 6)
-            .ignoresSafeArea(.keyboard)
+
+            SurfaceLine(label: "Date", tint: Theme.onPhoto) {
+                dateRow
+            }
+
+            HStack {
+                // Within the thumb's reach, away from Keep at the top.
+                Button(action: delete) { SurfaceWord(text: "Delete", quiet: true) }
+                    .buttonStyle(.plain)
+                Spacer()
+                if hasDate {
+                    Text("Back 5 days before, stays until put away")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.onPhoto.opacity(0.6))
+                }
+            }
         }
         .presentationDetents([.large])
-        .presentationBackground(Theme.formGround)
+        .presentationBackground(Theme.plumNight)
         .onChange(of: title) { _, _ in changed() }
         .onChange(of: note) { _, _ in changed() }
         .onChange(of: words) { _, _ in changed() }
@@ -150,12 +122,12 @@ struct EditSheet: View {
     }
 
     private var dateRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 2) {
             if hasDate {
                 DatePicker("", selection: $date, in: dateFloor..., displayedComponents: hasTime ? [.date, .hourAndMinute] : [.date])
                     .labelsHidden()
                     .datePickerStyle(.compact)
-                    .tint(Theme.accent)
+                    .tint(Theme.nectarine)
                 HStack(spacing: 22) {
                     word(hasTime ? "No time" : "Add a time") { hasTime.toggle() }
                     word("Clear date") { hasDate = false; hasTime = false }
@@ -164,19 +136,11 @@ struct EditSheet: View {
                 word("Add a date") { hasDate = true }
             }
         }
-        .font(.system(size: 17))
     }
 
     private func word(_ text: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(text)
-                .font(.system(size: 16, weight: .semibold))
-                .underline()
-                .foregroundStyle(Theme.formInk)
-                .frame(minHeight: Metrics.touchMin)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        Button(action: action) { SurfaceWord(text: text) }
+            .buttonStyle(.plain)
     }
 
     // MARK: Saving
