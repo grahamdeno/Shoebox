@@ -106,7 +106,7 @@ Reached from Today and the Box. No paragraphs. One short list in a card one step
 - **Email:** the address and Copy, or a first name and "Get address".
 - **Backups:** Last copy; Save a copy now; Bring one back (takes any Shoebox 1 or 2 file).
 - **How to use Shoebox:** The three moves; Share, then Shoebox.
-- Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first).
+- Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first; it also asks the relay to delete your email address and waiting mail, `POST /me/delete`).
 - The version and build number.
 
 ### 2.9 The notification

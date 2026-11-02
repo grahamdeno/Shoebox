@@ -323,7 +323,7 @@ struct SettingsView: View {
                 choice("Delete all \(all.count)", false) { deleteEverything() }
                 choice("Keep them", true) { page = nil }
             }
-            line("A copy is saved first.")
+            line("A copy is saved first. Your Shoebox email address is deleted too.")
             if !importNote.isEmpty { line(importNote) }
         }
     }
@@ -347,6 +347,15 @@ struct SettingsView: View {
         for s in all { context.delete(s) }
         try? context.save()
         Prefs.pickIds = []
+        // Ask the server to delete your email address and any mail waiting there. It runs on its own;
+        // if the phone is offline the mail still expires there within 30 days.
+        if let key = Prefs.inboxKey {
+            Task.detached {
+                _ = try? await URLSession.shared.data(for: Relay.request("me/delete", method: "POST", body: Data("{}".utf8), key: key))
+            }
+        }
+        Prefs.inboxKey = nil
+        Prefs.inboxAddress = nil
         dismiss()
     }
 
