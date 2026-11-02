@@ -103,7 +103,7 @@ struct EditSheet: View {
                         dateRow
                     }
                     .padding(.top, 26)
-                    Text("It comes back 5 days before, 1 day before and on the day.")
+                    Text("It comes back 5 days before and stays until you put it away.")
                         .font(.system(size: 14))
                         .foregroundStyle(Theme.formQuiet)
                         .padding(.top, 8)

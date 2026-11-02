@@ -21,6 +21,19 @@ public enum EmailRules {
         return hits >= 3 ? .promotional : .other
     }
 
+    /// Email text as plain lines: Windows line ends made plain (Swift reads "\r\n" as one character, so a
+    /// split on "\n" missed every line), "format=flowed" soft breaks (a line ending in a space) joined back up,
+    /// and the common HTML entities decoded.
+    public static func unwrap(_ text: String) -> String {
+        var s = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        s = s.replacingOccurrences(of: #" \n(?!\n)"#, with: " ", options: .regularExpression)
+        for (e, v) in ["&nbsp;": " ", "&amp;": "&", "&quot;": "\"", "&#39;": "'", "&rsquo;": "\u{2019}", "&lsquo;": "\u{2018}",
+                       "&ldquo;": "\u{201C}", "&rdquo;": "\u{201D}", "&lt;": "<", "&gt;": ">", "&ndash;": "-", "&mdash;": "-", "&#160;": " "] {
+            s = s.replacingOccurrences(of: e, with: v)
+        }
+        return s
+    }
+
     /// Sign-in codes and account notices: useful for minutes, never worth a post.
     public static func isAccountNotice(subject: String, text: String) -> Bool {
         let t = (subject + "\n" + text.prefix(1_500)).lowercased()

@@ -70,6 +70,9 @@ enum Inbox {
         var done: [String] = []
         var added = 0
         let now = Date()
+        // Dated posts already made from email (and in this collection), so a newsletter sent again each week
+        // does not make the same event twice.
+        var known = existing.filter { $0.deletedAt == nil && $0.kind == .email && $0.eventDate != nil }
         for m in r.mails ?? [] {
             let subject = EmailRules.cleanSubject(m.subject ?? "")
             let received = m.at.map { Date(timeIntervalSince1970: $0 / 1000) } ?? now
@@ -87,8 +90,8 @@ enum Inbox {
             if reason.isEmpty, EmailRules.isAccountNotice(subject: subject, text: m.text ?? "") {
                 done.append(m.id); continue
             }
-            let body = EmailRules.stripAds(rawBody)
-            var lines = body.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            let body = EmailRules.stripAds(EmailRules.unwrap(rawBody))
+            var lines = body.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && !$0.hasPrefix("From:") && !$0.hasPrefix("Date:") && !$0.hasPrefix("Subject:") && !$0.hasPrefix("To:") && !$0.contains("Forwarded message") }
             let link = m.links?.first(where: { !$0.lowercased().contains("unsubscribe") }).map(Detection.unwrapLink)
 
@@ -102,7 +105,7 @@ enum Inbox {
             // An email that is only a link ("have a look at this"): read the page, so the post is about it.
             let thin = lines.filter { !$0.hasPrefix("http") }.joined(separator: " ").count < 120
             if thin, pdf == nil, let link, let url = URL(string: link), let text = await Relay.preview(url)?.text, !text.isEmpty {
-                lines += text.components(separatedBy: .newlines).prefix(400)
+                lines += EmailRules.unwrap(text).components(separatedBy: "\n").prefix(400)
             }
 
             // Many dates (a school newsletter, a season schedule): one post per date that is about your people.
@@ -111,14 +114,20 @@ enum Inbox {
                 let today = Calendar.current.startOfDay(for: now)
                 let keep = EmailCalendar.relevant(items, to: EmailCalendar.Profile(Prefs.mailFor)).filter { $0.day >= today }
                 for item in keep {
-                    let s = Save(title: String(item.title.prefix(140)),
-                                 snippet: String(item.line.prefix(240)),
-                                 body: item.line + (subject.isEmpty ? "" : "\n\nFrom \(subject)"),
-                                 note: reason, origin: "via your Shoebox email", kind: .email, createdAt: received)
+                    let words = EmailCalendar.details(of: item, received: received, calendar: .current)
+                    if let old = known.first(where: { Calendar.current.isDate($0.eventDate ?? .distantPast, inSameDayAs: item.day)
+                        && EmailCalendar.sameEvent($0.title, item.title) }) {
+                        refresh(old, with: words, now: now)
+                        continue
+                    }
+                    // Where it came from goes in the byline ("You, today, from Roosevelt newsletter"), not the words.
+                    let s = Save(title: String(item.title.prefix(140)), snippet: String(words.prefix(240)), body: words,
+                                 note: reason, origin: EmailCalendar.sourceName(subject), kind: .email, createdAt: received)
                     s.urlString = (item.link?.absoluteString).map(Detection.unwrapLink)
                     stamp(s, mail: m, subject: subject, received: received, now: now)
                     schedule(s, on: item.day, now: now)
                     context.insert(s)
+                    known.append(s)
                     added += 1
                 }
                 done.append(m.id)
@@ -142,7 +151,7 @@ enum Inbox {
                 // Only a link: let the page's own picture come in later, as for a shared link.
                 s.enrichedAt = nil
             }
-            // A date in the email: it comes back 5 days before, the day before and on the day.
+            // A date in the email: seen now, then back 5 days before and every day until put away.
             let days = EmailRules.days(in: subject + "\n" + lines.joined(separator: "\n"), received: received, calendar: .current).filter { $0 > now }.sorted()
             if let day = days.first {
                 schedule(s, on: day, now: now)
@@ -168,15 +177,28 @@ enum Inbox {
         s.emailReceivedAt = received
     }
 
-    /// Comes back 5 days before, the day before and on the day; on screen now if the day is here.
+    /// Seen once when it arrives; flicked up, it waits for 5 days before, then is back every day until put away.
     private static func schedule(_ s: Save, on day: Date, now: Date) {
         s.eventDate = day
-        if let first = SaveActions().reminders(for: day).first(where: { $0 > now }) {
-            s.status = .away
-            s.returnDate = first
-        } else {
+        s.status = .today
+        s.returnDate = nil
+    }
+
+    /// The same event sent again. New details replace the old words quietly; a new time shows it once more,
+    /// even if it was put away, with what changed on top. Otherwise a put away post stays put away.
+    private static func refresh(_ s: Save, with words: String, now: Date) {
+        let old = s.body.components(separatedBy: "\n").filter { !$0.hasPrefix("Changed:") && !$0.isEmpty }.joined(separator: " ")
+        guard old != words else { return }
+        if let change = EmailCalendar.timeChange(from: old, to: words) {
+            s.body = "Changed: \(change).\n" + words
             s.status = .today
+            s.returnDate = nil
+            s.seenOn = nil
+        } else {
+            s.body = words
         }
+        s.snippet = String(words.prefix(240))
+        s.updatedAt = now
     }
 
     /// One attachment of a waiting mail, fetched before the mail is acknowledged (which deletes it).

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import UIKit
 #if canImport(FoundationModels)
 import FoundationModels
@@ -36,9 +37,15 @@ enum StockPhoto {
         let words = await phrase(for: s)
         if Task.isCancelled { release(); return }
         guard let phrase = words else { return }
+        // A dated post from email (a newsletter date) gets a picture of its own subject or none: the words must
+        // name something in its title ("trumpet", "lacrosse"), not a stand-in like a mountain or a classroom.
+        if s.kind == .email, s.eventDate != nil, !sharesWord(phrase, with: s.title) { return }
         let found = await search(phrase)
         if Task.isCancelled { release(); return }
-        guard let candidates = found, !candidates.isEmpty else { return }
+        // Never the same picture twice: one already on another post is skipped.
+        let used = Set(((try? s.modelContext?.fetch(FetchDescriptor<Save>())) ?? [])
+            .filter { $0.id != s.id && $0.imageSource == "stock" }.compactMap(\.imageURL))
+        guard let candidates = found?.filter({ !used.contains($0.url) }), !candidates.isEmpty else { return }
         let choice = await pick(from: candidates, phrase: phrase)
         guard let url = URL(string: choice.url) else { return }
         let data = await Relay.picture(url)
@@ -50,6 +57,17 @@ enum StockPhoto {
         s.imageCredit = choice.by.map { "Photo by \($0) on Pixabay" } ?? "Photo from Pixabay"
         s.imageCreditURL = choice.page
         s.updatedAt = Date()
+    }
+
+    /// True when a word of the phrase (or its singular) is in the title.
+    static func sharesWord(_ phrase: String, with title: String) -> Bool {
+        let t = Set(title.lowercased().split(whereSeparator: { !$0.isLetter }).map { String($0) })
+        let tSingular = Set(t.map { $0.hasSuffix("s") ? String($0.dropLast()) : $0 })
+        return phrase.split(separator: " ").contains { w in
+            let word = String(w)
+            let singular = word.hasSuffix("s") ? String(word.dropLast()) : word
+            return word.count >= 4 && (t.contains(word) || tSingular.contains(singular))
+        }
     }
 
     // MARK: The words

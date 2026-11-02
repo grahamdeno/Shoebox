@@ -18,7 +18,7 @@ The old app (repo `grahamdeno/edition`, a web app in an iPhone wrapper) proved t
 
 These decide every design and engineering question. If a feature breaks one, the feature changes.
 
-1. **Your reason decides when it comes back.** "Before we plan next quarter" means the gap before that meeting. "This weekend" means Saturday morning. "At dinner" means the evening at home. Dated saves (school emails, events) come back on their own: 5 days before, 1 day before, and on the day.
+1. **Your reason decides when it comes back.** "Before we plan next quarter" means the gap before that meeting. "This weekend" means Saturday morning. "At dinner" means the evening at home. Dated saves (school emails, events) show once when they arrive, then come back on their own 5 days before the day and stay every day (Next skips a day) until put away; after the day they move to Kept.
 2. **One post at a time.** The app is one full-screen feed called Today, one post per screen, like Scales. No second "sort" screen.
 3. **Moving on is a decision.** Swiping up past a post is the soft pass: once seen, it's gone until tomorrow. Nothing to tap. A post you keep passing keeps coming back; there is no quiet rule.
 4. **One button at rest.** The resting post has only the box top, which says Later. Done appears once you open a post, because opening it means you dealt with it. Later accepts a suggested date in one tap; Pick a date and Let go live inside Later. Every action is instant with Undo; nothing asks to confirm.

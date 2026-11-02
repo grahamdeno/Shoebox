@@ -32,4 +32,12 @@ final class EmailPostTests: XCTestCase {
         XCTAssertFalse(w.text.contains("wrote:"))
         XCTAssertFalse(w.text.contains("iPhone"))
     }
+
+    @MainActor
+    func testNewsletterPicturesMustNameTheirSubject() {
+        XCTAssertTrue(StockPhoto.sharesWord("trumpet music", with: "Trumpet and brass sectional"))
+        XCTAssertTrue(StockPhoto.sharesWord("lacrosse players", with: "Lacrosse interest meeting"))
+        XCTAssertFalse(StockPhoto.sharesWord("mountain forest", with: "8th grade field trip"))
+        XCTAssertFalse(StockPhoto.sharesWord("library books", with: "Yearbook order deadline"))
+    }
 }

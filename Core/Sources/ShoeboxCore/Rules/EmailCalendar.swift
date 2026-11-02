@@ -58,13 +58,16 @@ public enum EmailCalendar {
         for raw in text.components(separatedBy: .newlines) {
             let line = tidy(raw)
             guard !line.isEmpty else { continue }
-            // A line that starts in lowercase carries on the one above (a PDF wraps long lines).
-            if let f = line.first, f.isLowercase {
+            // A line that starts in lowercase, or follows a line left open on a comma, carries on the one above
+            // (a PDF or a mail program wraps long lines).
+            let day = firstDay(in: line, received: received, calendar: calendar)
+            let open = lastWasItem && day == nil && (out.last?.line.hasSuffix(",") ?? false)
+            if let f = line.first, f.isLowercase || open {
                 if lastWasItem, var last = out.popLast() { last.line += " " + line; out.append(last) }
                 continue
             }
             lastWasItem = false
-            if let day = firstDay(in: line, received: received, calendar: calendar) {
+            if let day {
                 out.append(Item(line: line, section: section, title: title(of: line), day: day, link: link(in: line)))
                 lastWasItem = true
             } else if isHeading(line) {
@@ -112,9 +115,14 @@ public enum EmailCalendar {
         return out
     }
 
+    /// Whole words, with hyphens and spaces alike and a plural allowed: "cross-country" finds "Cross country",
+    /// "soccer" finds "Soccer:", "game" finds "games".
     static func contains(_ text: String, word: String) -> Bool {
-        let escaped = NSRegularExpression.escapedPattern(for: word)
-        return text.range(of: "\\b\(escaped)\\b", options: .regularExpression) != nil
+        let flat = { (s: String) in s.replacingOccurrences(of: #"[-–—_]+"#, with: " ", options: .regularExpression) }
+        let parts = flat(word).split(separator: " ").map { NSRegularExpression.escapedPattern(for: String($0)) }
+        guard !parts.isEmpty else { return false }
+        let pattern = "\\b" + parts.joined(separator: "\\s+") + "(s|es)?\\b"
+        return flat(text).range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     static func tidy(_ raw: String) -> String {
@@ -177,21 +185,109 @@ public enum EmailCalendar {
     }
 
     /// "Sat Nov 7: Cross country regional championship, 8:30 AM start" gives "Cross country regional championship".
-    static func title(of line: String) -> String {
+    static func title(of line: String) -> String { pieces(of: line).title }
+
+    /// A line taken apart: a short title (up to six words, cut at "for", "to", "at" when longer), what follows
+    /// it as separate details, and the end of a date range written in front ("Nov 25 to 27" gives "27").
+    static func pieces(of line: String) -> (title: String, details: [String], rangeEnd: String?) {
         var s = line
+        var rangeEnd: String?
         // Drop a leading date ("Mon Nov 2:", "Nov 25 to 27:", "11/14 -") when a colon or dash follows it.
-        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*\d{1,2})?\s*[:\-–]\s+"#, options: .regularExpression) {
+        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*(\d{1,2}))?\s*[:\-–]\s+"#, options: .regularExpression) {
+            let prefix = String(s[r])
+            if let e = prefix.range(of: #"(?:to|-|–)\s*\d{1,2}"#, options: .regularExpression) {
+                rangeEnd = String(prefix[e]).filter(\.isNumber)
+            }
             s = String(s[r.upperBound...])
         }
         s = s.replacingOccurrences(of: #"https?://\S+"#, with: "", options: .regularExpression)
-        if let cut = s.range(of: #"(, |\. | - | – )"#, options: .regularExpression) { s = String(s[..<cut.lowerBound]) }
-        s = s.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ".:,-")))
-        if s.count > 60 {
-            let words = s.prefix(60).split(separator: " ").dropLast()
-            s = words.joined(separator: " ")
+        var rest = ""
+        if let cut = s.range(of: #"(, |\. | - | – |; )"#, options: .regularExpression) {
+            rest = String(s[cut.upperBound...])
+            s = String(s[..<cut.lowerBound])
         }
-        guard let first = s.first else { return line }
-        return first.uppercased() + s.dropFirst()
+        s = s.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ".:,-")))
+        var details: [String] = []
+        // Long names are cut at their first "for", "to", "at", "with" or "on"; the tail becomes a detail.
+        if s.split(separator: " ").count > 6,
+           let p = s.range(of: #" (for|to|at|with|on) "#, options: .regularExpression),
+           s[..<p.lowerBound].split(separator: " ").count >= 2 {
+            details.append(String(s[p.lowerBound...]).trimmingCharacters(in: .whitespaces))
+            s = String(s[..<p.lowerBound])
+        }
+        let words = s.split(separator: " ")
+        if words.count > 7 { s = words.prefix(7).joined(separator: " ") }
+        details += rest.components(separatedBy: CharacterSet(charactersIn: ",;"))
+            .flatMap { $0.components(separatedBy: ". ") }
+            .map { $0.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "."))) }
+            .filter { !$0.isEmpty }
+        details = details.map { d in d.prefix(1).uppercased() + d.dropFirst() }
+        guard let first = s.first else { return (line, [], nil) }
+        return (first.uppercased() + s.dropFirst(), details, rangeEnd)
+    }
+
+    /// The words of a dated post: "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck." The day comes first,
+    /// spelled out; pieces that only repeat the date are left out.
+    public static func details(of item: Item, received: Date, calendar: Calendar) -> String {
+        let p = pieces(of: item.line)
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.calendar = calendar
+        f.timeZone = calendar.timeZone
+        f.dateFormat = "EEEE, MMM d"
+        var day = f.string(from: item.day)
+        if let end = p.rangeEnd { day += " to \(end)" }
+        let weekdays = Set(f.weekdaySymbols.map { $0.lowercased() })
+        let kept = p.details.filter { d in
+            firstDay(in: d, received: received, calendar: calendar) == nil && !weekdays.contains(d.lowercased())
+        }
+        return ([day] + kept).joined(separator: " · ") + "."
+    }
+
+    /// A short name for where the dates came from: "Roosevelt Middle School Family Newsletter, November 2026"
+    /// gives "Roosevelt newsletter". Months, years, dates and words like "family" or "weekly" are dropped.
+    public static func sourceName(_ subject: String) -> String {
+        let drop: Set<String> = ["family", "families", "weekly", "monthly", "update", "updates", "the", "pdf", "middle", "elementary",
+                                 "high", "school", "news", "for", "and", "of", "your", "our", "week", "issue", "edition"]
+        let words = EmailRules.cleanSubject(subject)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty && monthNames[$0.lowercased()] == nil && !$0.allSatisfy(\.isNumber) }
+        let kept = words.filter { !drop.contains($0.lowercased()) }
+        if let n = kept.firstIndex(where: { $0.lowercased() == "newsletter" }) {
+            return n > 0 ? "\(kept[0]) newsletter" : "a newsletter"
+        }
+        let name = kept.prefix(3).joined(separator: " ")
+        return name.isEmpty ? "via your Shoebox email" : name
+    }
+
+    /// The same event under slightly different words: "Winter band concert" and "Winter Band Concert, gym".
+    /// Most of the shorter name's words (numbers and times aside) must appear in the other.
+    public static func sameEvent(_ a: String, _ b: String) -> Bool {
+        let wa = eventWords(a), wb = eventWords(b)
+        guard !wa.isEmpty, !wb.isEmpty else { return false }
+        let shared = wa.intersection(wb).count
+        return Double(shared) / Double(min(wa.count, wb.count)) >= 0.6
+    }
+
+    static func eventWords(_ s: String) -> Set<String> {
+        let skip: Set<String> = ["the", "a", "an", "and", "of", "for", "to", "at", "in", "on", "am", "pm", "with", "is", "are", "be"]
+        let flat = s.lowercased().unicodeScalars.map { CharacterSet.alphanumerics.contains($0) ? Character($0) : " " }
+        return Set(String(flat).split(separator: " ").map(String.init).filter { !skip.contains($0) && !$0.allSatisfy(\.isNumber) })
+    }
+
+    /// Clock times in a line, as written: "6:30 PM", "7 pm", "8:15 a.m.".
+    public static func times(in line: String) -> [String] {
+        guard let re = try? NSRegularExpression(pattern: #"\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)"#, options: .caseInsensitive) else { return [] }
+        return re.matches(in: line, range: NSRange(line.startIndex..., in: line)).compactMap { m in
+            Range(m.range, in: line).map { String(line[$0]).uppercased().replacingOccurrences(of: ".", with: "") }
+        }
+    }
+
+    /// What a resent line changed that you would want to see: a different time. Returns "6:30 PM to 7:00 PM".
+    public static func timeChange(from old: String, to new: String) -> String? {
+        let before = times(in: old), after = times(in: new)
+        guard !after.isEmpty, before != after else { return nil }
+        return before.isEmpty ? nil : "\(before.joined(separator: ", ")) to \(after.joined(separator: ", "))"
     }
 
     static func link(in line: String) -> URL? {
