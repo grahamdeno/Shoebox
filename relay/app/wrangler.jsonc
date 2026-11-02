@@ -4,7 +4,7 @@
   // Deploy from this folder: npx wrangler deploy -c wrangler.jsonc   (docs/handoff/grok-relay-deploy.md has the steps)
   "name": "shoebox-app-relay",
   "main": "worker.js",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-11-02",
   // Variables and secrets are set in the Cloudflare dashboard or with `wrangler secret put`; deploys keep them.
   "keep_vars": true,
   // The Worker is reached only at its own domain. The *.workers.dev address stays off.
