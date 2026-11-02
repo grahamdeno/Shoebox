@@ -36,6 +36,7 @@ public enum EmailCalendar {
             grades = Set(EmailCalendar.grades(in: lower))
             let cleaned = lower.replacingOccurrences(of: #"\b\d{1,2}(st|nd|rd|th)\s*grade(rs)?\b"#, with: " ", options: .regularExpression)
                 .replacingOccurrences(of: #"\bgrade\s*\d{1,2}\b"#, with: " ", options: .regularExpression)
+                .replacingOccurrences(of: #"\b(?:year|yr)\.?\s*\d{1,2}\b"#, with: " ", options: .regularExpression)
             let parts = cleaned.components(separatedBy: CharacterSet(charactersIn: ",;:()/\n|&+"))
                 .flatMap { $0.components(separatedBy: " and ") }
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)) }
@@ -51,7 +52,7 @@ public enum EmailCalendar {
 
     /// Every line that names a calendar day (a month and day, or 11/14), with the heading above it.
     /// Weekday-only lines ("Tuesday 6 PM track") repeat every week, so they are not dates here.
-    public static func items(in text: String, received: Date, calendar: Calendar) -> [Item] {
+    public static func items(in text: String, received: Date, calendar: Calendar, dayFirst: Bool = false) -> [Item] {
         var out: [Item] = []
         var section: String?
         var lastWasItem = false
@@ -60,7 +61,7 @@ public enum EmailCalendar {
             guard !line.isEmpty else { continue }
             // A line that starts in lowercase, or follows a line that stopped mid-sentence (no full stop), carries on
             // the one above: a PDF or a mail program wraps long lines. A new bullet or an ALL CAPS heading never does.
-            let day = firstDay(in: line, received: received, calendar: calendar)
+            let day = firstDay(in: line, received: received, calendar: calendar, dayFirst: dayFirst)
             let isBullet = raw.trimmingCharacters(in: .whitespaces).first.map { "-•*·–".contains($0) } ?? false
             let allCaps = line == line.uppercased() && line.contains(where: \.isLetter)
             let endsOpen = !(out.last?.line.last.map { ".!?".contains($0) } ?? true)
@@ -110,10 +111,14 @@ public enum EmailCalendar {
 
     static func grades(in lower: String) -> [Int] {
         var out: [Int] = []
-        for pattern in [#"\b(\d{1,2})(?:st|nd|rd|th)\s*grade"#, #"\bgrade\s*(\d{1,2})\b"#] {
+        // "4th grade", "grade 4", and the school years used in the UK, Australia and New Zealand ("Year 4", "Yr 4", up to 13).
+        // "this year 5 times" is not a school year.
+        let notAYear = "(?<!this )(?<!next )(?<!last )(?<!every )(?<!each )(?<!per )(?<!a )(?<!the )(?<!one )"
+        for pattern in [#"\b(\d{1,2})(?:st|nd|rd|th)\s*grade"#, #"\bgrade\s*(\d{1,2})\b"#,
+                        notAYear + #"\b(?:year|yr)\.?\s*(\d{1,2})\b"#] {
             guard let re = try? NSRegularExpression(pattern: pattern) else { continue }
             for m in re.matches(in: lower, range: NSRange(lower.startIndex..., in: lower)) {
-                if let r = Range(m.range(at: 1), in: lower), let n = Int(lower[r]), (1...12).contains(n) { out.append(n) }
+                if let r = Range(m.range(at: 1), in: lower), let n = Int(lower[r]), (1...13).contains(n) { out.append(n) }
             }
         }
         return out
@@ -152,29 +157,86 @@ public enum EmailCalendar {
         return m
     }()
 
-    /// The first month-and-day ("Nov 7", "November 14th", "Dec. 6") or numeric date ("11/14") in the line.
-    /// A day more than 60 days before the email arrived means next year.
-    public static func firstDay(in line: String, received: Date, calendar: Calendar) -> Date? {
-        let lower = line.lowercased().replacingOccurrences(of: #"https?://\S+"#, with: " ", options: .regularExpression)
-        let tokens = lower.replacingOccurrences(of: ",", with: " ").replacingOccurrences(of: ".", with: " ").replacingOccurrences(of: ":", with: " ")
+    /// Regions that write a numeric date day first ("10/11" is 10 November). Everywhere else reads it month first.
+    public static func dayFirst(for locale: Locale) -> Bool {
+        guard let region = locale.region?.identifier else { return false }
+        return ["CA", "GB", "AU", "NZ"].contains(region)
+    }
+
+    /// Whether this phone's region writes numeric dates day first.
+    public static var deviceDayFirst: Bool { dayFirst(for: .current) }
+
+    /// Which number is the month and which the day in "a/b". A number over 12 can only be the day, whatever the
+    /// region ("25/12" is 25 December, "12/25" is 25 December). When both could be either, the region decides.
+    public static func monthAndDay(_ a: Int, _ b: Int, dayFirst: Bool) -> (month: Int, day: Int)? {
+        guard (1...31).contains(a), (1...31).contains(b) else { return nil }
+        if a > 12 && b > 12 { return nil }
+        if a > 12 { return (b, a) }
+        if b > 12 { return (a, b) }
+        return dayFirst ? (b, a) : (a, b)
+    }
+
+    /// The day written in front of a month name: "10 Nov", "10th of November", "25-27 Nov" (gives 25).
+    /// `tokens` are the line's words as written; the month is at `i`. A lowercase "may" is the verb, not the month.
+    static func dayBeforeMonth(_ tokens: [String], at i: Int) -> Int? {
+        guard i > 0 else { return nil }
+        if tokens[i].lowercased() == "may", tokens[i].first?.isUppercase != true { return nil }
+        var j = i - 1
+        if tokens[j].lowercased() == "of", j > 0 { j -= 1 }
+        let lower = tokens[j].lowercased()
+        func number(_ t: String) -> Int? {
+            let digits = t.prefix { $0.isNumber }
+            let rest = t.dropFirst(digits.count)
+            guard !digits.isEmpty, digits.count <= 2, ["", "st", "nd", "rd", "th"].contains(String(rest)),
+                  let n = Int(digits), (1...31).contains(n) else { return nil }
+            return n
+        }
+        // "25-27 Nov" and "25 to 27 Nov" start on the 25th.
+        if let r = lower.range(of: #"^(\d{1,2})[-–](\d{1,2})$"#, options: .regularExpression) {
+            let parts = lower[r].split(whereSeparator: { $0 == "-" || $0 == "–" })
+            if let first = parts.first, let n = Int(first), (1...31).contains(n) { return n }
+        }
+        guard let day = number(lower) else { return nil }
+        if j >= 2, ["to", "until", "through", "thru", "-", "–"].contains(tokens[j - 1].lowercased()), let start = number(tokens[j - 2].lowercased()) {
+            return start
+        }
+        return day
+    }
+
+    /// The first month-and-day ("Nov 7", "November 14th", "Dec. 6", "7 November") or numeric date ("11/14", or "14/11"
+    /// when `dayFirst`) in the line. A day more than 60 days before the email arrived means next year.
+    public static func firstDay(in line: String, received: Date, calendar: Calendar, dayFirst: Bool = false) -> Date? {
+        let cleaned = line.replacingOccurrences(of: #"https?://\S+"#, with: " ", options: .regularExpression)
+        let original = cleaned.replacingOccurrences(of: ",", with: " ").replacingOccurrences(of: ".", with: " ").replacingOccurrences(of: ":", with: " ")
             .split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init)
+        let tokens = original.map { $0.lowercased() }
+        let lower = cleaned.lowercased()
         var found: (month: Int, day: Int, year: Int?)?
-        for (i, tok) in tokens.enumerated() where i + 1 < tokens.count {
+        for (i, tok) in tokens.enumerated() {
             guard let month = monthNames[tok] else { continue }
-            let digits = tokens[i + 1].prefix { $0.isNumber }
-            guard digits.count <= 2, let day = Int(digits), (1...31).contains(day) else { continue }
-            var year: Int?
-            if i + 2 < tokens.count, let y = Int(tokens[i + 2]), (2000...2100).contains(y) { year = y }
-            found = (month, day, year)
-            break
+            if i + 1 < tokens.count {
+                let digits = tokens[i + 1].prefix { $0.isNumber }
+                if digits.count <= 2, let day = Int(digits), (1...31).contains(day) {
+                    var year: Int?
+                    if i + 2 < tokens.count, let y = Int(tokens[i + 2]), (2000...2100).contains(y) { year = y }
+                    found = (month, day, year)
+                    break
+                }
+            }
+            if let day = dayBeforeMonth(original, at: i) {
+                var year: Int?
+                if i + 1 < tokens.count, let y = Int(tokens[i + 1]), (2000...2100).contains(y) { year = y }
+                found = (month, day, year)
+                break
+            }
         }
         if found == nil, let re = try? NSRegularExpression(pattern: #"\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b"#),
            let m = re.firstMatch(in: lower, range: NSRange(lower.startIndex..., in: lower)),
-           let mr = Range(m.range(at: 1), in: lower), let dr = Range(m.range(at: 2), in: lower),
-           let month = Int(lower[mr]), let day = Int(lower[dr]), (1...12).contains(month), (1...31).contains(day) {
+           let ar = Range(m.range(at: 1), in: lower), let br = Range(m.range(at: 2), in: lower),
+           let a = Int(lower[ar]), let b = Int(lower[br]), let md = monthAndDay(a, b, dayFirst: dayFirst), (1...12).contains(md.month) {
             var year: Int?
             if let yr = Range(m.range(at: 3), in: lower), let y = Int(lower[yr]) { year = y < 100 ? 2000 + y : y }
-            found = (month, day, year)
+            found = (md.month, md.day, year)
         }
         guard let f = found else { return nil }
         var c = DateComponents()
@@ -197,7 +259,9 @@ public enum EmailCalendar {
         var s = line
         var rangeEnd: String?
         // Drop a leading date ("Mon Nov 2:", "Nov 25 to 27:", "11/14 -") when a colon or dash follows it.
-        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*(\d{1,2}))?\s*[:\-–]\s+"#, options: .regularExpression) {
+        // A month written after the day ("Mon 2 Nov:", "25 to 27 Nov -") is part of the date too.
+        let afterDay = #"(?:\s+(?:of\s+)?(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?)?"#
+        if let r = s.range(of: #"^[^:]{0,24}?\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:to|-|–)\s*(\d{1,2}))?(?:st|nd|rd|th)?"# + afterDay + #"\s*[:\-–]\s+"#, options: [.regularExpression, .caseInsensitive]) {
             let prefix = String(s[r])
             if let e = prefix.range(of: #"(?:to|-|–)\s*\d{1,2}"#, options: .regularExpression) {
                 rangeEnd = String(prefix[e]).filter(\.isNumber)
