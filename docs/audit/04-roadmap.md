@@ -21,7 +21,7 @@ Ids refer to `backlog.csv`. Effort points are human person-weeks for comparison;
 | Usability | A-9 Close flakiness |
 | Release | Q-1 tests gate uploads, pinned Xcode and simulator, Q-2 MetricKit, Q-3 tester groups, Q-4 build numbers, Q-6 entitlement check, T-1 retention measures |
 
-About 24 items, 19.5 points. Merge PR #28 first, then one beta build (your one-big-release rule).
+About 25 items. PR #28 is merged; one beta build at the end (your one-big-release rule).
 
 ## Phase 2: App Store v1.0
 
@@ -44,7 +44,7 @@ About 24 items, 19.5 points. Merge PR #28 first, then one beta build (your one-b
 | Text | P-6 metadata and README, P-7 review notes |
 | Release | Q-5 tests for Inbox, backups, Delete everything |
 
-About 45 items, 46.5 points.
+About 47 items.
 
 ## Phase 3: post-launch
 
