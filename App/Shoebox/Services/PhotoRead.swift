@@ -47,16 +47,47 @@ enum PhotoRead {
         else { return fallback }
         let year = Calendar.current.component(.year, from: now)
         let check = clean + " \(year) \(year + 1)"
-        let title = r.content.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let details = r.content.details.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = fixTitle(r.content.title.trimmingCharacters(in: .whitespacesAndNewlines), source: clean)
+        let details = dropEmptyClaims(r.content.details.trimmingCharacters(in: .whitespacesAndNewlines))
         let why = r.content.why.trimmingCharacters(in: .whitespacesAndNewlines)
         let words = details.isEmpty ? title : title + "\n" + details
         guard !title.isEmpty, !EmailRules.invents(words, source: check) else { return fallback }
-        let goodWhy = !why.isEmpty && !EmailRules.invents(why, source: check)
-        return Gist(words: String(words.prefix(600)), why: goodWhy ? String(why.prefix(60)) : "")
+        return Gist(words: String(words.prefix(600)), why: goodWhy(why, source: clean) ? String(why.prefix(60)) : "")
         #else
         return fallback
         #endif
+    }
+
+    /// A title whose first word is not in the photo (a half-read word) loses that word.
+    static func fixTitle(_ title: String, source: String) -> String {
+        var words = title.split(separator: " ").map(String.init)
+        let lower = source.lowercased()
+        while words.count > 1, let first = words.first,
+              lower.range(of: "\\b" + NSRegularExpression.escapedPattern(for: first.lowercased()) + "\\b", options: .regularExpression) == nil {
+            words.removeFirst()
+        }
+        let out = words.joined(separator: " ")
+        guard let f = out.first else { return "" }
+        return f.uppercased() + out.dropFirst()
+    }
+
+    /// Sentences that only say something is missing ("Price: not stated.") are dropped.
+    static func dropEmptyClaims(_ details: String) -> String {
+        let bad = ["not stated", "not specified", "not provided", "not mentioned", "unknown", "n/a", "none listed"]
+        let parts = details.components(separatedBy: ". ")
+        return parts.filter { p in !bad.contains(where: p.lowercased().contains) }.joined(separator: ". ")
+    }
+
+    /// A suggested why must come from the photo: most of its words are in the text, and it is not an instruction to a model.
+    static func goodWhy(_ why: String, source: String) -> Bool {
+        guard !why.isEmpty else { return false }
+        let lower = why.lowercased()
+        if ["json", "format", "respond", "instruction", "as an ai", "text provided"].contains(where: lower.contains) { return false }
+        let words = lower.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).filter { $0.count > 3 }
+        guard !words.isEmpty else { return false }
+        let src = source.lowercased()
+        let hits = words.filter { src.contains($0) }.count
+        return Double(hits) / Double(words.count) >= 0.6 && !EmailRules.invents(why, source: source)
     }
 
     /// Without Apple Intelligence: the first line is the title, the next few lines are the details.

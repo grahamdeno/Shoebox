@@ -98,10 +98,24 @@ struct EmailCalendarTests {
             return EmailCalendar.details(of: item, received: Self.received, calendar: Self.cal)
         }
         #expect(words("Sat Nov 14: Cross country banquet, 5:00 PM, cafeteria. Potluck.") == "Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck.")
-        #expect(words("Nov 25 to 27: No school, Thanksgiving break.") == "Wednesday, Nov 25 to 27 · Thanksgiving break.")
+        #expect(words("Nov 25 to 27: No school, Thanksgiving break.") == "Wednesday, Nov 25 to Friday, Nov 27 · Thanksgiving break.")
         #expect(words("Tue Nov 24: 8th grade field trip to the Battleship North Carolina, buses leave at 8:15 AM.")
                 == "Tuesday, Nov 24 · To the Battleship North Carolina · Buses leave at 8:15 AM.")
         #expect(words("Picture retake day is Wednesday, November 4. Forms were sent home.") == "Wednesday, Nov 4 · Forms were sent home.")
+    }
+
+    @Test func aTimeIsADetailNotTheTitle() {
+        #expect(EmailCalendar.title(of: "Fri Nov 20: Early release at 12:30 PM, teacher workday.") == "Early release")
+        let item = EmailCalendar.items(in: "Fri Nov 20: Early release at 12:30 PM, teacher workday.", received: Self.received, calendar: Self.cal)[0]
+        #expect(EmailCalendar.details(of: item, received: Self.received, calendar: Self.cal) == "Friday, Nov 20 · 12:30 PM · Teacher workday.")
+    }
+
+    @Test func aLineThatStopsMidSentenceCarriesOnEvenInCapitals() {
+        let text = "ATHLETICS\n- Sat Nov 7: Cross country regional championship, 8:30 AM start, Hugh\nMacRae Park. Runners report by 7:30 AM.\n- Fri Nov 13: Field trip permission slips due for the Battleship North\nCarolina trip."
+        let items = EmailCalendar.items(in: text, received: Self.received, calendar: Self.cal)
+        #expect(items.count == 2)
+        #expect(items[0].line.hasSuffix("Hugh MacRae Park. Runners report by 7:30 AM."))
+        #expect(items[1].line.hasSuffix("North Carolina trip."))
     }
 
     @Test func shortSourceNames() {
@@ -135,6 +149,27 @@ struct EmailNoticeTests {
         #expect(EmailRules.cleanSubject("[Shoebox test 8] Fwd: Fwd: Re: Dock repair quote") == "Dock repair quote")
         #expect(EmailRules.cleanSubject("RE: fw: Lunch") == "Lunch")
         #expect(EmailRules.cleanSubject("Q4 Planning Notes") == "Q4 Planning Notes")
+    }
+
+    @Test func labelsTheEmailNeverUsedAreDropped() {
+        let source = "Order by Nov 25. Confirmation: RX-48213"
+        #expect(EmailRules.dropInventedLabels("Order the beans. Trip leg: order now for shipment.", source: source) == "Order the beans. Order now for shipment.")
+        #expect(EmailRules.dropInventedLabels("Location: 421 Princess St. Confirmation: RX-48213.", source: source) == "421 Princess St. Confirmation: RX-48213.")
+    }
+
+    @Test func titlesAreInSentenceCase() {
+        let source = "Dr. Anita Patel at Cape Fear Family Dentistry. Lease renewal terms."
+        #expect(EmailRules.sentenceCase("Lease Renewal Terms", source: source) == "Lease renewal terms")
+        #expect(EmailRules.sentenceCase("Appointment With Dr. Patel", source: source) == "Appointment with Dr. Patel")
+        #expect(EmailRules.sentenceCase("Sprint 14 Demo", source: "Sprint 14") == "Sprint 14 demo")
+    }
+
+    @Test func aPostLeadsWithItsDay() {
+        let cal = EmailCalendarTests.cal
+        let day = EmailCalendarTests.day(11, 12)
+        #expect(EmailRules.leadWithDay("Dr. Patel at 2:30 PM, Thursday.", day: day, calendar: cal) == "Thursday, Nov 12 · Dr. Patel at 2:30 PM, Thursday.")
+        #expect(EmailRules.leadWithDay("Dr. Patel on November 12 at 2:30 PM.", day: day, calendar: cal) == "Dr. Patel on November 12 at 2:30 PM.")
+        #expect(EmailRules.leadWithDay("No date here.", day: nil, calendar: cal) == "No date here.")
     }
 
     @Test func inventedDetailsAreCaught() {

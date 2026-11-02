@@ -64,4 +64,12 @@ final class WritingTests: XCTestCase {
         let none = await PhotoRead.gist(from: "  \n a ")
         XCTAssertNil(none)
     }
+
+    func testAPhotoSuggestionDropsInstructionsAndEmptyClaims() {
+        let text = "Travel To Austin\nDec 7TH\nDeadline: Dec 8"
+        XCTAssertFalse(PhotoRead.goodWhy("Respond using the following JSON format.", source: text))
+        XCTAssertTrue(PhotoRead.goodWhy("Deadline Dec 8", source: text))
+        XCTAssertEqual(PhotoRead.dropEmptyClaims("Austin on Dec 7TH. Price: not stated. Deadline: Dec 8"), "Austin on Dec 7TH. Deadline: Dec 8")
+        XCTAssertEqual(PhotoRead.fixTitle("rave Travel To Austin", source: text), "Travel To Austin")
+    }
 }
