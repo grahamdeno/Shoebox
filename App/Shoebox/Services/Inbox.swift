@@ -70,6 +70,9 @@ enum Inbox {
         var done: [String] = []
         var added = 0
         let now = Date()
+        // Dated posts already made from email (and in this collection), so a newsletter sent again each week
+        // does not make the same event twice.
+        var known = existing.filter { $0.deletedAt == nil && $0.kind == .email && $0.eventDate != nil }
         for m in r.mails ?? [] {
             let subject = EmailRules.cleanSubject(m.subject ?? "")
             let received = m.at.map { Date(timeIntervalSince1970: $0 / 1000) } ?? now
@@ -111,6 +114,11 @@ enum Inbox {
                 let today = Calendar.current.startOfDay(for: now)
                 let keep = EmailCalendar.relevant(items, to: EmailCalendar.Profile(Prefs.mailFor)).filter { $0.day >= today }
                 for item in keep {
+                    if let old = known.first(where: { Calendar.current.isDate($0.eventDate ?? .distantPast, inSameDayAs: item.day)
+                        && EmailCalendar.sameEvent($0.title, item.title) }) {
+                        refresh(old, with: item, now: now)
+                        continue
+                    }
                     let s = Save(title: String(item.title.prefix(140)),
                                  snippet: String(item.line.prefix(240)),
                                  body: item.line + (subject.isEmpty ? "" : "\n\nFrom \(subject)"),
@@ -119,6 +127,7 @@ enum Inbox {
                     stamp(s, mail: m, subject: subject, received: received, now: now)
                     schedule(s, on: item.day, now: now)
                     context.insert(s)
+                    known.append(s)
                     added += 1
                 }
                 done.append(m.id)
@@ -173,6 +182,24 @@ enum Inbox {
         s.eventDate = day
         s.status = .today
         s.returnDate = nil
+    }
+
+    /// The same event sent again. New details replace the old words quietly; a new time shows it once more,
+    /// even if it was put away, with what changed on top. Otherwise a put away post stays put away.
+    private static func refresh(_ s: Save, with item: EmailCalendar.Item, now: Date) {
+        let oldLine = s.body.components(separatedBy: "\n").first(where: { !$0.hasPrefix("Changed:") && !$0.isEmpty }) ?? ""
+        guard oldLine != item.line else { return }
+        let from = s.body.components(separatedBy: "\n").last(where: { $0.hasPrefix("From ") }).map { "\n\n" + $0 } ?? ""
+        if let change = EmailCalendar.timeChange(from: oldLine, to: item.line) {
+            s.body = "Changed: \(change).\n" + item.line + from
+            s.status = .today
+            s.returnDate = nil
+            s.seenOn = nil
+        } else {
+            s.body = item.line + from
+        }
+        s.snippet = String(item.line.prefix(240))
+        s.updatedAt = now
     }
 
     /// One attachment of a waiting mail, fetched before the mail is acknowledged (which deletes it).

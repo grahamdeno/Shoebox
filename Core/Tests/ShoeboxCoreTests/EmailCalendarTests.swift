@@ -78,6 +78,19 @@ struct EmailCalendarTests {
         #expect(EmailRules.unwrap("Inservice/No School&nbsp;") == "Inservice/No School ")
     }
 
+    @Test func theSameEventSentAgainIsRecognized() {
+        #expect(EmailCalendar.sameEvent("Winter band concert", "Winter Band Concert"))
+        #expect(EmailCalendar.sameEvent("Cross country banquet", "Cross country banquet potluck"))
+        #expect(!EmailCalendar.sameEvent("Early release", "Yearbook order deadline"))
+    }
+
+    @Test func aNewTimeIsTheChangeWorthShowing() {
+        #expect(EmailCalendar.timeChange(from: "Thu Dec 10: Winter band concert, 6:30 PM in the gym.",
+                                         to: "Thu Dec 10: Winter band concert, 7:00 PM in the gym.") == "6:30 PM to 7:00 PM")
+        #expect(EmailCalendar.timeChange(from: "Fri Dec 4: Yearbook order deadline.", to: "Fri Dec 4: Yearbook order deadline, room 12.") == nil)
+        #expect(EmailCalendar.timeChange(from: "Sat Nov 14: Cross country banquet, 5:00 PM.", to: "Sat Nov 14: Cross country banquet, 5:00 PM, cafeteria.") == nil)
+    }
+
     @Test func titlesDropTheDate() {
         #expect(EmailCalendar.title(of: "Sat Nov 7: Cross country regional championship, 8:30 AM start") == "Cross country regional championship")
         #expect(EmailCalendar.title(of: "Nov 25 to 27: No school, Thanksgiving break.") == "No school")

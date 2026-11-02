@@ -202,6 +202,36 @@ public enum EmailCalendar {
         return first.uppercased() + s.dropFirst()
     }
 
+    /// The same event under slightly different words: "Winter band concert" and "Winter Band Concert, gym".
+    /// Most of the shorter name's words (numbers and times aside) must appear in the other.
+    public static func sameEvent(_ a: String, _ b: String) -> Bool {
+        let wa = eventWords(a), wb = eventWords(b)
+        guard !wa.isEmpty, !wb.isEmpty else { return false }
+        let shared = wa.intersection(wb).count
+        return Double(shared) / Double(min(wa.count, wb.count)) >= 0.6
+    }
+
+    static func eventWords(_ s: String) -> Set<String> {
+        let skip: Set<String> = ["the", "a", "an", "and", "of", "for", "to", "at", "in", "on", "am", "pm", "with", "is", "are", "be"]
+        let flat = s.lowercased().unicodeScalars.map { CharacterSet.alphanumerics.contains($0) ? Character($0) : " " }
+        return Set(String(flat).split(separator: " ").map(String.init).filter { !skip.contains($0) && !$0.allSatisfy(\.isNumber) })
+    }
+
+    /// Clock times in a line, as written: "6:30 PM", "7 pm", "8:15 a.m.".
+    public static func times(in line: String) -> [String] {
+        guard let re = try? NSRegularExpression(pattern: #"\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)"#, options: .caseInsensitive) else { return [] }
+        return re.matches(in: line, range: NSRange(line.startIndex..., in: line)).compactMap { m in
+            Range(m.range, in: line).map { String(line[$0]).uppercased().replacingOccurrences(of: ".", with: "") }
+        }
+    }
+
+    /// What a resent line changed that you would want to see: a different time. Returns "6:30 PM to 7:00 PM".
+    public static func timeChange(from old: String, to new: String) -> String? {
+        let before = times(in: old), after = times(in: new)
+        guard !after.isEmpty, before != after else { return nil }
+        return before.isEmpty ? nil : "\(before.joined(separator: ", ")) to \(after.joined(separator: ", "))"
+    }
+
     static func link(in line: String) -> URL? {
         guard let r = line.range(of: #"https?://[^\s)>\]]+"#, options: .regularExpression) else { return nil }
         let s = String(line[r]).trimmingCharacters(in: CharacterSet(charactersIn: ".,;"))
