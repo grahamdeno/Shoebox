@@ -13,8 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install the relay's packages
+        working-directory: relay/app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - name: Relay tests
-        run: node --test relay/app/test/worker.test.mjs
+        run: node --test relay/app/test/*.test.mjs
+      - name: The sealed-mail vector must match what the tests write
+        run: |
+          git status --porcelain -- relay/app/test/vectors
+          test -z "$(git status --porcelain -- relay/app/test/vectors)"
 
   build-and-test:
     runs-on: macos-26

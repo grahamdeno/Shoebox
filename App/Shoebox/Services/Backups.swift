@@ -152,7 +152,7 @@ enum Backups {
             context.insert(s)
         }
         let st = r.settings
-        if Prefs.inboxKey == nil { Prefs.inboxKey = st.inboxKey }
+        MailboxKeys.restoreIfEmpty(st.inboxKey)
         if Prefs.inboxAddress == nil { Prefs.inboxAddress = st.inboxAddress }
         try? context.save()
     }
@@ -200,6 +200,8 @@ enum Backups {
         var format = 1
         var exported = Date()
         var saves: [Item]
+        /// Never written any more (D-5): the mailbox secret lives in the Keychain, not in backup files. Still read, so an
+        /// older backup restores its key into an empty Keychain.
         var inboxKey: String?
         var inboxAddress: String?
 
@@ -231,7 +233,7 @@ enum Backups {
                         imageCredit: s.imageCredit, imageCreditURL: s.imageCreditURL,
                         file: files && s.deletedAt == nil ? s.fileData : nil, fileName: s.fileName, fileType: s.fileType)
         }
-        let e = Export(saves: items, inboxKey: Prefs.inboxKey, inboxAddress: Prefs.inboxAddress)
+        let e = Export(saves: items, inboxKey: nil, inboxAddress: Prefs.inboxAddress)
         return try? JSONEncoder.shoebox.encode(e)
     }
 
@@ -258,7 +260,7 @@ enum Backups {
             context.insert(s)
             added += 1
         }
-        if Prefs.inboxKey == nil { Prefs.inboxKey = e.inboxKey }
+        MailboxKeys.restoreIfEmpty(e.inboxKey)
         if Prefs.inboxAddress == nil { Prefs.inboxAddress = e.inboxAddress }
         try? context.save()
         if added == 0 { return "Everything in that backup is already here." }

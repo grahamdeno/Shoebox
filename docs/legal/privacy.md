@@ -11,14 +11,14 @@ Shoebox is made and run by Graham DeNoyer, an individual. Questions: support@inm
 - Your posts stay on your phone. There is no account.
 - No ads, no tracking, no analytics, no tools from other companies inside the app.
 - Three things pass through our server: link previews, stock pictures, and (only if you turn it on) your Shoebox email address.
-- Forwarded email waits on our server for up to 7 days, until your phone collects it. Then it is deleted.
+- Forwarded email is sealed on our server to a key only your phone holds, so we cannot read it. It waits up to 7 days, until your phone collects it. Then it is deleted.
 - Delete everything in Settings removes what we hold for you.
 
 ## What stays on your phone
 
 Everything you keep: links, notes, photos, files, your reasons, the dates read from them, your settings, and the line you write in Settings about who your mail is about. Reading a photo (the words in it, the faces and subject for framing) and writing a post from an email happen on your phone with Apple's on-device tools. Shoebox does not send your words or photos to an AI service.
 
-Shoebox saves a backup of your posts every day to the Shoebox folder in Files on your phone and, if you use iCloud Drive, to your iCloud Drive. Those files belong to you and are covered by Apple's terms for iCloud. A backup includes the secret key that ties your phone to its email address, so that a restored phone keeps its address. Keep your backups private.
+Shoebox saves a backup of your posts every day to the Shoebox folder in Files on your phone and, if you use iCloud Drive, to your iCloud Drive. Those files belong to you and are covered by Apple's terms for iCloud. A backup does not include the secret key that ties your phone to its email address. That key is kept in your Keychain and, if you use iCloud Keychain, comes to your new phone that way. Keep your backups private.
 
 ## What passes through our server
 
@@ -28,7 +28,7 @@ Our server is a small program that runs on Cloudflare. It has three jobs.
 
 **2. Stock pictures.** For a post with no picture, the phone chooses a few generic words (for example "garden" or "birthday cake") and asks our server for photos. The server asks Pixabay and passes the photos back. Only generic words are sent. Names are never sent, and posts about health, money or legal matters are never looked up. Results are cached for 24 hours. We do not log the words.
 
-**3. Your Shoebox email address (Shoebox Plus).** If you turn this on, you give a first name and the app asks our server for an address such as `sam-k3t7m2qa@inmyshoebox.com`. When you forward an email to it, our server keeps that email until your phone collects it: the sender's address and name, the subject, the text, links, and up to six attachments (PDFs and pictures). We keep it for up to 7 days, and delete it as soon as your phone has saved the post made from it. We do not read it, use it for anything else, or share it.
+**3. Your Shoebox email address (Shoebox Plus).** If you turn this on, you give a first name and the app asks our server for an address such as `sam-k3t7m2qa@inmyshoebox.com`. When you forward an email to it, our server seals that email to a public key your phone gave us, and keeps only the sealed copy until your phone collects it: the sender's address and name, the subject, the text, links, and up to six attachments (PDFs and pictures). Only your phone holds the key that opens it. We keep it for up to 7 days, and delete it as soon as your phone has saved the post made from it. We cannot read it, do not use it for anything else, and do not share it. The address needs Shoebox Plus. To check the purchase, your phone sends Apple's signed receipt for it to our server, which keeps the purchase's transaction number so one purchase works on at most five phones.
 
 Newsletters and school notices can include children's names and details. Shoebox is not made for children and we do not knowingly collect information from children. A parent or other adult chooses what to forward. Any such email is deleted from our server after 7 days at most. The line you write in Settings about who your mail is about is read on your phone and is never sent to us.
 
@@ -53,7 +53,7 @@ We do not sell or rent personal information, and we do not share it for advertis
 
 ## Your choices
 
-- **Delete everything** (Settings) deletes all your posts from the phone and asks our server to delete your address, mailbox record and waiting email. If your phone is offline at that moment the request is not sent; your address then expires 90 days after it was last used and waiting email after 7 days. Backups in Files and iCloud Drive stay until you delete them. (Publishing note for Graham: when D-6 ships and the app retries the request, say so here.)
+- **Delete everything** (Settings) deletes all your posts from the phone and asks our server to delete your address, mailbox record, waiting email and the link to your purchase. If your phone is offline at that moment, the app asks again each time it opens until our server confirms. Backups in Files and iCloud Drive stay until you delete them.
 - Deleting the app removes your posts and settings from the phone. It does not remove backup files, or your address on our server. Use Delete everything first.
 - You can stop forwarding email at any time. Without new mail, your address expires 90 days after your phone last asked for mail.
 
@@ -71,7 +71,7 @@ Shoebox is rated 4+ because it has no objectionable content. It is meant for adu
 
 ## Security
 
-Mail and addresses are kept in Cloudflare's storage, which encrypts what it holds. Your mailbox is identified by a secret key made on your phone, which we store only in scrambled form. Nobody else's phone can read your mail. No system is perfectly secure.
+Mail and addresses are kept in Cloudflare's storage, which encrypts what it holds. Your mailbox is identified by a secret key made on your phone, kept in your Keychain, which we store only in scrambled form. Mail is sealed to a key that stays on your phone, so we cannot read it either. No system is perfectly secure.
 
 ## Changes
 

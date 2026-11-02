@@ -2,6 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import RELAY, { mailBox, boxOf, newSlug, mintAddress } from "../worker.js";
+import { suite, fromBase64, SEAL_INFO } from "../seal.js";
+import { makeChain, signPurchase, purchasePayload, x25519 } from "./pki.mjs";
 
 /** A KV namespace in memory. Remembers each key's TTL; lists in pages of `page` keys. */
 function memoryKV(page = 1000) {
@@ -25,6 +27,21 @@ const ORIGIN = "https://inmyshoebox.com";
 const KEY_A = "sb-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const KEY_B = "sb-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+// Apple's chain stands in as a test chain; the Worker trusts it only because the test sets TEST_PURCHASE_ROOT.
+const chain = makeChain();
+const text = new TextEncoder();
+// One phone's sealing key pair, from fixed secret bytes.
+const phone = x25519(new Uint8Array(32).fill(7));
+const PUB = phone.public;
+const phoneKey = await suite.kem.deserializePrivateKey(fromBase64(phone.secret).buffer);
+
+const newEnv = (extra = {}) => ({ SHOEBOX: memoryKV(), TEST_PURCHASE_ROOT: chain.root, ...extra });
+
+// A purchase for each phone key, so one purchase never covers more than five boxes by accident.
+const ids = new Map();
+const otidOf = (key) => { if (!ids.has(key)) ids.set(key, String(1000000000 + ids.size + 1)); return ids.get(key); };
+const jwsFor = (otid, over = {}) => signPurchase(chain, purchasePayload({ originalTransactionId: otid, ...over }));
+
 function call(env, path, { method = "GET", key, body, origin = ORIGIN, ip = "1.1.1.1" } = {}) {
   const headers = { origin, "cf-connecting-ip": ip };
   if (key) headers["x-inbox-key"] = key;
@@ -32,24 +49,43 @@ function call(env, path, { method = "GET", key, body, origin = ORIGIN, ip = "1.1
   return RELAY.fetch(new Request("https://api.inmyshoebox.com" + path, { method, headers, body: body ? JSON.stringify(body) : undefined }), env);
 }
 
-function mail(to, subject = "Band concert") {
+/** Asks for an address the way the phone does: its name, its sealing key and a signed purchase. */
+function mint(env, key, opts = {}) {
+  const otid = opts.otid || otidOf(key);
+  // `in` (not a default) so a test can pass pub: undefined to leave it out.
+  const body = { name: opts.name || "sam", pub: "pub" in opts ? opts.pub : PUB, purchase: "purchase" in opts ? opts.purchase : jwsFor(otid) };
+  return call(env, "/inbox/address", { method: "POST", key, body, ip: opts.ip });
+}
+async function address(env, key, opts) { return (await (await mint(env, key, opts)).json()).address; }
+
+function mail(to, subject = "Band concert", { attach } = {}) {
   let rejected = null;
+  const body = "The band concert is Thursday, Nov 13 at 7 pm in the gym. Please arrive by 6:30 and bring your uniform.";
+  const raw = attach
+    ? `From: School <school@example.com>\r\nSubject: ${subject}\r\nContent-Type: multipart/mixed; boundary="b1"\r\n\r\n--b1\r\nContent-Type: text/plain\r\n\r\n${body}\r\n--b1\r\nContent-Type: application/pdf; name="flyer.pdf"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename="flyer.pdf"\r\n\r\n${Buffer.from(attach).toString("base64")}\r\n--b1--\r\n`
+    : `From: School <school@example.com>\r\nSubject: ${subject}\r\nContent-Type: text/plain\r\n\r\n${body}\r\n`;
   return {
-    to, from: "school@example.com", rawSize: 400,
-    raw: `From: School <school@example.com>\r\nSubject: ${subject}\r\nContent-Type: text/plain\r\n\r\nThe band concert is Thursday, Nov 13 at 7 pm in the gym. Please arrive by 6:30 and bring your uniform.\r\n`,
+    to, from: "school@example.com", rawSize: 400, raw,
     setReject(reason) { rejected = reason; },
     get rejected() { return rejected; },
   };
 }
 
+/** What the phone does with a stored record: open it with its private key and the box and mail ids. */
+async function open(record, aad, key = phoneKey) {
+  return new Uint8Array(await suite.open({ recipientKey: key, enc: fromBase64(record.enc).buffer, info: text.encode(SEAL_INFO) }, fromBase64(record.ct).buffer, text.encode(aad)));
+}
+const openJSON = async (record, aad) => JSON.parse(new TextDecoder().decode(await open(record, aad)));
+const keysWith = (kv, prefix) => [...kv.m.keys()].filter((k) => k.startsWith(prefix));
+
 test("only Shoebox's origin is served", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   assert.equal((await call(env, "/inbox", { key: KEY_A, origin: "https://example.com" })).status, 403);
   assert.equal((await call(env, "/inbox", { key: KEY_A, origin: "" })).status, 403);
 });
 
 test("the old relay's routes are not here", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   for (const [method, path] of [["POST", "/v1/agent"], ["GET", "/apple/token"], ["POST", "/remind"], ["GET", "/image?url=https://example.com/a.png"],
     ["GET", "/file?url=https://example.com/a"], ["GET", "/ical?url=https://example.com/a"], ["GET", "/version"], ["POST", "/beta"], ["GET", "/photo?q=cats"],
     ["POST", "/ai/messages"], ["GET", "/stats"], ["POST", "/song"]]) {
@@ -58,51 +94,55 @@ test("the old relay's routes are not here", async () => {
 });
 
 test("an address has an 8 character suffix and its keys expire", async () => {
-  const kv = memoryKV(), env = { SHOEBOX: kv };
-  const res = await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "Sam" } });
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const res = await mint(env, KEY_A, { name: "Sam" });
   assert.equal(res.status, 200);
   const { address } = await res.json();
   assert.match(address, /^sam-[a-z2-9]{8}@inmyshoebox\.com$/);
   const slug = address.split("@")[0];
   assert.ok(kv.ttl.get(`alias:${slug}`) > 0, "alias has a TTL");
-  assert.ok(kv.ttl.get(`box:${await boxOf(KEY_A)}`) > 0, "box has a TTL");
+  const box = await boxOf(KEY_A);
+  assert.ok(kv.ttl.get(`box:${box}`) > 0, "box has a TTL");
+  // The box record holds the phone's sealing key and the purchase that opened it. Never the secret itself.
+  const rec = await kv.get(`box:${box}`, "json");
+  assert.equal(rec.pub, PUB);
+  assert.equal(rec.buy, otidOf(KEY_A));
+  assert.ok(![...kv.m.values()].some((v) => v.includes(KEY_A)), "the mailbox secret is never stored, only its hash");
   assert.equal(newSlug("x").split("-")[1].length, 8);
 });
 
 test("new addresses are limited per network, then refused", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   const results = [];
   for (let i = 0; i < 7; i++) {
     const key = `sb-${String(i).repeat(40)}`;
-    results.push((await call(env, "/inbox/address", { method: "POST", key, body: { name: "kid" }, ip: "9.9.9.9" })).status);
+    results.push((await mint(env, key, { name: "kid", ip: "9.9.9.9" })).status);
   }
   assert.deepEqual(results, [200, 200, 200, 200, 200, 429, 429]);
   // Another network is not affected.
-  assert.equal((await call(env, "/inbox/address", { method: "POST", key: KEY_B, body: { name: "kid" }, ip: "8.8.8.8" })).status, 200);
+  assert.equal((await mint(env, KEY_B, { name: "kid", ip: "8.8.8.8" })).status, 200);
 });
 
 test("the whole relay stops minting at the daily cap", async () => {
-  const env = { SHOEBOX: memoryKV(), MINT_DAILY_CAP: "2" };
+  const env = newEnv({ MINT_DAILY_CAP: "2" });
   const statuses = [];
-  for (let i = 0; i < 4; i++) {
-    statuses.push((await call(env, "/inbox/address", { method: "POST", key: `sb-${String(i + 1).repeat(40)}`, body: { name: "a" }, ip: `7.7.7.${i}` })).status);
-  }
+  for (let i = 0; i < 4; i++) statuses.push((await mint(env, `sb-${String(i + 1).repeat(40)}`, { name: "a", ip: `7.7.7.${i}` })).status);
   assert.deepEqual(statuses, [200, 200, 503, 503]);
 });
 
 test("a phone can rename its address only a few times a day", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   const statuses = [];
-  for (let i = 0; i < 6; i++) statuses.push((await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" }, ip: `6.6.6.${i}` })).status);
+  for (let i = 0; i < 6; i++) statuses.push((await mint(env, KEY_A, { name: "sam", ip: `6.6.6.${i}` })).status);
   assert.deepEqual(statuses, [200, 200, 200, 200, 429, 429]);   // first mint, then 3 renames, then refused
 });
 
 test("mail to an unknown address is dropped without a bounce", async () => {
-  const kv = memoryKV(), env = { SHOEBOX: kv };
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
   const m = mail("nobody-abcd2345@inmyshoebox.com");
   await RELAY.email(m, env);
   assert.equal(m.rejected, null);
-  assert.equal([...kv.m.keys()].filter((k) => k.startsWith("m:")).length, 0);
+  assert.equal(keysWith(kv, "m:").length, 0);
   // A four letter suffix (the old form) is not an address any more.
   const old = mail("sam-ab2c@inmyshoebox.com");
   await RELAY.email(old, env);
@@ -110,18 +150,20 @@ test("mail to an unknown address is dropped without a bounce", async () => {
 });
 
 test("mail waits 7 days, reaches only its phone, and is gone once acknowledged", async () => {
-  const kv = memoryKV(), env = { SHOEBOX: kv };
-  const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
-  const m = mail(address);
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  const m = mail(addr);
   await RELAY.email(m, env);
   assert.equal(m.rejected, null);
-  const mailKey = [...kv.m.keys()].find((k) => k.startsWith("m:"));
+  const mailKey = keysWith(kv, "m:")[0];
   assert.equal(kv.ttl.get(mailKey), 7 * 86400);
 
   const inbox = await (await call(env, "/inbox", { key: KEY_A })).json();
   assert.equal(inbox.mails.length, 1);
-  assert.equal(inbox.address, address);
-  assert.match(inbox.mails[0].text, /band concert/i);
+  assert.equal(inbox.address, addr);
+  assert.equal(inbox.pub, PUB, "the phone is told which sealing key the relay holds for it");
+  const opened = await openJSON(inbox.mails[0], `${await boxOf(KEY_A)}:${inbox.mails[0].id}`);
+  assert.match(opened.text, /band concert/i);
   // Another phone sees nothing.
   assert.equal((await (await call(env, "/inbox", { key: KEY_B })).json()).mails.length, 0);
 
@@ -132,37 +174,35 @@ test("mail waits 7 days, reaches only its phone, and is gone once acknowledged",
 });
 
 test("one box takes only so many mails a day, and says so", async () => {
-  const kv = memoryKV(), env = { SHOEBOX: kv, MAILBOX_DAILY_CAP: "3" };
-  const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, MAILBOX_DAILY_CAP: "3" });
+  const addr = await address(env, KEY_A);
   const sent = [];
-  for (let i = 0; i < 5; i++) { const m = mail(address, `Note ${i}`); await RELAY.email(m, env); sent.push(m.rejected); }
-  assert.equal([...kv.m.keys()].filter((k) => k.startsWith("m:")).length, 3);
+  for (let i = 0; i < 5; i++) { const m = mail(addr, `Note ${i}`); await RELAY.email(m, env); sent.push(m.rejected); }
+  assert.equal(keysWith(kv, "m:").length, 3);
   assert.deepEqual(sent.slice(0, 3), [null, null, null]);
   assert.match(sent[3], /enough mail today/);
 });
 
 test("mail too large for a real address is bounced with a reason, not lost silently", async () => {
-  const kv = memoryKV(), env = { SHOEBOX: kv };
-  const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
-  const big = mail(address);
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  const big = mail(addr);
   big.rawSize = 13e6;
   await RELAY.email(big, env);
   assert.match(big.rejected, /Too large/);
-  assert.equal([...kv.m.keys()].filter((k) => k.startsWith("m:")).length, 0);
+  assert.equal(keysWith(kv, "m:").length, 0);
 });
 
 test("an IPv6 network counts as its first 64 bits", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   const statuses = [];
-  for (let i = 0; i < 6; i++) {
-    statuses.push((await call(env, "/inbox/address", { method: "POST", key: `sb-${String(i).repeat(40)}`, body: { name: "a" }, ip: `2001:db8:1:2::${i + 1}` })).status);
-  }
+  for (let i = 0; i < 6; i++) statuses.push((await mint(env, `sb-${String(i).repeat(40)}`, { name: "a", ip: `2001:db8:1:2::${i + 1}` })).status);
   assert.deepEqual(statuses, [200, 200, 200, 200, 200, 429]);
 });
 
 test("the shared address belongs to a pinned owner, never to the first caller", async () => {
   const kv = memoryKV();
-  const env = { SHOEBOX: kv, EMAIL_ADDRESS: "graham-keep@inmyshoebox.com" };
+  const env = newEnv({ SHOEBOX: kv, EMAIL_ADDRESS: "graham-keep@inmyshoebox.com" });
   assert.equal(await mailBox(env, "graham-keep@inmyshoebox.com"), null, "no owner secret: nobody");
   // Asking the inbox first does not make a phone the owner.
   await call(env, "/inbox", { key: KEY_B });
@@ -172,28 +212,30 @@ test("the shared address belongs to a pinned owner, never to the first caller", 
 });
 
 test("Delete everything removes the address, the box and every waiting mail, past the first page", async () => {
-  const kv = memoryKV(2), env = { SHOEBOX: kv };
-  const { address } = await (await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam" } })).json();
-  for (let i = 0; i < 5; i++) await RELAY.email(mail(address, `Note ${i}`), env);
-  assert.ok([...kv.m.keys()].filter((k) => k.startsWith("m:")).length >= 5);
+  const kv = memoryKV(2), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  for (let i = 0; i < 5; i++) await RELAY.email(mail(addr, `Note ${i}`), env);
+  assert.ok(keysWith(kv, "m:").length >= 5);
   const res = await call(env, "/me/delete", { method: "POST", key: KEY_A });
   assert.equal(res.status, 200);
   assert.equal((await res.json()).mail, 5);
-  const left = [...kv.m.keys()].filter((k) => /^(m|a|alias|box):/.test(k));
+  const left = [...kv.m.keys()].filter((k) => /^(m|a|alias|box|buy):/.test(k));
   assert.deepEqual(left, []);
-  assert.equal(await mailBox(env, address), null);
+  assert.equal(await mailBox(env, addr), null);
+  // Asking again is safe (the phone retries until it hears 200).
+  assert.equal((await call(env, "/me/delete", { method: "POST", key: KEY_A })).status, 200);
   // Without a key there is nothing to delete.
   assert.equal((await call(env, "/me/delete", { method: "POST" })).status, 401);
 });
 
 test("an inbox key must look like one", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   assert.equal((await call(env, "/inbox", { key: "short" })).status, 401);
   assert.equal((await call(env, "/inbox")).status, 401);
 });
 
 test("the stock route answers only Shoebox's origin and asks for 1 to 80 characters", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   assert.equal((await call(env, "/stock?q=cats", { origin: "http://localhost:3000" })).status, 403);
   assert.equal((await call(env, "/stock?q=")).status, 400);
   assert.equal((await call(env, "/stock?q=" + "a".repeat(81))).status, 400);
@@ -204,8 +246,223 @@ test("the stock route answers only Shoebox's origin and asks for 1 to 80 charact
 });
 
 test("previews refuse private addresses and non-links", async () => {
-  const env = { SHOEBOX: memoryKV() };
+  const env = newEnv();
   assert.equal((await call(env, "/preview?url=http://127.0.0.1/admin")).status, 400);
   assert.equal((await call(env, "/preview?url=http://169.254.169.254/latest")).status, 400);
   assert.equal((await call(env, "/preview?url=not-a-link")).status, 400);
+});
+
+/* ---- Sealed mail (R-13) ---- */
+
+test("a stored mail and its attachment hold nothing readable, and the phone opens both", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  const pdf = Buffer.from("%PDF-1.4 the school flyer, with a very particular line: Picture Day is Friday");
+  await RELAY.email(mail(addr, "Band concert", { attach: pdf }), env);
+
+  // What the relay stored: only version, id, arrival time and the sealed bytes.
+  const [mailKey] = keysWith(kv, "m:"), [fileKey] = keysWith(kv, "a:");
+  const stored = await kv.get(mailKey, "json");
+  assert.deepEqual(Object.keys(stored).sort(), ["at", "ct", "enc", "id", "v"]);
+  assert.equal(stored.v, 1);
+  assert.deepEqual(Object.keys(await kv.get(fileKey, "json")).sort(), ["ct", "enc", "v"]);
+  for (const secret of ["band concert", "Band concert", "school@example.com", "School", "uniform", "flyer", "Picture Day", pdf.toString("base64").slice(0, 40)]) {
+    for (const [k, v] of kv.m) assert.ok(!v.toLowerCase().includes(secret.toLowerCase()), `${k} holds "${secret}" in the clear`);
+  }
+
+  // What the phone gets: the same records, which it opens with its key and the box and mail ids.
+  const box = await boxOf(KEY_A), id = stored.id;
+  const body = await openJSON(stored, `${box}:${id}`);
+  assert.equal(body.from, "school@example.com");
+  assert.equal(body.fromName, "School");
+  assert.equal(body.subject, "Band concert");
+  assert.match(body.text, /band concert/i);
+  assert.deepEqual(body.links, []);
+  assert.deepEqual(body.attachments, [{ n: 0, name: "flyer.pdf", type: "application/pdf", size: pdf.length }]);
+  const file = await (await call(env, `/inbox/file?id=${id}&n=0`, { key: KEY_A })).json();
+  assert.deepEqual(Object.keys(file).sort(), ["ct", "enc", "v"]);
+  assert.deepEqual(Buffer.from(await open(file, `${box}:${id}:0`)), pdf);
+});
+
+test("a record does not open under the wrong box, mail or attachment number, or the wrong key", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  await RELAY.email(mail(addr, "Band concert", { attach: Buffer.from("%PDF-1.4 x") }), env);
+  const stored = await kv.get(keysWith(kv, "m:")[0], "json"), box = await boxOf(KEY_A);
+  await assert.rejects(open(stored, `${await boxOf(KEY_B)}:${stored.id}`));
+  await assert.rejects(open(stored, `${box}:other`));
+  await assert.rejects(open(stored, `${box}:${stored.id}:0`), "a mail is not an attachment");
+  const file = await kv.get(keysWith(kv, "a:")[0], "json");
+  await assert.rejects(open(file, `${box}:${stored.id}`), "an attachment is not a mail");
+  await assert.rejects(open(file, `${box}:${stored.id}:1`));
+  const elsewhere = await suite.kem.deserializePrivateKey(fromBase64(x25519(new Uint8Array(32).fill(9)).secret).buffer);
+  await assert.rejects(open(stored, `${box}:${stored.id}`, elsewhere), "another phone's key cannot open it");
+});
+
+test("each mail is sealed with a fresh key, so two identical mails look nothing alike", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const addr = await address(env, KEY_A);
+  await RELAY.email(mail(addr, "Same"), env);
+  await RELAY.email(mail(addr, "Same"), env);
+  const [a, b] = await Promise.all(keysWith(kv, "m:").map((k) => kv.get(k, "json")));
+  assert.notEqual(a.enc, b.enc);
+  assert.notEqual(a.ct, b.ct);
+});
+
+test("a box with no sealing key cannot receive: the sender is told, and nothing is stored", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  // A box from before sealing: an address and no key.
+  const box = await boxOf(KEY_A);
+  await kv.put("alias:sam-abcd2345", box, { expirationTtl: 90 * 86400 });
+  await kv.put(`box:${box}`, JSON.stringify({ slug: "sam-abcd2345", at: Date.now() }), { expirationTtl: 90 * 86400 });
+  const m = mail("sam-abcd2345@inmyshoebox.com");
+  await RELAY.email(m, env);
+  assert.equal(m.rejected, "Open Shoebox to finish setting up your address.");
+  assert.equal(keysWith(kv, "m:").length + keysWith(kv, "a:").length, 0);
+  assert.equal((await (await call(env, "/inbox", { key: KEY_A })).json()).pub, null);
+});
+
+test("an address cannot be made without the sealing key, and a bad key is refused", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  for (const pub of [undefined, "", "short", "!".repeat(44), PUB.slice(0, -1)]) {
+    assert.equal((await mint(env, KEY_A, { pub })).status, 400, `pub ${pub}`);
+  }
+  assert.equal(keysWith(kv, "box:").length + keysWith(kv, "alias:").length, 0);
+});
+
+test("/inbox/seal registers a key for an address that has none, and replaces a different one", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const box = await boxOf(KEY_A);
+  await kv.put("alias:sam-abcd2345", box, { expirationTtl: 90 * 86400 });
+  await kv.put(`box:${box}`, JSON.stringify({ slug: "sam-abcd2345", at: Date.now() }), { expirationTtl: 90 * 86400 });
+  const seal = (extra = {}) => call(env, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB, purchase: jwsFor(otidOf(KEY_A)), ...extra } });
+  assert.equal((await seal()).status, 200);
+  assert.equal((await (await call(env, "/inbox", { key: KEY_A })).json()).pub, PUB);
+  const m = mail("sam-abcd2345@inmyshoebox.com");
+  await RELAY.email(m, env);
+  assert.equal(m.rejected, null);
+  assert.equal(keysWith(kv, "m:").length, 1);
+  // A new phone key (a reinstall without iCloud Keychain) replaces it.
+  const second = x25519(new Uint8Array(32).fill(3)).public;
+  assert.equal((await seal({ pub: second })).status, 200);
+  assert.equal((await (await call(env, "/inbox", { key: KEY_A })).json()).pub, second);
+  assert.ok(kv.ttl.get(`box:${box}`) > 0 && kv.ttl.get("alias:sam-abcd2345") > 0, "both keep their TTL");
+});
+
+test("/inbox/seal needs an address first, a good key and a purchase", async () => {
+  const env = newEnv();
+  const seal = (body, key = KEY_A) => call(env, "/inbox/seal", { method: "POST", key, body });
+  assert.equal((await seal({ pub: PUB, purchase: jwsFor("1000000000000001") })).status, 404, "no address yet");
+  await address(env, KEY_A);
+  assert.equal((await seal({ pub: "nope", purchase: jwsFor("1000000000000001") })).status, 400);
+  assert.equal((await seal({ pub: PUB })).status, 402);
+  assert.equal((await seal({ pub: PUB, purchase: "garbage" })).status, 402);
+  assert.equal((await seal({ pub: PUB, purchase: jwsFor("1000000000000001") })).status, 200);
+  assert.equal((await call(env, "/inbox/seal", { method: "GET", key: KEY_A })).status, 404);
+});
+
+/* ---- The Plus gate (M-1) ---- */
+
+test("an address needs a signed Shoebox Plus purchase", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const attempt = (purchase) => call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam", pub: PUB, purchase } });
+  assert.equal((await attempt(undefined)).status, 402);
+  assert.equal((await attempt("garbage")).status, 402);
+  assert.equal((await attempt(jwsFor("1000000000000001", { productId: "com.grahamdeno.shoebox.other" }))).status, 402);
+  assert.equal((await attempt(jwsFor("1000000000000001", { bundleId: "com.example.other" }))).status, 402);
+  assert.equal((await attempt(jwsFor("1000000000000001", { revocationDate: Date.now() }))).status, 402);
+  assert.equal((await attempt(signPurchase(makeChain({ name: "Forged" })))).status, 402, "a chain that is not Apple's");
+  const body = await (await attempt("garbage")).json();
+  assert.match(body.error.message, /Shoebox Plus/);
+  assert.equal(keysWith(kv, "box:").length + keysWith(kv, "alias:").length + keysWith(kv, "buy:").length, 0, "nothing was made");
+  assert.equal((await attempt(jwsFor("1000000000000001"))).status, 200);
+});
+
+test("with no Apple root filled in and no test root, nothing verifies: the gate fails closed", async () => {
+  const env = { SHOEBOX: memoryKV() };
+  const res = await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam", pub: PUB, purchase: jwsFor("1000000000000001") } });
+  assert.equal(res.status, 402);
+});
+
+test("sandbox purchases are accepted until ALLOW_SANDBOX is turned off", async () => {
+  const sandbox = jwsFor("1000000000000001", { environment: "Sandbox" }), production = jwsFor("1000000000000002", { environment: "Production" });
+  const on = newEnv(), off = newEnv({ ALLOW_SANDBOX: "0" });
+  assert.equal((await mint(on, KEY_A, { purchase: sandbox })).status, 200);
+  assert.equal((await mint(off, KEY_A, { purchase: sandbox })).status, 402);
+  assert.equal((await mint(off, KEY_B, { purchase: production })).status, 200);
+});
+
+test("one purchase opens at most five boxes; a sixth is told to write to support", async () => {
+  const env = newEnv();
+  const otid = "1000000000000099", keys = [0, 1, 2, 3, 4, 5].map((i) => `sb-${String(i + 1).repeat(40)}`);
+  const statuses = [];
+  for (const [i, key] of keys.entries()) statuses.push((await mint(env, key, { otid, ip: `5.5.5.${i}` })).status);
+  assert.deepEqual(statuses, [200, 200, 200, 200, 200, 403]);
+  const sixth = await mint(env, keys[5], { otid, ip: "5.5.5.9" });
+  assert.equal((await sixth.json()).error.message, "This purchase is already on five phones. Write to support@inmyshoebox.com.");
+  // A phone that already holds a seat can ask again (a new name, or a new sealing key).
+  assert.equal((await mint(env, keys[0], { otid, ip: "5.5.5.10" })).status, 200);
+  assert.equal((await call(env, "/inbox/seal", { method: "POST", key: keys[1], body: { pub: PUB, purchase: jwsFor(otid) }, ip: "5.5.5.11" })).status, 200);
+  // Another purchase is not affected.
+  assert.equal((await mint(env, keys[5], { otid: "1000000000000100", ip: "5.5.5.12" })).status, 200);
+});
+
+test("Delete everything gives the purchase its seat back; so does a box that expired", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const otid = "1000000000000098", keys = [0, 1, 2, 3, 4, 5].map((i) => `sb-${String(i + 1).repeat(40)}`);
+  for (const [i, key] of keys.slice(0, 5).entries()) assert.equal((await mint(env, key, { otid, ip: `4.4.4.${i}` })).status, 200);
+  assert.equal((await mint(env, keys[5], { otid, ip: "4.4.4.9" })).status, 403);
+  await call(env, "/me/delete", { method: "POST", key: keys[0] });
+  assert.equal((await mint(env, keys[5], { otid, ip: "4.4.4.10" })).status, 200, "a seat came back");
+  assert.equal((await mint(env, keys[0], { otid, ip: "4.4.4.11" })).status, 403, "and is taken again");
+  // A box idle for 90 days is gone from KV; its seat is free without anyone asking.
+  await kv.delete(`box:${await boxOf(keys[1])}`);
+  assert.equal((await mint(env, keys[0], { otid, ip: "4.4.4.12" })).status, 200);
+  // The last box leaving removes the purchase record, so nothing is kept for it.
+  const alone = newEnv({ SHOEBOX: memoryKV() });
+  await mint(alone, KEY_A, { otid: "1000000000000097" });
+  assert.equal(keysWith(alone.SHOEBOX, "buy:").length, 1);
+  await call(alone, "/me/delete", { method: "POST", key: KEY_A });
+  assert.equal(keysWith(alone.SHOEBOX, "buy:").length, 0);
+});
+
+test("collecting mail, files, ack and delete are never gated: a refund stops only new addresses", async () => {
+  const kv = memoryKV(), live = newEnv({ SHOEBOX: kv });
+  const addr = await address(live, KEY_A);
+  await RELAY.email(mail(addr, "Band concert", { attach: Buffer.from("%PDF-1.4 x") }), live);
+  // From here on no purchase verifies (sandbox off, and the only purchase is a sandbox one).
+  const off = { ...live, ALLOW_SANDBOX: "0" };
+  assert.equal((await mint(off, KEY_B)).status, 402);
+  assert.equal((await call(off, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB, purchase: jwsFor(otidOf(KEY_A)) } })).status, 402);
+  const inbox = await call(off, "/inbox", { key: KEY_A });
+  assert.equal(inbox.status, 200);
+  const { mails, address: still } = await inbox.json();
+  assert.equal(mails.length, 1);
+  assert.equal(still, addr, "the address keeps working");
+  assert.equal((await call(off, `/inbox/file?id=${mails[0].id}&n=0`, { key: KEY_A })).status, 200);
+  assert.equal((await call(off, "/inbox/ack", { method: "POST", key: KEY_A, body: { ids: [mails[0].id] } })).status, 200);
+  const more = mail(addr, "Another");
+  await RELAY.email(more, off);
+  assert.equal(more.rejected, null, "mail still arrives");
+  assert.equal((await call(off, "/me/delete", { method: "POST", key: KEY_A })).status, 200);
+});
+
+test("purchase checks are limited per network, because each one costs CPU", async () => {
+  const env = newEnv();
+  const statuses = [];
+  for (let i = 0; i < 32; i++) statuses.push((await call(env, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "sam", pub: PUB, purchase: "garbage" }, ip: "3.3.3.3" })).status);
+  assert.equal(statuses.filter((s) => s === 402).length, 30);
+  assert.deepEqual(statuses.slice(30), [429, 429]);
+});
+
+test("plain mail from before sealing is still handed over as it was stored", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const box = await boxOf(KEY_A);
+  await kv.put(`m:${box}:old1`, JSON.stringify({ id: "old1", at: 1, from: "a@example.com", subject: "Old", text: "plain", links: [], attachments: [{ n: 0, name: "x.pdf", type: "application/pdf", size: 3 }] }));
+  await kv.put(`a:${box}:old1:0`, "QUJD");
+  const { mails } = await (await call(env, "/inbox", { key: KEY_A })).json();
+  assert.equal(mails.length, 1);
+  assert.equal(mails[0].text, "plain");
+  assert.equal(mails[0].v, undefined, "no version: the phone reads it as plain");
+  assert.deepEqual(await (await call(env, "/inbox/file?id=old1&n=0", { key: KEY_A })).json(), { data: "QUJD" });
 });

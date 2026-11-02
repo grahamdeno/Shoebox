@@ -1,5 +1,5 @@
 {
-  // Shoebox app relay: the Worker for the Shoebox iPhone app. Seven routes, nothing else (see worker.js).
+  // Shoebox app relay: the Worker for the Shoebox iPhone app. Eight routes, nothing else (see worker.js).
   // The old Worker (../wrangler.jsonc, shoebox-relay) stays as it is for Shoebox 1 until it is retired.
   // Deploy from this folder: npx wrangler deploy -c wrangler.jsonc   (docs/handoff/grok-relay-deploy.md has the steps)
   "name": "shoebox-app-relay",

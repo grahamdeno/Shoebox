@@ -21,6 +21,11 @@ struct SettingsView: View {
     @State private var firstName = ""
     @State private var addressNote = ""
     @State private var copied = false
+    @State private var plusOwned = false
+    @State private var plusPrice: String?
+    @State private var plusNote = ""
+    @State private var restoreNote = ""
+    @State private var removing = MailboxKeys.pendingDelete() != nil
     @State private var mailFor = Prefs.mailFor
     @State private var importing = false
     @State private var importNote = ""
@@ -39,6 +44,7 @@ struct SettingsView: View {
             }
         }
         .animation(.easeOut(duration: 0.18), value: page)
+        .onAppear { removing = MailboxKeys.pendingDelete() != nil }
         .font(.system(size: 17))
         .onChange(of: time) { _, t in
             Prefs.dailyMinute = DailyTime.minute(of: t)
@@ -76,8 +82,11 @@ struct SettingsView: View {
                     link("Look", ["Auto", "Light", "Dark"][min(max(appearance, 0), 2)], .look)
                     hair
                     link("Pictures", stock ? "On" : "Off", .pictures)
-                    hair
-                    link("Email", address == nil ? "Set up" : "On", .email)
+                    // Plus is offered after the first week, never in the first run (SPEC 9). A phone with an address always sees it.
+                    if Plus.isOffered(hasAddress: address != nil) {
+                        hair
+                        link("Email", address == nil ? "Set up" : "On", .email)
+                    }
                     hair
                     link("Backups", backupAnswer, .backups)
                 }
@@ -92,6 +101,14 @@ struct SettingsView: View {
                 }
                 .padding(.top, 22)
                 .padding(.leading, 6)
+
+                if Plus.isOffered(hasAddress: address != nil) {
+                    quietWord("Restore purchases") { restorePurchases() }
+                        .padding(.leading, 6)
+                    if !restoreNote.isEmpty { line(restoreNote) }
+                }
+                // Delete everything asks the relay again until it confirms (D-6).
+                if removing { line("Removing your address from the server.") }
 
                 Text("Shoebox \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
                     .font(.system(size: 13))
@@ -229,7 +246,9 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.top, 22)
-            } else {
+                // The relay holds no key for this phone yet, or another phone's: mail waits unopened until Plus is restored here.
+                if !Prefs.sealingRegistered { line("Mail waits until Shoebox Plus is restored on this phone.") }
+            } else if plusOwned {
                 line("Get an address. Forward an email to it to keep it.")
                 card {
                     row {
@@ -250,6 +269,19 @@ struct SettingsView: View {
                 }
                 .padding(.top, 22)
                 if !addressNote.isEmpty { line(addressNote) }
+            } else {
+                line("Forward an email to your own address to keep it.")
+                card {
+                    row {
+                        Button("Get your address with Shoebox Plus") { buyPlus() }
+                            .fontWeight(.semibold).foregroundStyle(Theme.ink)
+                            .frame(minHeight: Metrics.touchMin)
+                        Spacer()
+                        if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
+                    }
+                }
+                .padding(.top, 22)
+                if !plusNote.isEmpty { line(plusNote) }
             }
             question("Who it's about")
             card {
@@ -260,6 +292,11 @@ struct SettingsView: View {
                     .onChange(of: mailFor) { _, new in Prefs.mailFor = new }
             }
             line("A newsletter makes posts only for their dates.")
+            if let unopened = Inbox.unopenedLine() { line(unopened) }
+        }
+        .task {
+            plusOwned = await Plus.proof() != nil
+            plusPrice = await Plus.price()
         }
     }
 
@@ -322,7 +359,7 @@ struct SettingsView: View {
                 .padding(.top, 24).padding(.horizontal, 6)
             line("No account. No ads. No tracking.")
             line("Link previews and stock pictures pass through our server and are not kept.")
-            line("Forwarded mail waits there up to 7 days, until your phone collects it.")
+            line("Forwarded mail is sealed to a key only your phone holds. We can't read it. It waits up to 7 days.")
             Link("Read the privacy policy", destination: URL(string: "https://inmyshoebox.com/privacy")!)
                 .fontWeight(.semibold).foregroundStyle(Theme.ink)
                 .frame(minHeight: Metrics.touchMin, alignment: .leading)
@@ -333,12 +370,12 @@ struct SettingsView: View {
     private var deleteScreen: some View {
         VStack(alignment: .leading, spacing: 0) {
             title("Delete everything")
-            question("Delete all \(all.count) posts?")
+            question("Delete all \(liveCount) posts?")
             choices {
-                choice("Delete all \(all.count)", false) { deleteEverything() }
+                choice("Delete all \(liveCount)", false) { deleteEverything() }
                 choice("Keep them", true) { page = nil }
             }
-            line("A copy is saved first. Your Shoebox email address is deleted too.")
+            line("A copy is saved first. Your Shoebox email address is deleted too. Your backups stay in Files until you delete them.")
             if !importNote.isEmpty { line(importNote) }
         }
     }
@@ -352,26 +389,58 @@ struct SettingsView: View {
         if (try? data.write(to: url, options: .atomic)) != nil { exportURL = url }
     }
 
+    /// Posts that are still there. Ones already deleted (and kept only so Undo works) are not counted.
+    private var liveCount: Int { all.filter { $0.deletedAt == nil }.count }
+
     private func deleteEverything() {
-        // One last copy first, so this can be undone from Files. No copy, no delete.
+        // 1. One last copy first, so this can be undone from Files. No copy, no delete. The copy never carries the mailbox key.
         guard let data = Backups.export(context, files: true),
               Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
             importNote = "Couldn't save a copy first, so nothing was deleted."
             return
         }
+        // 2. The posts, "Who it's about", the address and the pick.
         for s in all { context.delete(s) }
         try? context.save()
         Prefs.pickIds = []
-        // Ask the server to delete your email address and any mail waiting there. It runs on its own;
-        // if the phone is offline the mail still expires there within 30 days.
-        if let key = Prefs.inboxKey {
-            Task.detached {
-                _ = try? await URLSession.shared.data(for: Relay.request("me/delete", method: "POST", body: Data("{}".utf8), key: key))
+        Prefs.pickDay = nil
+        Prefs.mailFor = ""
+        mailFor = ""
+        Prefs.inboxAddress = nil
+        Prefs.sealingRegistered = false
+        Prefs.unopenedMail = 0
+        Prefs.unopenedMailAt = nil
+        address = nil
+        // 3. The mailbox secret moves to a pending item and the sealing key goes: from here the app has no mailbox.
+        guard MailboxKeys.beginDelete() else {
+            importNote = "Your posts are deleted. Couldn't finish removing your address. Delete everything again to try."
+            return
+        }
+        // 4. The relay is asked now, and again on every launch and return to the app until it answers 200.
+        removing = MailboxKeys.pendingDelete() != nil
+        Task { await Inbox.finishPendingDelete(); removing = MailboxKeys.pendingDelete() != nil }
+        dismiss()
+    }
+
+    private func buyPlus() {
+        Task {
+            switch await Plus.buy() {
+            case .bought: plusOwned = true; plusNote = ""
+            case .pending: plusNote = "Waiting for approval."
+            case .cancelled: plusNote = ""
+            case .failed: plusNote = "Couldn't reach the App Store. Try again in a minute."
             }
         }
-        Prefs.inboxKey = nil
-        Prefs.inboxAddress = nil
-        dismiss()
+    }
+
+    private func restorePurchases() {
+        Task {
+            let found = await Plus.restore()
+            plusOwned = found
+            restoreNote = found ? "Shoebox Plus is on." : "No Shoebox Plus found for this Apple Account."
+            // An address whose key the relay does not hold yet is registered the next time mail is collected.
+            if found, address != nil { await Inbox.collect(context); address = Prefs.inboxAddress }
+        }
     }
 
     // MARK: Pieces
