@@ -29,6 +29,8 @@ enum Theme {
     static let plumInk = Color(UIColor(hex: 0x2A1C30))
     static let plum = Color(UIColor(hex: 0x56395F))
     static let nectarine = Color(UIColor(hex: 0xFFBD76))
+    /// Brick: the one red, only for Delete. Wheat words on it read at about 5.7 to 1.
+    static let brick = Color(UIColor(hex: 0xA8402F))
     /// The deepest plum: shadows, scrims over photos and glass tints where words sit on a picture.
     static let shade = Color(UIColor(hex: 0x1A1020))
 

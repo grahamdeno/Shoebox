@@ -191,11 +191,12 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 | System controls (date pickers, links) | Plum `#56395F` | Nectarine |
 | Bottom box | Plum `#56395F` glass, text Wheat, lid Nectarine with a `#E9A35C` lip | same |
 | Logo box | Plum `#56395F` | `#6B4A76` |
+| Delete (swipe) | Brick `#A8402F` with Wheat word | same |
 | Words on photos | Wheat | Wheat |
 | Shadows, scrims, glass over photos | plum shade `#1A1020` | same |
 | Launch screen | Wheat | Plum Night |
 
-No black anywhere. Each color has one job:
+No black anywhere. Brick is the only red and is used for Delete alone. Each color has one job:
 - Wheat and Plum Night are the grounds; Wheat is also the text on dark and on photos.
 - Plum Ink is the text on light.
 - Plum is the box, in the app and the logo, and the light-mode accent.
