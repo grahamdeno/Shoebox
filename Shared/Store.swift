@@ -135,6 +135,13 @@ enum Prefs {
         set { d.set(newValue, forKey: "sealingRegistered") }
     }
 
+    /// When this phone first saw the relay holding a sealing key that is not its own. It waits a day before
+    /// registering its own, so a key still on its way through iCloud Keychain is not replaced. Nil when they match.
+    static var sealMismatchSince: Date? {
+        get { d.object(forKey: "sealMismatchSince") as? Date }
+        set { d.set(newValue, forKey: "sealMismatchSince") }
+    }
+
     /// Mail that arrived sealed to a key this phone does not have (a new phone without iCloud Keychain). Counted and
     /// dropped; Settings shows one quiet line for a week after the last one.
     static var unopenedMail: Int {

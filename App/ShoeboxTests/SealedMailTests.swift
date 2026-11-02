@@ -74,6 +74,24 @@ final class SealedMailTests: XCTestCase {
         XCTAssertNil(Inbox.opened(future, box: "b", key: key))
     }
 
+    // Fix 3: mail this phone can't open stays on the relay for 2 days.
+
+    func testUnopenedMailStaysTwoDays() {
+        let now = Date()
+        let ms = { (ago: TimeInterval) in (now.timeIntervalSince1970 - ago) * 1000 }
+        XCTAssertFalse(Inbox.mayDropUnopened(at: ms(60), now: now))
+        XCTAssertFalse(Inbox.mayDropUnopened(at: ms(Inbox.keepUnopened - 60), now: now))
+        XCTAssertTrue(Inbox.mayDropUnopened(at: ms(Inbox.keepUnopened), now: now))
+        XCTAssertFalse(Inbox.mayDropUnopened(at: nil, now: now), "without a time, the relay's 7 days decide")
+    }
+
+    func testAMailWithoutAKeyIsNotOpenedButAPlainOneIs() throws {
+        let key = Curve25519.KeyAgreement.PrivateKey()
+        let sealed = try sealedMail(id: "m1", box: "b", to: key.publicKey, subject: "Concert")
+        XCTAssertNil(Inbox.opened(sealed, box: "b", key: nil))
+        XCTAssertEqual(Inbox.opened(Inbox.Mail(id: "m2", subject: "Old"), box: "b", key: nil)?.subject, "Old")
+    }
+
     func testUnopenedMailIsCountedForAWeek() {
         let d = AppGroup.defaults
         let (n, at) = (d.integer(forKey: "unopenedMail"), d.object(forKey: "unopenedMailAt"))

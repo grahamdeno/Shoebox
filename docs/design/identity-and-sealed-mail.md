@@ -94,3 +94,10 @@ Design for D-5 (Keychain), R-13 (sealed mail), M-1 (Shoebox Plus gate) and D-6 (
 ## Not in this design
 
 CloudKit sync, App Attest, moving Pixabay photos to R2, Durable Objects. See the reasons given November 2: they guard against users who don't exist yet, or close a door that is hard to reopen.
+
+## Rules added after review (2 November)
+
+- **A key is made only when the Keychain says there is none.** A read that fails for any other reason makes nothing, replaces nothing and skips the collection. New keys are added, never written over an existing item. A key made over the real one would sync through iCloud Keychain and lose it on every phone.
+- **The relay's sealing key is replaced only when nothing can be lost.** The phone registers its key at once only when the relay holds none. When the relay holds another key, the phone waits a day from when it first saw the mismatch (its own copy may still be coming through iCloud Keychain, or another phone on the account holds it), unless the person taps Restore purchases. No key is made while it waits.
+- **Mail the phone can't open stays on the relay for 2 days**, then is counted and acknowledged so it can't block newer mail (the relay serves the oldest 20).
+- **Delete everything ends only on the relay's own answer:** a 200 with `{"ok":true}`, or a 401 with the relay's error body. A Wi-Fi sign-in page that answers 200 keeps the retries going.

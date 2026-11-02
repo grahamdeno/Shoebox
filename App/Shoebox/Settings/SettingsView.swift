@@ -439,7 +439,7 @@ struct SettingsView: View {
             plusOwned = found
             restoreNote = found ? "Shoebox Plus is on." : "No Shoebox Plus found for this Apple Account."
             // An address whose key the relay does not hold yet is registered the next time mail is collected.
-            if found, address != nil { await Inbox.collect(context); address = Prefs.inboxAddress }
+            if found, address != nil { await Inbox.collect(context, forceSealing: true); address = Prefs.inboxAddress }
         }
     }
 

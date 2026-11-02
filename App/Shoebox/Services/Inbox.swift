@@ -34,16 +34,17 @@ enum Inbox {
     struct AddressResponse: Decodable { var address: String? }
     struct Problem: Decodable { var error: Message?; struct Message: Decodable { var message: String? } }
 
-    /// A private key that ties this phone to its mailbox on the relay. Made once, kept in the Keychain (MailboxKeys).
-    static var key: String { MailboxKeys.secretMakingOne() }
-
     /// Asks the relay for an address from your first name, with this phone's sealing key and StoreKit's signed proof of
     /// Shoebox Plus. Returns the address or a plain reason it failed.
     static func makeAddress(firstName: String) async -> Result<String, Error> {
         let name = firstName.lowercased().filter { $0.isLetter }
         guard !name.isEmpty else { return .failure(Failure("Type your first name first.")) }
         guard let purchase = await Plus.proof() else { return .failure(Failure("Shoebox Plus is needed to get an address.")) }
-        let body = try? JSONSerialization.data(withJSONObject: ["name": name, "pub": MailboxKeys.sealingPublicKey(), "purchase": purchase])
+        // The private key that ties this phone to its mailbox, and the sealing key, both kept in the Keychain.
+        guard let key = MailboxKeys.secretMakingOne(), let pub = MailboxKeys.sealingPublicKey() else {
+            return .failure(Failure("Couldn't save this phone's key. Try again in a minute."))
+        }
+        let body = try? JSONSerialization.data(withJSONObject: ["name": name, "pub": pub, "purchase": purchase])
         let req = Relay.request("inbox/address", method: "POST", body: body, key: key)
         guard let (data, res) = try? await URLSession.shared.data(for: req) else {
             return .failure(Failure("Couldn't reach Shoebox's server. Try again in a minute."))
@@ -51,6 +52,7 @@ enum Inbox {
         if (res as? HTTPURLResponse)?.statusCode == 200, let a = try? JSONDecoder().decode(AddressResponse.self, from: data).address {
             Prefs.inboxAddress = a
             Prefs.sealingRegistered = true
+            Prefs.sealMismatchSince = nil
             return .success(a)
         }
         let message = (try? JSONDecoder().decode(Problem.self, from: data))?.error?.message
@@ -63,9 +65,12 @@ enum Inbox {
         var errorDescription: String? { text }
     }
 
+    /// `forceSealing`: Settings › Restore purchases, where the person asks for this phone's key to be the one.
     @discardableResult
-    static func collect(_ context: ModelContext) async -> Int {
+    static func collect(_ context: ModelContext, forceSealing: Bool = false) async -> Int {
+        // A Keychain that can't be read right now: try again later, and never make a key over the one that's there.
         guard !running, let key = MailboxKeys.secret() else { return 0 }
+        if case .failed = MailboxKeys.sealingKeyState() { return 0 }
         running = true
         defer { running = false }
         let req = Relay.request("inbox", key: key)
@@ -73,8 +78,7 @@ enum Inbox {
               let r = try? JSONDecoder().decode(Response.self, from: data) else { return 0 }
         // No address on the server (a new relay, or it expired): stop showing one that no longer delivers.
         Prefs.inboxAddress = r.address
-        if r.address != nil { await registerSealingKey(held: r.pub, key: key) }
-        let sealing = MailboxKeys.sealingKey()
+        let sealing = await settleSealing(held: r.pub, hasAddress: r.address != nil, key: key, force: forceSealing)
         let box = MailboxKeys.boxID(for: key)
         var unopened = 0
         let existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
@@ -85,11 +89,14 @@ enum Inbox {
         // does not make the same event twice.
         var known = existing.filter { $0.deletedAt == nil && $0.kind == .email && $0.eventDate != nil }
         for stored in r.mails ?? [] {
-            // Sealed to a key this phone does not have (a new phone without iCloud Keychain): counted, acknowledged, never retried.
-            // The relay would delete it within 7 days anyway.
             // A version this build does not know is left on the relay for a newer build, not counted or acknowledged.
             if let v = stored.v, v != 1 { continue }
-            guard let m = opened(stored, box: box, key: sealing) else { unopened += 1; done.append(stored.id); continue }
+            // Sealed to a key this phone does not have yet. It may still be on its way through iCloud Keychain, so the
+            // mail stays on the relay for 2 days. After that it is counted and acknowledged, so it can't block newer mail.
+            guard let m = opened(stored, box: box, key: sealing) else {
+                if mayDropUnopened(at: stored.at, now: now) { unopened += 1; done.append(stored.id) }
+                continue
+            }
             let subject = EmailRules.cleanSubject(m.subject ?? "")
             let received = m.at.map { Date(timeIntervalSince1970: $0 / 1000) } ?? now
             // The same message twice: keep one.
@@ -199,13 +206,22 @@ enum Inbox {
 
     /// A mail as the relay stored it, made readable. A record without a version is plain mail from before sealing and is
     /// read as it is. Nil when it is sealed to a key this phone does not have, or is a version this build does not know.
-    static func opened(_ m: Mail, box: String, key: Curve25519.KeyAgreement.PrivateKey) -> Mail? {
+    static func opened(_ m: Mail, box: String, key: Curve25519.KeyAgreement.PrivateKey?) -> Mail? {
         guard let v = m.v else { return m }
-        guard v == 1,
+        guard v == 1, let key,
               let data = SealedMail.openBase64(enc: m.enc, ct: m.ct, aad: "\(box):\(m.id)", with: key),
               let body = try? JSONDecoder().decode(SealedMail.Opened.self, from: data) else { return nil }
         return Mail(id: m.id, from: body.from, fromName: body.fromName, subject: body.subject, text: body.text,
                     at: m.at, links: body.links, attachments: body.attachments)
+    }
+
+    /// How long mail this phone can't open stays on the relay before it is given up on.
+    static let keepUnopened: TimeInterval = 2 * 86_400
+
+    /// `at` is when the relay stored the mail, in milliseconds. Without one, the relay's own 7 days decide.
+    static func mayDropUnopened(at: Double?, now: Date) -> Bool {
+        guard let at else { return false }
+        return now.timeIntervalSince1970 - at / 1000 >= keepUnopened
     }
 
     /// Counts mail that could not be opened. After a week with none, the count starts again.
@@ -222,38 +238,84 @@ enum Inbox {
         return n == 1 ? "1 email couldn't be opened on this phone." : "\(n) emails couldn't be opened on this phone."
     }
 
-    /// The relay holds a sealing key for this phone's address. If it holds none, or another one (a new phone, or one
-    /// restored without iCloud Keychain), register this phone's. That needs Plus; without it the mail waits unopened
-    /// and Settings says so. Quiet: it never asks for anything.
-    private static func registerSealingKey(held: String?, key: String) async {
-        let mine = MailboxKeys.sealingPublicKey()
-        if held == mine { Prefs.sealingRegistered = true; return }
-        Prefs.sealingRegistered = false
-        guard let purchase = await Plus.proof() else { return }
-        let body = try? JSONSerialization.data(withJSONObject: ["pub": mine, "purchase": purchase])
-        let req = Relay.request("inbox/seal", method: "POST", body: body, key: key)
-        if let (_, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200 {
+    /// What to do about the sealing key the relay holds for this phone's address.
+    enum SealingStep: Equatable {
+        case ready      // the relay holds this phone's key
+        case register   // register this phone's key now
+        case wait       // the relay holds another key: give this phone's own time to arrive
+    }
+
+    /// How long a phone waits, when the relay holds a key it doesn't have, before registering its own.
+    static let sealingGrace: TimeInterval = 86_400
+
+    /// The rule. The relay holding no key means no mail is sealed to anything, so registering loses nothing. The relay
+    /// holding another key usually means this phone's copy is still coming through iCloud Keychain, or another phone
+    /// on the same Apple Account has it: registering at once would seal mail to a key the other phone doesn't have.
+    /// So the phone waits a day, unless the person asks (Restore purchases).
+    static func sealingStep(held: String?, mine: String?, mismatchSince: Date?, now: Date, force: Bool) -> SealingStep {
+        if let mine, held == mine { return .ready }
+        if held == nil || force { return .register }
+        if let since = mismatchSince, now.timeIntervalSince(since) >= sealingGrace { return .register }
+        return .wait
+    }
+
+    /// Settles the sealing key with the relay and returns the key to open mail with (nil when this phone has none).
+    /// A key is made only when it is about to be registered, and registering needs Plus; without it the mail waits
+    /// unopened and Settings says so. Quiet: it never asks for anything.
+    static func settleSealing(held: String?, hasAddress: Bool, key: String, force: Bool, now: Date = Date()) async -> Curve25519.KeyAgreement.PrivateKey? {
+        var mine: Curve25519.KeyAgreement.PrivateKey?
+        if case .found(let k) = MailboxKeys.sealingKeyState() { mine = k }
+        guard hasAddress else { return mine }
+        switch sealingStep(held: held, mine: mine.map(MailboxKeys.publicText), mismatchSince: Prefs.sealMismatchSince, now: now, force: force) {
+        case .ready:
             Prefs.sealingRegistered = true
+            Prefs.sealMismatchSince = nil
+            return mine
+        case .wait:
+            Prefs.sealingRegistered = false
+            if Prefs.sealMismatchSince == nil { Prefs.sealMismatchSince = now }
+            return mine
+        case .register:
+            Prefs.sealingRegistered = false
+            if held != nil, Prefs.sealMismatchSince == nil { Prefs.sealMismatchSince = now }
+            guard let purchase = await Plus.proof(), let sealing = mine ?? MailboxKeys.sealingKey() else { return mine }
+            let body = try? JSONSerialization.data(withJSONObject: ["pub": MailboxKeys.publicText(sealing), "purchase": purchase])
+            let req = Relay.request("inbox/seal", method: "POST", body: body, key: key)
+            if let (_, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200 {
+                Prefs.sealingRegistered = true
+                Prefs.sealMismatchSince = nil
+            }
+            return sealing
         }
     }
 
     // MARK: Delete everything that finishes (D-6)
 
-    /// Asks the relay to forget the mailbox that Delete everything took away, and keeps asking until it says 200: on every
-    /// launch and every return to the app. The request is safe to repeat. Returns true when nothing is left to remove.
-    /// A 401 means the relay refuses the key's shape, so it can hold nothing for it: that ends it too.
+    /// Asks the relay to forget the mailbox that Delete everything took away, and keeps asking until it confirms: on
+    /// every launch and every return to the app. The request is safe to repeat. Returns true when nothing is left to
+    /// remove. Only the relay's own answers end it: a 200 that says `{"ok":true}`, or a 401 with the relay's error
+    /// (it refuses the key's shape, so it can hold nothing for it). A Wi-Fi sign-in page that answers 200 does not.
     @discardableResult
-    static func finishPendingDelete(send: (URLRequest) async -> Int? = Inbox.statusOf) async -> Bool {
+    static func finishPendingDelete(send: (URLRequest) async -> (status: Int?, body: Data?) = Inbox.responseOf) async -> Bool {
         guard let secret = MailboxKeys.pendingDelete() else { return true }
-        let status = await send(Relay.request("me/delete", method: "POST", body: Data("{}".utf8), key: secret))
-        guard status == 200 || status == 401 else { return false }
+        let answer = await send(Relay.request("me/delete", method: "POST", body: Data("{}".utf8), key: secret))
+        guard relayConfirmedDelete(status: answer.status, body: answer.body) else { return false }
         MailboxKeys.finishDelete()
         return true
     }
 
-    nonisolated static func statusOf(_ request: URLRequest) async -> Int? {
-        guard let (_, res) = try? await URLSession.shared.data(for: request) else { return nil }
-        return (res as? HTTPURLResponse)?.statusCode
+    static func relayConfirmedDelete(status: Int?, body: Data?) -> Bool {
+        guard let body, let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any] else { return false }
+        switch status {
+        case 200: return object["ok"] as? Bool == true
+        case 401: return (object["error"] as? [String: Any])?["message"] is String
+        default: return false
+        }
+    }
+
+    nonisolated static func responseOf(_ request: URLRequest) async -> (status: Int?, body: Data?) {
+        guard let (data, res) = try? await URLSession.shared.data(for: request) else { return (nil, nil) }
+        return ((res as? HTTPURLResponse)?.statusCode, data)
     }
 
     /// Saves, then acknowledges the mail that was handled. Returns false, without acknowledging anything,
@@ -304,12 +366,12 @@ enum Inbox {
 
     /// One attachment of a waiting mail, fetched before the mail is acknowledged (which deletes it). A sealed one is
     /// opened here; a plain one from before sealing is just decoded.
-    private static func attachment(mail id: String, n: Int, key: String, box: String, sealing: Curve25519.KeyAgreement.PrivateKey) async -> Data? {
+    private static func attachment(mail id: String, n: Int, key: String, box: String, sealing: Curve25519.KeyAgreement.PrivateKey?) async -> Data? {
         let req = Relay.request("inbox/file", query: [.init(name: "id", value: id), .init(name: "n", value: String(n))], key: key)
         guard let (data, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200,
               let file = try? JSONDecoder().decode(FileResponse.self, from: data) else { return nil }
         if let v = file.v {
-            guard v == 1 else { return nil }
+            guard v == 1, let sealing else { return nil }
             return SealedMail.openBase64(enc: file.enc, ct: file.ct, aad: "\(box):\(id):\(n)", with: sealing)
         }
         guard let b64 = file.data else { return nil }

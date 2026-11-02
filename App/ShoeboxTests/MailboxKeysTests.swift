@@ -7,7 +7,17 @@ final class MemorySecretStore: SecretStore {
     var items: [String: Data] = [:]
     var failWrites = false
     var corruptWrites = false
-    func read(_ account: String) -> Data? { items[account] }
+    /// Reads fail (the phone is locked, the Keychain is busy) for these accounts.
+    var failReads: Set<String> = []
+    func read(_ account: String) -> SecretRead {
+        if failReads.contains(account) { return .failed }
+        return items[account].map(SecretRead.found) ?? .missing
+    }
+    func add(_ data: Data, account: String) -> Bool {
+        if failWrites || items[account] != nil { return false }
+        items[account] = corruptWrites ? Data("other".utf8) : data
+        return true
+    }
     func write(_ data: Data, account: String) -> Bool {
         if failWrites { return false }
         items[account] = corruptWrites ? Data("other".utf8) : data
@@ -75,8 +85,8 @@ final class MailboxKeysTests: XCTestCase {
         XCTAssertNil(MailboxKeys.secret())
     }
 
-    func testTheSecretIsMadeOnceAndKept() {
-        let a = MailboxKeys.secretMakingOne()
+    func testTheSecretIsMadeOnceAndKept() throws {
+        let a = try XCTUnwrap(MailboxKeys.secretMakingOne())
         XCTAssertTrue(a.hasPrefix("sb-"))
         XCTAssertEqual(a.count, 43)
         XCTAssertEqual(MailboxKeys.secretMakingOne(), a)
@@ -112,26 +122,31 @@ final class MailboxKeysTests: XCTestCase {
         return MailboxKeys.pendingDelete()!
     }
 
+    private let ok = Data(#"{"ok":true,"mail":0}"#.utf8)
+    private let refused = Data(#"{"error":{"message":"No inbox key."}}"#.utf8)
+
     func testOfflineKeepsThePendingDelete() async {
         let secret = pend()
-        let done = await Inbox.finishPendingDelete(send: { _ in nil })
+        let done = await Inbox.finishPendingDelete(send: { _ in (nil, nil) })
         XCTAssertFalse(done)
         XCTAssertEqual(MailboxKeys.pendingDelete(), secret)
     }
 
     func testA500KeepsItAnd200ClearsIt() async {
         _ = pend()
-        var finished = await Inbox.finishPendingDelete(send: { _ in 500 })
+        let ok = self.ok
+        var finished = await Inbox.finishPendingDelete(send: { _ in (500, nil) })
         XCTAssertFalse(finished)
         XCTAssertNotNil(MailboxKeys.pendingDelete())
-        finished = await Inbox.finishPendingDelete(send: { _ in 200 })
+        finished = await Inbox.finishPendingDelete(send: { _ in (200, ok) })
         XCTAssertTrue(finished)
         XCTAssertNil(MailboxKeys.pendingDelete())
     }
 
     func testA401AlsoEndsIt() async {
         _ = pend()
-        let finished = await Inbox.finishPendingDelete(send: { _ in 401 })
+        let refused = self.refused
+        let finished = await Inbox.finishPendingDelete(send: { _ in (401, refused) })
         XCTAssertTrue(finished)
         XCTAssertNil(MailboxKeys.pendingDelete())
     }
@@ -139,16 +154,166 @@ final class MailboxKeysTests: XCTestCase {
     func testTheRequestCarriesThePendingSecret() async {
         let secret = pend()
         var sent: URLRequest?
-        _ = await Inbox.finishPendingDelete(send: { sent = $0; return 200 })
+        let ok = self.ok
+        _ = await Inbox.finishPendingDelete(send: { sent = $0; return (200, ok) })
         XCTAssertEqual(sent?.url?.path.hasSuffix("me/delete"), true)
         XCTAssertTrue(sent?.allHTTPHeaderFields?.values.contains(where: { $0.contains(secret) }) ?? false)
     }
 
+    // Fix 4: only the relay's own answer ends the retries.
+
+    func testA200ThatIsNotTheRelaysAnswerKeepsThePendingDelete() async {
+        _ = pend()
+        let portal = Data("<html>Sign in to Hotel Wi-Fi</html>".utf8)
+        var finished = await Inbox.finishPendingDelete(send: { _ in (200, portal) })
+        XCTAssertFalse(finished, "a Wi-Fi sign-in page must not end the retries")
+        finished = await Inbox.finishPendingDelete(send: { _ in (200, Data(#"{"ok":false}"#.utf8)) })
+        XCTAssertFalse(finished)
+        finished = await Inbox.finishPendingDelete(send: { _ in (200, nil) })
+        XCTAssertFalse(finished)
+        XCTAssertNotNil(MailboxKeys.pendingDelete())
+    }
+
+    func testA401ThatIsNotTheRelaysAnswerKeepsThePendingDelete() async {
+        _ = pend()
+        let finished = await Inbox.finishPendingDelete(send: { _ in (401, Data("Unauthorized".utf8)) })
+        XCTAssertFalse(finished)
+        XCTAssertNotNil(MailboxKeys.pendingDelete())
+    }
+
     func testNothingPendingMeansNothingToDo() async {
         var called = false
-        let done = await Inbox.finishPendingDelete(send: { _ in called = true; return 200 })
+        let done = await Inbox.finishPendingDelete(send: { _ in called = true; return (200, nil) })
         XCTAssertTrue(done)
         XCTAssertFalse(called)
+    }
+
+    // Fix 1: a key is made only when the Keychain says there is none.
+
+    func testAFailedReadNeverReplacesTheSealingKey() {
+        let real = Curve25519.KeyAgreement.PrivateKey()
+        store.items["seal"] = real.rawRepresentation
+        store.failReads = ["seal"]
+        XCTAssertNil(MailboxKeys.sealingKey())
+        XCTAssertNil(MailboxKeys.sealingPublicKey())
+        guard case .failed = MailboxKeys.sealingKeyState() else { return XCTFail("a failed read is not a missing key") }
+        XCTAssertEqual(store.items["seal"], real.rawRepresentation, "the real key is untouched")
+        store.failReads = []
+        XCTAssertEqual(MailboxKeys.sealingKey()?.rawRepresentation, real.rawRepresentation)
+    }
+
+    func testBytesThatAreNotAKeyAreNeverReplaced() {
+        store.items["seal"] = Data([1, 2, 3])
+        XCTAssertNil(MailboxKeys.sealingKey())
+        XCTAssertEqual(store.items["seal"], Data([1, 2, 3]))
+    }
+
+    func testAFailedReadNeverReplacesTheSecret() {
+        store.items["secret"] = Data(key.utf8)
+        store.failReads = ["secret"]
+        XCTAssertNil(MailboxKeys.secretMakingOne())
+        store.failReads = []
+        XCTAssertEqual(MailboxKeys.secret(), key)
+    }
+
+    func testAKeyThatArrivedInBetweenWins() {
+        // Missing on the first read, then iCloud Keychain delivers one before the add: the add fails, that one is used.
+        final class ArrivesLate: SecretStore {
+            let inner = MemorySecretStore()
+            let arriving: Data
+            var reads = 0
+            init(_ arriving: Data) { self.arriving = arriving }
+            func read(_ account: String) -> SecretRead {
+                reads += 1
+                if reads == 2 { inner.items[account] = arriving }
+                return inner.read(account)
+            }
+            func add(_ data: Data, account: String) -> Bool {
+                if inner.items[account] == nil { inner.items[account] = arriving }
+                return inner.add(data, account: account)
+            }
+            func write(_ data: Data, account: String) -> Bool { inner.write(data, account: account) }
+            func remove(_ account: String) { inner.remove(account) }
+        }
+        let real = Curve25519.KeyAgreement.PrivateKey()
+        MailboxKeys.store = ArrivesLate(real.rawRepresentation)
+        XCTAssertEqual(MailboxKeys.sealingKey()?.rawRepresentation, real.rawRepresentation)
+    }
+
+    func testAMissingKeyIsMadeOnce() {
+        let a = MailboxKeys.sealingKey()
+        XCTAssertNotNil(a)
+        XCTAssertEqual(MailboxKeys.sealingKey()?.rawRepresentation, a?.rawRepresentation)
+    }
+
+    func testMigrationWaitsWhenTheKeychainCantBeRead() {
+        defaults.set(key, forKey: "inboxKey")
+        store.failReads = ["secret"]
+        MailboxKeys.migrate(defaults: defaults)
+        XCTAssertEqual(defaults.string(forKey: "inboxKey"), key)
+        XCTAssertNil(store.items["secret"])
+    }
+
+    func testDeleteChangesNothingWhenTheKeychainCantBeRead() {
+        store.items["secret"] = Data(key.utf8)
+        store.failReads = ["secret"]
+        XCTAssertFalse(MailboxKeys.beginDelete())
+        XCTAssertEqual(store.items["secret"], Data(key.utf8))
+        XCTAssertNil(store.items["pendingDelete"])
+    }
+
+    func testRestoreWaitsWhenTheKeychainCantBeRead() {
+        store.failReads = ["secret"]
+        MailboxKeys.restoreIfEmpty(key)
+        XCTAssertNil(store.items["secret"])
+    }
+
+    // Fix 2: the relay's key is replaced only when nothing can be lost.
+
+    func testSealingStep() {
+        let now = Date()
+        let step = { (held: String?, mine: String?, since: Date?, force: Bool) in
+            Inbox.sealingStep(held: held, mine: mine, mismatchSince: since, now: now, force: force)
+        }
+        XCTAssertEqual(step("a", "a", nil, false), .ready)
+        XCTAssertEqual(step(nil, "a", nil, false), .register, "the relay holds no key: nothing is sealed to anything")
+        XCTAssertEqual(step(nil, nil, nil, false), .register)
+        XCTAssertEqual(step("a", "b", nil, false), .wait, "another key: this phone's may still be on its way")
+        XCTAssertEqual(step("a", nil, nil, false), .wait, "no key here yet: never make one over the one the relay holds")
+        XCTAssertEqual(step("a", "b", now.addingTimeInterval(-3_600), false), .wait)
+        XCTAssertEqual(step("a", "b", now.addingTimeInterval(-Inbox.sealingGrace), false), .register, "a day later")
+        XCTAssertEqual(step("a", nil, nil, true), .register, "Restore purchases")
+        XCTAssertEqual(step("a", "a", nil, true), .ready)
+    }
+
+    func testWaitingMakesNoKeyAndStartsTheClock() async {
+        let d = AppGroup.defaults
+        let saved = (d.object(forKey: "sealMismatchSince"), d.bool(forKey: "sealingRegistered"))
+        defer { d.set(saved.0, forKey: "sealMismatchSince"); d.set(saved.1, forKey: "sealingRegistered") }
+        Prefs.sealMismatchSince = nil
+        let other = Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation.base64EncodedString()
+        let now = Date()
+        let key = await Inbox.settleSealing(held: other, hasAddress: true, key: self.key, force: false, now: now)
+        XCTAssertNil(key)
+        XCTAssertNil(store.items["seal"], "no key is made while the relay holds another")
+        XCTAssertEqual(Prefs.sealMismatchSince, now)
+        XCTAssertFalse(Prefs.sealingRegistered)
+        // A later look keeps the first time, so the day is counted from when the mismatch was first seen.
+        _ = await Inbox.settleSealing(held: other, hasAddress: true, key: self.key, force: false, now: now.addingTimeInterval(60))
+        XCTAssertEqual(Prefs.sealMismatchSince, now)
+    }
+
+    func testTheRelaysOwnKeyClearsTheClock() async {
+        let d = AppGroup.defaults
+        let saved = (d.object(forKey: "sealMismatchSince"), d.bool(forKey: "sealingRegistered"))
+        defer { d.set(saved.0, forKey: "sealMismatchSince"); d.set(saved.1, forKey: "sealingRegistered") }
+        let mine = Curve25519.KeyAgreement.PrivateKey()
+        store.items["seal"] = mine.rawRepresentation
+        Prefs.sealMismatchSince = Date(timeIntervalSince1970: 0)
+        let key = await Inbox.settleSealing(held: MailboxKeys.publicText(mine), hasAddress: true, key: self.key, force: false)
+        XCTAssertEqual(key?.rawRepresentation, mine.rawRepresentation)
+        XCTAssertNil(Prefs.sealMismatchSince)
+        XCTAssertTrue(Prefs.sealingRegistered)
     }
 
     func testBoxIDMatchesTheRelaysDerivation() {
