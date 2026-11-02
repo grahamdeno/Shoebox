@@ -4,7 +4,7 @@ Design for D-5 (Keychain), R-13 (sealed mail), M-1 (Shoebox Plus gate) and D-6 (
 
 ## Irreversible or outside-the-repo steps, first
 
-1. **Workers Paid on before the email catch-all moves to the new Worker.** On the free plan a Worker gets about 10 ms of CPU per email; parsing a large newsletter, and sealing it, can exceed that and the mail is lost. (Cloudflare: email Workers count against the standard Workers CPU limits; inbound messages are capped at 25 MiB.) Graham, or Grok with Graham's yes.
+1. **Workers Paid on before the public TestFlight link goes out.** On the free plan a Worker gets about 10 ms of CPU per email (Cloudflare: email Workers count against the standard Workers CPU limits; inbound messages are capped at 25 MiB). Graham's own forwards fit: 20 since late October, the largest 2.8 MB, no bounces. Strangers' mail is not predictable, so upgrade before they arrive. Graham, or Grok with Graham's yes.
 2. **Paid Apps Agreement active** (W-9, bank account) in App Store Connect. Needed to test the purchase in the sandbox. Graham.
 3. **Create the in-app purchase** `com.grahamdeno.shoebox.plus`, non-consumable, $9.99, Family Sharing on. **A product id can never be reused or changed.** Grok with Graham's yes, after this design is accepted.
 4. **Redeploy the app relay** with sealing and the purchase check (`wrangler deploy`; the code gains an import, so the dashboard editor no longer works). Rollback: `wrangler rollback` to the version Grok deployed on November 2.
