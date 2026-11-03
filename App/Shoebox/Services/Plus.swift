@@ -9,12 +9,25 @@ enum Plus {
     /// A product id can never be reused or changed once it exists in App Store Connect.
     static let productID = "com.grahamdeno.shoebox.plus"
 
-    /// Plus is offered a week after the first run, never in it (SPEC 9).
+    /// Plus is offered a week after the first run, never in it (SPEC 9), except in the sandbox (`inSandbox`).
     static let offerAfter: TimeInterval = 7 * 86_400
 
-    /// Has this install been open for a week? A phone that already has an address is past it.
-    static func isOffered(now: Date = Date(), firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil) -> Bool {
-        if hasAddress { return true }
+    /// Builds from TestFlight, App Review and Xcode run in the App Store sandbox. There Plus is offered at once, because a
+    /// reviewer or a tester can't wait a week. Customers on the App Store still see it after 7 days. False until checked.
+    private(set) static var inSandbox = false
+
+    /// Asks StoreKit which store this build came from. Never asks the person to sign in (that is `refresh`, not used).
+    static func checkStore() async {
+        guard let result = try? await AppTransaction.shared else { return }
+        switch result {
+        case .verified(let t), .unverified(let t, _): inSandbox = t.environment != .production
+        }
+    }
+
+    /// Has this install been open for a week? A phone that already has an address is past it, and so is a review or
+    /// TestFlight build.
+    static func isOffered(now: Date = Date(), firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil, sandbox: Bool = Plus.inSandbox) -> Bool {
+        if hasAddress || sandbox { return true }
         guard let firstOpened else { return false }
         return now.timeIntervalSince(firstOpened) >= offerAfter
     }

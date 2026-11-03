@@ -26,6 +26,7 @@ struct SettingsView: View {
     @State private var plusNote = ""
     @State private var restoreNote = ""
     @State private var removing = MailboxKeys.pendingDelete() != nil
+    @State private var sandbox = Plus.inSandbox
     @State private var mailFor = Prefs.mailFor
     @State private var importing = false
     @State private var importNote = ""
@@ -45,6 +46,7 @@ struct SettingsView: View {
         }
         .animation(.easeOut(duration: 0.18), value: page)
         .onAppear { removing = MailboxKeys.pendingDelete() != nil }
+        .task { await Plus.checkStore(); sandbox = Plus.inSandbox }
         .font(.system(size: 17))
         .onChange(of: time) { _, t in
             Prefs.dailyMinute = DailyTime.minute(of: t)
@@ -83,7 +85,7 @@ struct SettingsView: View {
                     hair
                     link("Pictures", stock ? "On" : "Off", .pictures)
                     // Plus is offered after the first week, never in the first run (SPEC 9). A phone with an address always sees it.
-                    if Plus.isOffered(hasAddress: address != nil) {
+                    if Plus.isOffered(hasAddress: address != nil, sandbox: sandbox) {
                         hair
                         link("Email", address == nil ? "Set up" : "On", .email)
                     }
@@ -102,7 +104,7 @@ struct SettingsView: View {
                 .padding(.top, 22)
                 .padding(.leading, 6)
 
-                if Plus.isOffered(hasAddress: address != nil) {
+                if Plus.isOffered(hasAddress: address != nil, sandbox: sandbox) {
                     quietWord("Restore purchases") { restorePurchases() }
                         .padding(.leading, 6)
                     if !restoreNote.isEmpty { line(restoreNote) }
