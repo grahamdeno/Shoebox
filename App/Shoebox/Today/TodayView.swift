@@ -283,7 +283,7 @@ struct TodayView: View {
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
     }
 
-    /// Your Shoebox, across the bottom: a Plum box (Bone in dark) with its Sunflower lid on top, like the logo.
+    /// Your Shoebox, across the bottom: a Plum box (a lighter Plum in dark) with its Sunflower lid on top, like the logo.
     /// The lid lifts and tips open once a post is far enough to drop in, and the whole box rattles
     /// when a post is flicked away or dropped into it. Tap it or pull it up to open the Box.
     private var strip: some View {

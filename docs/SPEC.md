@@ -192,9 +192,9 @@ Next: the Core package's richer planner (`Core/Sources/ShoeboxCore/Planner`, rul
 | Your reason (on a photo) | Sunflower | Sunflower |
 | Action word (Keep, Next) | Plum Ink | Sunflower `#F9C93A` |
 | System controls (date pickers, links) | Plum `#3B2240` | Sunflower |
-| Bottom box | Plum `#3B2240` glass, text Bone | Bone `#F1E9D8` glass, text Plum |
+| Bottom box | Plum `#3B2240` glass, text Bone | lighter Plum `#6A4F73` glass, text Bone (no bright band on a dark screen; the lid is the bright mark) |
 | Lid | Sunflower `#F9C93A` with a `#D4A21E` lip | same |
-| Logo | tile Bone, box Plum, cards `#A798AD` | tile Plum, box Bone, cards `#8E7A92` |
+| Logo | tile Bone, box Plum, cards `#A798AD` | tile Plum, box lighter Plum `#6A4F73`, cards `#B7A6BA` |
 | Delete (swipe) | Brick `#A8402F` with Bone word | same |
 | Words on photos | Bone | Bone |
 | Shadows, scrims, glass over photos | plum shade `#1A1020` | same |

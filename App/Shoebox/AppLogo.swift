@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The app's own icon, drawn from the same artwork as the home screen icon:
-/// the cards, the Plum (Bone in dark) box and the Sunflower lid on the icon's tile.
+/// the cards, the Plum (a lighter Plum in dark) box and the Sunflower lid on the icon's tile.
 struct AppLogo: View {
     var size: CGFloat = 120
     /// Draw the icon tile behind the mark. Off when it sits on a colored surface.
