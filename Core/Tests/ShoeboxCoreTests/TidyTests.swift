@@ -5,7 +5,7 @@ import Testing
 /// SPEC 2.4: titles worth reading, topics, and folds. The cases are the Put away list of November 2.
 struct TidyTests {
     private func item(_ title: String, snippet: String = "", note: String = "", url: String? = nil,
-                      origin: String = "", subject: String? = nil, kind: String = "link", id: String? = nil) -> Tidy.Item {
+                      origin: String = "", kind: String = "link", subject: String? = nil, id: String? = nil) -> Tidy.Item {
         Tidy.Item(id: id ?? UUID().uuidString, title: title, snippet: snippet, note: note, url: url,
                   origin: origin, emailSubject: subject, kind: kind)
     }
