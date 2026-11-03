@@ -103,7 +103,7 @@ struct TodayView: View {
                     topBar(onPhoto: true)
                 } else {
                     stopScreen
-                    topBar(onPhoto: false)
+                    newLow
                 }
 
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
@@ -117,7 +117,7 @@ struct TodayView: View {
                     .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
 
                 if let toast {
-                    toastView(toast)
+                    toastView(toast, aboveNew: queue.isEmpty)
                 }
             }
         }
@@ -392,15 +392,15 @@ struct TodayView: View {
         }
     }
 
-    /// The day's end: a message, not a post, set high, with one choice: keep going through your Shoebox.
-    /// (+ New is already at the top, so there is no second way to keep something here.)
+    /// The day's end: who we are at the top (the logo, the name and the line), then a message, not a post, with one
+    /// choice: keep going through your Shoebox. + New sits low on the right, under the thumb (`newLow`).
     private var stopScreen: some View {
         let more = browsable
         let head: String
         let sub: String
         if !anyKept {
             head = "Nothing kept yet."
-            sub = "Share a page to Shoebox from Safari or any app, or tap New."
+            sub = "Share a page to Shoebox from Safari or any app, or tap + New below."
         } else if !pickIds.isEmpty && !more.isEmpty {
             head = "That's \(pickIds.count) for today."
             sub = "Got time? Go through your Shoebox and act on what you like."
@@ -412,6 +412,20 @@ struct TodayView: View {
             sub = nextBackText
         }
         return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 14) {
+                AppLogo(size: 52)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Shoebox")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Theme.ink)
+                    Text("Keep it. It comes back to you.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.quiet)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Shoebox. Keep it. It comes back to you.")
+            .padding(.bottom, 88)
             Text(head)
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Theme.ink)
@@ -428,8 +442,30 @@ struct TodayView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
-        .padding(.top, 150)
+        .padding(.top, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// + New on the day's end screen: low on the right, just above the box, where the right thumb rests.
+    /// (On a post it stays at the top, clear of the flick and the words.)
+    private var newLow: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button { showAdd = true } label: {
+                    Text("+ New")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .trailing)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Keep something new")
+            }
+            .padding(.trailing, 24)
+            .padding(.bottom, Self.stripHeight + 12)
+        }
     }
 
     private func row(_ text: String, action: @escaping () -> Void) -> some View {
@@ -453,7 +489,7 @@ struct TodayView: View {
     }
 
     /// Undo: small, at the right above the box, clear of the post and of the thumb's swipe path.
-    private func toastView(_ toast: Toast) -> some View {
+    private func toastView(_ toast: Toast, aboveNew: Bool = false) -> some View {
         VStack {
             Spacer()
             HStack {
@@ -465,7 +501,8 @@ struct TodayView: View {
                 }
             }
             .padding(.trailing, 16)
-            .padding(.bottom, Self.stripHeight + 14)
+            // On the day's end screen + New sits here, so Undo rises above it.
+            .padding(.bottom, Self.stripHeight + 14 + (aboveNew ? Metrics.touchMin + 8 : 0))
         }
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
