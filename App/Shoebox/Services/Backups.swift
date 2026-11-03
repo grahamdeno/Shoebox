@@ -342,6 +342,9 @@ enum Backups {
         return wrote
     }
 
+    /// Whether the daily copies also go to iCloud Drive.
+    static var usesICloud: Bool { cloudRoot != nil }
+
     static var lastBackupAt: Date? { AppGroup.defaults.object(forKey: "lastBackupAt") as? Date }
 }
 
