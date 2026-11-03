@@ -70,15 +70,18 @@ enum Theme {
     static let lidLip = Color(UIColor(hex: 0xD4A21E))
     static let lidInk = plumInk
 
-    // Your Shoebox, the box across the bottom of Today: Plum with Bone words in light, Bone with Plum words in dark, like the logo.
-    static let boxGlass = adaptive(light: 0x3B2240, dark: 0xF1E9D8)
-    static let boxText = adaptive(light: 0xF1E9D8, dark: 0x3B2240)
+    // Your Shoebox, the box across the bottom of Today: Plum with Bone words in light; in dark a lighter Plum, so the
+    // box stands off the ground (2 to 1) without a bright band across a dark screen. The lid stays the one bright mark.
+    // Bone words on it read at about 5.8 to 1. Same box as the logo.
+    static let plumLight: UInt32 = 0x6A4F73
+    static let boxGlass = adaptive(light: 0x3B2240, dark: plumLight)
+    static let boxText = adaptive(light: 0xF1E9D8, dark: 0xF1E9D8)
 
-    // The logo. The box is Plum on the light tile and Bone on the Plum tile, so it shows at icon size.
-    static let logoBox = adaptive(light: 0x3B2240, dark: 0xF1E9D8)
+    // The logo. The box is Plum on the light tile and the lighter Plum on the Plum tile, like the box on Today.
+    static let logoBox = adaptive(light: 0x3B2240, dark: plumLight)
     static let logoLid = sunflower
     static let logoTile = adaptive(light: 0xF1E9D8, dark: 0x3B2240)
-    static let logoCards = adaptive(light: 0xA798AD, dark: 0x8E7A92)
+    static let logoCards = adaptive(light: 0xA798AD, dark: 0xB7A6BA)
 
     // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
     // hairline fields, words for actions. Laid out like Scales.
