@@ -116,14 +116,49 @@ enum Prefs {
         set { d.set(newValue, forKey: "notificationsOn") }
     }
 
-    static var inboxKey: String? {
+    /// The mailbox secret as earlier builds kept it, in plain defaults. Only `MailboxKeys.migrate` reads this, to move
+    /// it into the Keychain. Nothing else may: the secret is read through `MailboxKeys`, never from here.
+    static var legacyInboxKey: String? {
         get { d.string(forKey: "inboxKey") }
         set { d.set(newValue, forKey: "inboxKey") }
     }
 
+    /// The address, for display only. The relay is the source of truth for whether it works.
     static var inboxAddress: String? {
         get { d.string(forKey: "inboxAddress") }
         set { d.set(newValue, forKey: "inboxAddress") }
+    }
+
+    /// Whether the relay holds this phone's current sealing key. False until the first mint or registration succeeds.
+    static var sealingRegistered: Bool {
+        get { d.bool(forKey: "sealingRegistered") }
+        set { d.set(newValue, forKey: "sealingRegistered") }
+    }
+
+    /// When this phone first saw the relay holding a sealing key that is not its own. It waits a day before
+    /// registering its own, so a key still on its way through iCloud Keychain is not replaced. Nil when they match.
+    static var sealMismatchSince: Date? {
+        get { d.object(forKey: "sealMismatchSince") as? Date }
+        set { d.set(newValue, forKey: "sealMismatchSince") }
+    }
+
+    /// Mail that arrived sealed to a key this phone does not have (a new phone without iCloud Keychain). Counted and
+    /// dropped; Settings shows one quiet line for a week after the last one.
+    static var unopenedMail: Int {
+        get { d.integer(forKey: "unopenedMail") }
+        set { d.set(newValue, forKey: "unopenedMail") }
+    }
+
+    static var unopenedMailAt: Date? {
+        get { d.object(forKey: "unopenedMailAt") as? Date }
+        set { d.set(newValue, forKey: "unopenedMailAt") }
+    }
+
+    /// The first time this install opened. `.distantPast` for an install that was already in use before this was
+    /// recorded. Shoebox Plus is offered a week after it (SPEC 9).
+    static var firstOpened: Date? {
+        get { d.object(forKey: "firstOpened") as? Date }
+        set { d.set(newValue, forKey: "firstOpened") }
     }
 
     /// Who your mail is about, in your own words ("Sam, 4th grade: soccer, band").

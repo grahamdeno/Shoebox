@@ -72,8 +72,14 @@ struct RootView: View {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "demo") { return }
         #endif
+        // The first run, then the mailbox secret into the Keychain (before anything reads it), then a Delete everything
+        // that has not finished: the relay is asked again on every launch and every return to the app.
+        Plus.noteFirstOpen()
+        MailboxKeys.migrate()
+        Plus.startListening()
         await Backups.resolveCloud()
         _ = await Backups.autoImport(context)
+        await Inbox.finishPendingDelete()
         await Inbox.collect(context)
         await Notifier.schedule(context)
     }
@@ -85,6 +91,7 @@ struct RootView: View {
         try? context.save()
         Backups.dailyBackup(context)
         Task { await Notifier.schedule(context) }
+        Task { await Inbox.finishPendingDelete() }
     }
 }
 

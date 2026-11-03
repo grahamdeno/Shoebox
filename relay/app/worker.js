@@ -1,26 +1,36 @@
 /*
  * Shoebox app relay: the Cloudflare Worker for the Shoebox iPhone app (1.0 and later).
  *
- * Seven routes, nothing else. Everything the old relay (relay/perplexity-relay.js) also does for Shoebox 1
+ * Eight routes, nothing else. Everything the old relay (relay/perplexity-relay.js) also does for Shoebox 1
  * (AI calls, reminders, Apple Music, stats, beta sign-up, calendar and file pass-through) is not here on purpose.
  *
  *   GET  /preview?url=[&text=1]   a page's title, description, pictures and, with text=1, its readable text
  *   GET  /stock?q=&n=             Pixabay stock photos for a few generic words (24 hour cache)
- *   GET  /inbox                   waiting mail for this phone, and its address
- *   POST /inbox/address           make this phone's address from a first name { name }
- *   GET  /inbox/file?id=&n=       one attachment of a waiting mail
+ *   GET  /inbox                   waiting mail for this phone (sealed), its address and the sealing key held for it
+ *   POST /inbox/address           make this phone's address { name, pub, purchase }   needs Shoebox Plus
+ *   POST /inbox/seal              register this phone's sealing key { pub, purchase }  needs Shoebox Plus
+ *   GET  /inbox/file?id=&n=       one attachment of a waiting mail (sealed)
  *   POST /inbox/ack               forget mail the phone has saved { ids }
  *   POST /me/delete               forget everything kept for this phone
- *   (email)                       mail to <name>-<8 letters>@inmyshoebox.com waits here 7 days
+ *   (email)                       mail to <name>-<8 letters>@inmyshoebox.com waits here 7 days, sealed
+ *
+ * Sealed mail: before a message is stored it is sealed (HPKE, seal.js) to the public key the phone registered. What is
+ * stored holds no sender, subject, text, link or attachment in the clear, and this Worker cannot open it. Cloudflare's
+ * email system and this Worker see a message in memory while it is delivered; nothing readable is written.
+ * Collecting mail, files, ack and delete are never gated by a purchase; making an address and registering a key are.
  *
  * What it keeps, and for how long (the privacy policy says the same):
- *   mail and attachments   7 days, or until the phone acknowledges them
+ *   mail and attachments   7 days, or until the phone acknowledges them (sealed)
  *   address and box        90 days after the phone last asked, then gone
+ *   purchase seats         the transaction number and the boxes it opened (up to 5), until they are deleted or expire
  *   counters               a day or an hour, then gone; addresses appear only as salted hashes
  * Search words, link addresses and mail text are never logged.
  */
+import { verifyPurchase, PurchaseError, b64decode } from "./purchase.js";
+import { APPLE_ROOT_CA_G3_B64 } from "./apple-root-g3.js";
+import { sealJSON, seal, isPublicKey, fromBase64 } from "./seal.js";
 
-export const APP_RELAY_VERSION = 1;
+export const APP_RELAY_VERSION = 2;
 
 const ALLOWED_ORIGINS = ["https://inmyshoebox.com"];
 const MAIL_TTL = 7 * 86400;          // waiting mail and attachments
@@ -31,6 +41,8 @@ const MINT_PER_BOX_DAILY = 3;        // renames per phone per day
 const MINT_DAILY_CAP = 300;          // new addresses for everyone per day (MINT_DAILY_CAP overrides)
 const MAILBOX_DAILY_CAP = 40;        // mails a single box accepts per day (MAILBOX_DAILY_CAP overrides)
 const PREVIEW_HOURLY = 240;          // previews per network per hour
+const PURCHASE_CHECKS_HOURLY = 30;   // purchase checks per network per hour (they cost CPU)
+const BOXES_PER_PURCHASE = 5;        // one purchase opens at most this many boxes
 const SUFFIX_LENGTH = 8;
 const ALIAS_RE = new RegExp(`^([a-z][a-z0-9]{0,15}-[a-z2-9]{${SUFFIX_LENGTH}})@`);
 
@@ -89,6 +101,9 @@ const RELAY = {
     if (!box) return;
     // A real address that can't take this mail says so, so the person who forwarded it knows it did not arrive.
     // (Only someone who already sent to a real address learns that it exists.)
+    // No sealing key, no mail: nothing is ever stored in the clear.
+    const held = await env.SHOEBOX.get(`box:${box}`, "json");
+    if (!held || !isPublicKey(held.pub)) { message.setReject("Open Shoebox to finish setting up your address."); return; }
     const capKey = `cap:${box}:${dayOf()}`;
     const used = await spent(env.SHOEBOX, capKey);
     if (used >= (parseInt(env.MAILBOX_DAILY_CAP, 10) || MAILBOX_DAILY_CAP)) { message.setReject("This Shoebox has had enough mail today. Try again tomorrow."); return; }
@@ -98,9 +113,14 @@ const RELAY = {
     await env.SHOEBOX.put(capKey, String(used + 1), { expirationTtl: 2 * 86400 });
     const { files, ...mail } = parseMail(new TextDecoder("utf-8", { fatal: false }).decode(raw));
     const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    for (const [n, f] of files.entries()) await env.SHOEBOX.put(`a:${box}:${id}:${n}`, f.data, { expirationTtl: MAIL_TTL });
+    // Each attachment is sealed on its own, then the mail: the stored mail names no sender, subject or text.
+    for (const [n, f] of files.entries()) {
+      const sealed = await seal(held.pub, fromBase64(f.data), `${box}:${id}:${n}`);
+      await env.SHOEBOX.put(`a:${box}:${id}:${n}`, JSON.stringify({ v: 1, ...sealed }), { expirationTtl: MAIL_TTL });
+    }
     const attachments = files.map((f, n) => ({ n, name: f.name, type: f.type, size: f.size }));
-    await env.SHOEBOX.put(`m:${box}:${id}`, JSON.stringify({ id, at: Date.now(), from: message.from, ...mail, attachments }), { expirationTtl: MAIL_TTL });
+    const sealed = await sealJSON(held.pub, { from: message.from, ...mail, attachments }, `${box}:${id}`);
+    await env.SHOEBOX.put(`m:${box}:${id}`, JSON.stringify({ v: 1, id, at: Date.now(), ...sealed }), { expirationTtl: MAIL_TTL });
   },
 
   async fetch(request, env = {}, ctx = null) {
@@ -124,7 +144,7 @@ const RELAY = {
     }
     if (request.method === "GET" && pathname === "/stock") return stock(request, env, searchParams, cors, origin);
     if (request.method === "POST" && pathname === "/me/delete") return deleteMe(request, env, cors);
-    if (["/inbox", "/inbox/ack", "/inbox/file", "/inbox/address"].includes(pathname)) return inboxRoute(request, env, pathname, cors);
+    if (["/inbox", "/inbox/ack", "/inbox/file", "/inbox/address", "/inbox/seal"].includes(pathname)) return inboxRoute(request, env, pathname, cors);
     return json(404, "Not found.", cors);
   },
 };
@@ -403,13 +423,14 @@ async function currentAddress(env, box) {
   if (!cur) return null;
   if (Date.now() - (cur.at || 0) > TOUCH_AFTER * 1000) {
     await kv.put(`alias:${cur.slug}`, box, { expirationTtl: BOX_TTL });
-    await kv.put(`box:${box}`, JSON.stringify({ slug: cur.slug, at: Date.now() }), { expirationTtl: BOX_TTL });
+    await kv.put(`box:${box}`, JSON.stringify({ ...cur, at: Date.now() }), { expirationTtl: BOX_TTL });
   }
   return `${cur.slug}@${mailDomain(env)}`;
 }
 
-/** Makes (or replaces) this phone's address. Returns { address } or { status, message } when refused. */
-export async function mintAddress(env, request, box, name) {
+/** Makes (or replaces) this phone's address. Returns { address } or { status, message } when refused.
+ *  `pub` is the phone's sealing key and `buy` the purchase it was opened with; both stay in the box record. */
+export async function mintAddress(env, request, box, name, { pub, buy } = {}) {
   const kv = env.SHOEBOX;
   const day = dayOf();
   const cur = await kv.get(`box:${box}`, "json");
@@ -432,8 +453,62 @@ export async function mintAddress(env, request, box, name) {
   await kv.put(allKey, String(all + 1), { expirationTtl: 2 * 86400 });
   if (cur && cur.slug !== slug) await kv.delete(`alias:${cur.slug}`);
   await kv.put(`alias:${slug}`, box, { expirationTtl: BOX_TTL });
-  await kv.put(`box:${box}`, JSON.stringify({ slug, at: Date.now() }), { expirationTtl: BOX_TTL });
+  await kv.put(`box:${box}`, JSON.stringify({ slug, at: Date.now(), pub: pub || (cur && cur.pub) || null, buy: buy || (cur && cur.buy) || null }), { expirationTtl: BOX_TTL });
   return { address: `${slug}@${mailDomain(env)}` };
+}
+
+/* ---- Shoebox Plus: the purchase that opens a box ----
+ * `buy:<originalTransactionId>` holds { boxes: [box ids] }, up to 5, so one purchase can't make addresses for everyone.
+ * A box that expired (90 days idle) no longer counts. Collecting mail, files, ack and delete never ask for a purchase.
+ */
+const PURCHASE_REFUSED = "Shoebox Plus is needed to get an address.";
+const FIVE_PHONES = "This purchase is already on five phones. Write to support@inmyshoebox.com.";
+
+/** The certificates to trust as Apple's root: the embedded one, plus a test root only when a test sets one. */
+function purchaseRoots(env) {
+  return [APPLE_ROOT_CA_G3_B64, env.TEST_PURCHASE_ROOT].filter(Boolean).map((b) => b64decode(b));
+}
+
+/** Checks the signed purchase in a request. Returns { originalTransactionId } or { status, message }. */
+async function checkPurchase(env, request, jws) {
+  if (typeof jws !== "string" || !jws) return { status: 402, message: PURCHASE_REFUSED };
+  // Checking costs CPU: a network gets a few dozen an hour.
+  if (!(await underLimit(env, request, "purchase", PURCHASE_CHECKS_HOURLY, 3600))) return { status: 429, message: "Too many tries from this network. Try again in an hour." };
+  try {
+    const bought = await verifyPurchase(jws, { roots: purchaseRoots(env), allowSandbox: env.ALLOW_SANDBOX !== "0" });
+    return { originalTransactionId: bought.originalTransactionId };
+  } catch (e) {
+    if (!(e instanceof PurchaseError)) throw e;
+    return { status: 402, message: PURCHASE_REFUSED };
+  }
+}
+
+/** The boxes this purchase has opened that still exist. */
+async function seatsOf(kv, otid) {
+  const rec = await kv.get(`buy:${otid}`, "json");
+  const live = [];
+  for (const id of (rec && rec.boxes) || []) if (await kv.get(`box:${id}`)) live.push(id);
+  return live;
+}
+
+/** Is there a seat for this box on this purchase? (A box that already holds one always has.) */
+async function seatFree(kv, otid, box) {
+  const live = await seatsOf(kv, otid);
+  return live.includes(box) || live.length < BOXES_PER_PURCHASE;
+}
+
+/** Records the box on the purchase, and takes it off the purchase it was on before, if that was another one. */
+async function takeSeat(kv, otid, box, before) {
+  if (before && before !== otid) await freeSeat(kv, before, box);
+  const live = await seatsOf(kv, otid);
+  if (!live.includes(box)) live.push(box);
+  await kv.put(`buy:${otid}`, JSON.stringify({ boxes: live }));
+}
+
+async function freeSeat(kv, otid, box) {
+  const left = (await seatsOf(kv, otid)).filter((id) => id !== box);
+  if (left.length) await kv.put(`buy:${otid}`, JSON.stringify({ boxes: left }));
+  else await kv.delete(`buy:${otid}`);
 }
 
 const KEY_RE = /^[\w-]{24,80}$/;
@@ -463,6 +538,8 @@ async function deleteMe(request, env, cors) {
   for (const prefix of [`m:${box}:`, `a:${box}:`]) {
     for (const name of await listAll(kv, prefix)) { await kv.delete(name); mail++; }
   }
+  // The purchase gets its seat back, so it can open a box on the next phone. Safe to repeat: a second call finds nothing.
+  if (cur && cur.buy) await freeSeat(kv, cur.buy, box);
   return new Response(JSON.stringify({ ok: true, mail }), { headers: { ...cors, "content-type": "application/json" } });
 }
 
@@ -476,19 +553,43 @@ async function inboxRoute(request, env, pathname, cors) {
   if (request.method === "GET" && pathname === "/inbox") {
     const mails = [];
     for (const name of (await listAll(kv, `m:${box}:`)).slice(0, 20)) { const m = await kv.get(name, "json"); if (m) mails.push(m); }
-    return send({ mails, address: await currentAddress(env, box) });
+    const address = await currentAddress(env, box);
+    // `pub` is the sealing key held for this phone, so the phone can tell when it needs to register its own.
+    const held = address ? await kv.get(`box:${box}`, "json") : null;
+    return send({ mails, address, pub: (held && held.pub) || null });
   }
   if (request.method === "POST" && pathname === "/inbox/address") {
-    const { name } = await request.json().catch(() => ({}));
-    const made = await mintAddress(env, request, box, name || "");
+    const { name, pub, purchase } = await request.json().catch(() => ({}));
+    if (!isPublicKey(pub)) return json(400, "Update Shoebox to get an address.", cors);
+    const bought = await checkPurchase(env, request, purchase);
+    if (!bought.originalTransactionId) return json(bought.status, bought.message, cors);
+    if (!(await seatFree(kv, bought.originalTransactionId, box))) return json(403, FIVE_PHONES, cors);
+    const before = (await kv.get(`box:${box}`, "json"))?.buy || null;
+    const made = await mintAddress(env, request, box, name || "", { pub, buy: bought.originalTransactionId });
     if (!made.address) return json(made.status, made.message, cors);
+    await takeSeat(kv, bought.originalTransactionId, box, before);
     return send({ address: made.address });
+  }
+  if (request.method === "POST" && pathname === "/inbox/seal") {
+    const { pub, purchase } = await request.json().catch(() => ({}));
+    if (!isPublicKey(pub)) return json(400, "Bad key.", cors);
+    const cur = await kv.get(`box:${box}`, "json");
+    if (!cur) return json(404, "Get an address first.", cors);
+    const bought = await checkPurchase(env, request, purchase);
+    if (!bought.originalTransactionId) return json(bought.status, bought.message, cors);
+    if (!(await seatFree(kv, bought.originalTransactionId, box))) return json(403, FIVE_PHONES, cors);
+    await kv.put(`box:${box}`, JSON.stringify({ ...cur, pub, buy: bought.originalTransactionId, at: Date.now() }), { expirationTtl: BOX_TTL });
+    await kv.put(`alias:${cur.slug}`, box, { expirationTtl: BOX_TTL });
+    await takeSeat(kv, bought.originalTransactionId, box, cur.buy || null);
+    return send({ ok: true });
   }
   if (request.method === "GET" && pathname === "/inbox/file") {
     const q = new URL(request.url).searchParams, id = q.get("id") || "", n = q.get("n") || "";
     if (!/^[\w-]+$/.test(id) || !/^\d$/.test(n)) return json(400, "Bad file.", cors);
     const data = await kv.get(`a:${box}:${id}:${n}`);
     if (!data) return json(404, "That attachment is gone.", cors);
+    // Sealed attachments are stored as JSON { v, enc, ct }. Anything else is a plain one from before sealing (base64).
+    if (data.startsWith("{")) return send(JSON.parse(data));
     return send({ data });
   }
   if (request.method === "POST" && pathname === "/inbox/ack") {
@@ -547,7 +648,7 @@ function walk(part, out, depth = 0) {
   if (type.startsWith("application/pdf") || /^image\/(png|jpe?g|gif|webp)/.test(type)) {
     if ((headers["content-transfer-encoding"] || "").toLowerCase() !== "base64") return;
     const data = body.replace(/[^A-Za-z0-9+/=]/g, "");
-    const size = Math.floor(data.length * 3 / 4);
+    const size = Math.floor(data.length * 3 / 4) - (data.endsWith("==") ? 2 : data.endsWith("=") ? 1 : 0);   // the real byte count, padding excluded
     const isPdf = type.startsWith("application/pdf");
     if (!isPdf && size < 20000) return;
     const name = decodeWords((/filename\*?="?([^";]+)"?/i.exec(headers["content-disposition"] || "") || /name="?([^";]+)"?/i.exec(headers["content-type"] || "") || [])[1] || (isPdf ? "attachment.pdf" : "picture"));
