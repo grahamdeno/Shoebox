@@ -74,6 +74,45 @@ struct TidyTests {
         #expect(Tidy.topic(item("A cartoon I liked", kind: "note")) == .other)
     }
 
+    @Test func homeAndMoneySportsAndNewsletters() {
+        #expect(Tidy.topic(item("County Tax Paid", kind: "email", subject: "County Tax Paid")) == .home)
+        #expect(Tidy.topic(item("You have an upcoming game at Polar Ice House", kind: "email")) == .sports)
+        // A newsletter whose subject says nothing is about what it says.
+        var newsletter = item("26-27 Duck Weekly Newsletter", kind: "email", subject: "26-27 Duck Weekly Newsletter")
+        newsletter.text = "Good morning, Duck families. No school for students on Monday. Picture retake day is Thursday."
+        #expect(Tidy.topic(newsletter) == .school)
+        // A web page's words are not read: too many of them.
+        var page = item("A long article", url: "https://a.com/x")
+        page.text = "school school school"
+        #expect(Tidy.topic(page) == .reading)
+    }
+
+    @Test func anEmailWeCantPlaceIsSomethingElseNotReading() {
+        #expect(Tidy.topic(item("Hello from Sam", kind: "email", subject: "Hello from Sam")) == .other)
+    }
+
+    // MARK: Topics as a list (Put away)
+
+    @Test func topicsHaveNoFoldsAndShowTheSameTitleOnce() {
+        let newer = item("Picture retake day", kind: "email", subject: "Retake day", id: "new")
+        let older = item("Picture retake day", kind: "email", subject: "Picture retake day", id: "old")
+        let other = item("Report cards go home October 29", kind: "note")
+        let groups = Tidy.topics([newer, other, older])
+        #expect(groups.count == 1)
+        #expect(groups[0].topic == .school)
+        #expect(groups[0].rows.map(\.id) == ["new", other.id], "newest kept, order kept, no folds")
+        #expect(groups[0].count == 2)
+    }
+
+    @Test func topicsAreLargestFirstAndSomethingElseLast() {
+        let posts = [
+            item("Hello", kind: "note"), item("Hi there", kind: "note"), item("Hey you", kind: "note"),
+            item("Tuna salad recipe", url: "https://a.com/1"),
+            item("No school Monday", url: "https://b.com/1"), item("Picture day", url: "https://b.com/2"),
+        ]
+        #expect(Tidy.topics(posts).map(\.topic) == [.school, .food, .other])
+    }
+
     // MARK: Folds and groups
 
     @Test func postsFromOneEmailFoldTogether() {

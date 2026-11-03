@@ -81,7 +81,8 @@ enum Inbox {
         let sealing = await settleSealing(held: r.pub, hasAddress: r.address != nil, key: key, force: forceSealing)
         let box = MailboxKeys.boxID(for: key)
         var unopened = 0
-        let existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
+        // Posts made in this collection are added as they are made, so two copies in one batch are caught too.
+        var existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         var done: [String] = []
         var added = 0
         let now = Date()
@@ -163,6 +164,11 @@ enum Inbox {
             let when = EmailRules.days(in: subject + "\n" + lines.joined(separator: "\n"), received: received, calendar: .current)
                 .filter { $0 > now }.min()
             let text = EmailRules.leadWithDay(written.text, day: when, calendar: .current)
+            // The same post made twice (one notice forwarded twice, or by two people): keep the first. Only the same
+            // title AND the same words count, so next week's newsletter with last week's title is still kept.
+            if isRepeat(title: written.title, text: text, received: received, in: existing) {
+                done.append(m.id); continue
+            }
             let s = Save(title: String(written.title.prefix(140)),
                          snippet: String(text.replacingOccurrences(of: "\n", with: " ").prefix(240)),
                          body: text, note: reason,
@@ -186,6 +192,7 @@ enum Inbox {
                 Capture.place(s, note: reason, now: now)
             }
             context.insert(s)
+            existing.append(s)
             added += 1
             done.append(m.id)
         }
@@ -376,6 +383,18 @@ enum Inbox {
         }
         guard let b64 = file.data else { return nil }
         return Data(base64Encoded: b64, options: .ignoreUnknownCharacters)
+    }
+
+    /// A post from email that already exists: same title, same opening words, within two weeks.
+    static func isRepeat(title: String, text: String, received: Date, in existing: [Save]) -> Bool {
+        let opening = { (t: String) in String(t.replacingOccurrences(of: "\n", with: " ").prefix(160)).lowercased() }
+        let mine = opening(text)
+        return existing.contains { s in
+            s.deletedAt == nil && s.kind == .email
+                && s.title.caseInsensitiveCompare(String(title.prefix(140))) == .orderedSame
+                && opening(s.body) == mine
+                && abs((s.emailReceivedAt ?? s.createdAt).timeIntervalSince(received)) < 14 * 86_400
+        }
     }
 
     /// Your words above a forwarded message are the reason; the rest is the email.
