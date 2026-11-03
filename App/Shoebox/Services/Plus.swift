@@ -26,8 +26,9 @@ enum Plus {
 
     /// Has this install been open for a week? A phone that already has an address is past it, and so is a review or
     /// TestFlight build.
-    static func isOffered(now: Date = Date(), firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil, sandbox: Bool = Plus.inSandbox) -> Bool {
-        if hasAddress || sandbox { return true }
+    static func isOffered(now: Date = Date(), firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil, sandbox: Bool? = nil) -> Bool {
+        // `sandbox` nil means this build's own answer (a default argument can't read a main-actor value).
+        if hasAddress || (sandbox ?? inSandbox) { return true }
         guard let firstOpened else { return false }
         return now.timeIntervalSince(firstOpened) >= offerAfter
     }
