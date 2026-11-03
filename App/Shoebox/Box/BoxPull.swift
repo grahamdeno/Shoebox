@@ -74,6 +74,18 @@ enum Thumbs {
 /// The small tile at the left of a row: the post's own picture, or a card-colored tile lit with Sunflower when it has none.
 struct RowThumb: View {
     let save: Save
+
+    static func mark(_ kind: SaveKind) -> String {
+        switch kind {
+        case .email: return "envelope"
+        case .link: return "link"
+        case .photo: return "photo"
+        case .video: return "play.rectangle"
+        case .file: return "doc"
+        case .quote: return "quote.opening"
+        case .note: return "text.alignleft"
+        }
+    }
     @State private var image: UIImage?
 
     var body: some View {
@@ -84,6 +96,8 @@ struct RowThumb: View {
             } else {
                 shape.fill(Theme.card)
                 RadialGradient(colors: [Theme.lid.opacity(0.45), .clear], center: .topLeading, startRadius: 0, endRadius: 46)
+                // No picture: a small mark for what kind of post it is, so a blank tile still says something.
+                Image(systemName: Self.mark(save.kind)).font(.system(size: 16)).foregroundStyle(Theme.quiet)
             }
         }
         .frame(width: 42, height: 42)

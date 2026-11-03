@@ -1,4 +1,5 @@
 import Foundation
+import ShoeboxCore
 import SwiftData
 
 enum SaveStatus: String, Codable {
@@ -124,12 +125,21 @@ final class Save {
 
     var host: String? { url?.host()?.replacingOccurrences(of: "www.", with: "") }
 
-    /// Shown largest. Never empty.
-    var headline: String {
-        if !title.isEmpty { return title }
-        if let host { return host }
-        return note.isEmpty ? "Untitled" : note
+    /// What the tidy rules need (ShoeboxCore, Tidy).
+    var tidyItem: Tidy.Item {
+        Tidy.Item(id: id.uuidString, title: title, snippet: snippet, note: note, url: urlString,
+                  origin: origin, emailSubject: emailSubject, kind: kindRaw)
     }
+
+    /// Shown largest on a post. Never empty. A title that says nothing ("A photo", a bare link, "Id1120837655") is
+    /// shown as what the post says or a plain name for the link. The kept title itself is not changed.
+    var headline: String {
+        let t = Tidy.title(tidyItem)
+        return t == "Untitled" && !note.isEmpty ? note : t
+    }
+
+    /// The title in a list, where the reason is not shown: a photo with no words of its own takes your reason.
+    var listTitle: String { Tidy.title(tidyItem, useNote: true) }
 
     /// "You, 2 weeks ago, from Safari"
     func byline(now: Date = Date()) -> String {
