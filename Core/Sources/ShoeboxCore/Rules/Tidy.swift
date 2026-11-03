@@ -14,11 +14,13 @@ public enum Tidy {
         public var emailSubject: String?
         /// The post's kind as stored: link, note, photo, quote, video, file, email.
         public var kind: String
+        /// The start of an email's words, read only for its topic: a newsletter is about what it says.
+        public var text: String
 
         public init(id: String, title: String, snippet: String = "", note: String = "", url: String? = nil,
-                    origin: String = "", emailSubject: String? = nil, kind: String = "link") {
+                    origin: String = "", emailSubject: String? = nil, kind: String = "link", text: String = "") {
             self.id = id; self.title = title; self.snippet = snippet; self.note = note; self.url = url
-            self.origin = origin; self.emailSubject = emailSubject; self.kind = kind
+            self.origin = origin; self.emailSubject = emailSubject; self.kind = kind; self.text = text
         }
 
         var host: String? { Tidy.host(url) }
@@ -93,8 +95,10 @@ public enum Tidy {
     public enum Topic: String, CaseIterable, Sendable {
         case apps = "Apps"
         case school = "School"
+        case sports = "Sports"
         case food = "Food"
         case travel = "Travel"
+        case home = "Home & money"
         case shopping = "Shopping"
         case work = "Work"
         case watch = "Watch"
@@ -104,8 +108,10 @@ public enum Tidy {
 
     private static let words: [(Topic, String)] = [
         (.school, "school|schools|teachers?|classroom|students?|homework|pta|pto|principal|field trip|picture (re)?take|picture day|retake day|report cards?|conferences?|semester|kindergarten|\\d+(st|nd|rd|th) grade|graders?|early release|parent night|spirit week"),
+        (.sports, "games?|practices?|tournaments?|season|match|team|league|soccer|lacrosse|hockey|cross country|tryouts?|scrimmage|polar ice"),
         (.food, "recipes?|salad|dinner|lunch|breakfast|cook|cooking|bake|baking|soup|chicken|tuna|pasta|restaurant|meal|meals|dessert"),
         (.travel, "flights?|hotels?|airbnb|trip|itinerary|boarding pass|vacation|check-in"),
+        (.home, "tax|taxes|bills?|invoice|payment|paid|mortgage|rent|insurance|bank|utilities|utility|receipt|refund|hoa|repair|plumber"),
         (.shopping, "cart|shopping|order|orders|sale|deal|buy|price|watch bands?|ring|necklace|shoes|jacket|gift"),
         (.work, "meeting|agenda|project|scrum|agile|sprint|devops|pipeline|analytics|engineering|career|resume|data science|leadership"),
     ]
@@ -121,17 +127,45 @@ public enum Tidy {
         let host = i.host ?? ""
         func on(_ sites: [String]) -> Bool { sites.contains { host == $0 || host.hasSuffix("." + $0) } }
         if on(siteTopics[0].1) { return .apps }
-        let text = [title(i, useNote: true), i.snippet, i.note, i.emailSubject ?? ""].joined(separator: " ")
+        let emailWords = i.kind == "email" ? String(i.text.prefix(2_000)) : ""
+        let text = [title(i, useNote: true), i.snippet, i.note, i.emailSubject ?? "", emailWords].joined(separator: " ")
         for (topic, pattern) in words where RulesRegex.test("\\b(\(pattern))\\b", text, options: [.caseInsensitive]) {
             return topic
         }
         for (topic, sites) in siteTopics.dropFirst() where on(sites) { return topic }
         if i.kind == "video" || (host.hasSuffix("instagram.com") && (i.url ?? "").contains("/reel")) { return .watch }
-        if ["link", "file", "quote", "email"].contains(i.kind) || i.emailSubject != nil { return .reading }
+        // Not sure: links and files are usually reading; anything else, an email included, is Something else.
+        if ["link", "file", "quote"].contains(i.kind) { return .reading }
         return .other
     }
 
-    // MARK: Groups and folds
+    // MARK: Topics as a list
+
+    /// Put away by topic (SPEC 2.4): largest first, Something else last, newest first inside. No folds. The same
+    /// title kept twice shows once (the newest).
+    public static func topics(_ items: [Item]) -> [Group] {
+        var byTopic: [Topic: [Row]] = [:]
+        var seen: [Topic: Set<String>] = [:]
+        for i in items {
+            let t = topic(i)
+            let name = title(i, useNote: true).lowercased()
+            if seen[t, default: []].contains(name) { continue }
+            seen[t, default: []].insert(name)
+            byTopic[t, default: []].append(.one(i))
+        }
+        return sortGroups(byTopic)
+    }
+
+    static func sortGroups(_ byTopic: [Topic: [Row]]) -> [Group] {
+        let order = Topic.allCases
+        return byTopic.map { Group(topic: $0.key, rows: $0.value) }.sorted { a, b in
+            if (a.topic == .other) != (b.topic == .other) { return b.topic == .other }
+            if a.count != b.count { return a.count > b.count }
+            return order.firstIndex(of: a.topic)! < order.firstIndex(of: b.topic)!
+        }
+    }
+
+    // MARK: Groups and folds (not shown now; kept for a later look)
 
     /// One row of a list: a post, or several from one place (one email, one page, the same thing kept twice).
     public enum Row: Equatable, Sendable {
@@ -184,12 +218,7 @@ public enum Tidy {
             let row: Row = members.count == 1 ? .one(members[0]) : .fold(key: k, title: foldTitle(members), items: members)
             byTopic[majority(members.map { topic($0) }), default: []].append(row)
         }
-        let order = Topic.allCases
-        return byTopic.map { Group(topic: $0.key, rows: $0.value) }.sorted { a, b in
-            if (a.topic == .other) != (b.topic == .other) { return b.topic == .other }
-            if a.count != b.count { return a.count > b.count }
-            return order.firstIndex(of: a.topic)! < order.firstIndex(of: b.topic)!
-        }
+        return sortGroups(byTopic)
     }
 
     /// Most of a fold's posts decide its topic; Something else only when none has another.

@@ -128,7 +128,8 @@ final class Save {
     /// What the tidy rules need (ShoeboxCore, Tidy).
     var tidyItem: Tidy.Item {
         Tidy.Item(id: id.uuidString, title: title, snippet: snippet, note: note, url: urlString,
-                  origin: origin, emailSubject: emailSubject, kind: kindRaw)
+                  origin: origin, emailSubject: emailSubject, kind: kindRaw,
+                  text: kind == .email ? String(body.prefix(2_000)) : "")
     }
 
     /// Shown largest on a post. Never empty. A title that says nothing ("A photo", a bare link, "Id1120837655") is
