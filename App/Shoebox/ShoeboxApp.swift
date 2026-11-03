@@ -75,6 +75,8 @@ struct RootView: View {
         // The first run, then the mailbox secret into the Keychain (before anything reads it), then a Delete everything
         // that has not finished: the relay is asked again on every launch and every return to the app.
         Plus.noteFirstOpen()
+        // Not awaited: the store check must never hold up the collection.
+        Task { await Plus.checkStore() }
         MailboxKeys.migrate()
         Plus.startListening()
         await Backups.resolveCloud()

@@ -1,0 +1,28 @@
+import XCTest
+@testable import Shoebox
+
+/// SPEC 9: Plus is offered a week after the first run, never in it. Review and TestFlight builds (the App Store
+/// sandbox) offer it at once, so a reviewer can reach it.
+@MainActor
+final class PlusTests: XCTestCase {
+    private let now = Date()
+
+    func testNotInTheFirstWeekOnTheStore() {
+        XCTAssertFalse(Plus.isOffered(now: now, firstOpened: now, hasAddress: false, sandbox: false))
+        XCTAssertFalse(Plus.isOffered(now: now, firstOpened: now.addingTimeInterval(-Plus.offerAfter + 60), hasAddress: false, sandbox: false))
+        XCTAssertFalse(Plus.isOffered(now: now, firstOpened: nil, hasAddress: false, sandbox: false))
+    }
+
+    func testAfterAWeekOnTheStore() {
+        XCTAssertTrue(Plus.isOffered(now: now, firstOpened: now.addingTimeInterval(-Plus.offerAfter), hasAddress: false, sandbox: false))
+    }
+
+    func testAtOnceInReviewAndTestFlight() {
+        XCTAssertTrue(Plus.isOffered(now: now, firstOpened: now, hasAddress: false, sandbox: true))
+        XCTAssertTrue(Plus.isOffered(now: now, firstOpened: nil, hasAddress: false, sandbox: true))
+    }
+
+    func testAlwaysWithAnAddress() {
+        XCTAssertTrue(Plus.isOffered(now: now, firstOpened: now, hasAddress: true, sandbox: false))
+    }
+}
