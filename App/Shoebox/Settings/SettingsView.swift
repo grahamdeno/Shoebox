@@ -2,7 +2,8 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings: a short list where each row shows its answer. A row opens one small screen: a title and its choices.
+/// Settings, laid out like Scales: short groups under small titles, each row showing its answer. A row opens one
+/// small screen: a title and its choices.
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -31,7 +32,6 @@ struct SettingsView: View {
     @State private var importing = false
     @State private var importNote = ""
     @State private var exportURL: URL?
-    @State private var showMoves = false
 
     var body: some View {
         ZStack {
@@ -60,13 +60,15 @@ struct SettingsView: View {
             case .failure: importNote = "Couldn't open that file."
             }
         }
-        .fullScreenCover(isPresented: $showMoves) { ThreeMoves(button: "Got it") { showMoves = false } }
     }
 
     // MARK: The list
 
+    /// Laid out like Scales' Settings: a few short groups under small titles, each row showing its answer, one quiet
+    /// line under a group where it helps, and who we are at the end.
     private var root: some View {
-        ScrollView {
+        let offered = Plus.isOffered(hasAddress: address != nil, sandbox: sandbox)
+        return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     title("Settings")
@@ -78,59 +80,83 @@ struct SettingsView: View {
                 }
                 .padding(.top, 20)
 
+                group("Your day")
                 card {
                     link("Each day", dayAnswer, .day)
                     hair
-                    link("Look", ["Auto", "Light", "Dark"][min(max(appearance, 0), 2)], .look)
+                    link("Look", ["Automatic", "Light", "Dark"][min(max(appearance, 0), 2)], .look)
                     hair
                     link("Pictures", stock ? "On" : "Off", .pictures)
-                    // Plus is offered after the first week, never in the first run (SPEC 9). A phone with an address always sees it.
-                    if Plus.isOffered(hasAddress: address != nil, sandbox: sandbox) {
+                }
+
+                // Plus is offered after the first week, never in the first run (SPEC 9). A phone with an address always sees it.
+                if offered {
+                    group("Email")
+                    card { link("Your Shoebox address", address == nil ? "Set up" : "On", .email) }
+                    note("Forward an email to keep it. Only your phone can read it.")
+                }
+
+                group("Back up")
+                card { link("Backups", "Automatic", .backups) }
+                note(backupWhere)
+
+                group("Help and about")
+                card {
+                    link("How Shoebox works", nil, .help)
+                    hair
+                    outside("Send feedback", "mailto:support@inmyshoebox.com?subject=Shoebox%20feedback")
+                    hair
+                    outside("Support", "https://inmyshoebox.com/support")
+                    hair
+                    link("Privacy", nil, .privacy)
+                    if offered {
                         hair
-                        link("Email", address == nil ? "Set up" : "On", .email)
+                        Button { restorePurchases() } label: { rowLabel("Restore purchases", nil, arrow: false) }
+                            .buttonStyle(.plain)
                     }
                     hair
-                    link("Backups", backupAnswer, .backups)
+                    rowLabel("Version", version, arrow: false)
                 }
-                .padding(.top, 22)
-
-                card { link("How to use Shoebox", nil, .help) }
-                    .padding(.top, 18)
-
-                HStack(spacing: 22) {
-                    quietWord("Privacy") { page = .privacy }
-                    quietWord("Delete everything") { page = .deleteAll }
-                }
-                .padding(.top, 22)
-                .padding(.leading, 6)
-
-                if Plus.isOffered(hasAddress: address != nil, sandbox: sandbox) {
-                    quietWord("Restore purchases") { restorePurchases() }
-                        .padding(.leading, 6)
-                    if !restoreNote.isEmpty { line(restoreNote) }
-                }
+                if !restoreNote.isEmpty { note(restoreNote) }
                 // Delete everything asks the relay again until it confirms (D-6).
-                if removing { line("Removing your address from the server.") }
+                if removing { note("Removing your address from the server.") }
 
-                Text("Shoebox \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.quiet)
-                    .padding(.top, 14)
+                quietWord("Delete everything") { page = .deleteAll }
+                    .padding(.top, 22)
                     .padding(.leading, 6)
+
+                HStack(spacing: 10) {
+                    AppLogo(size: 30)
+                    Text("Your posts stay on your phone.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.quiet)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 28)
+                .accessibilityElement(children: .combine)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
         }
     }
 
+    private var version: String {
+        let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        let b = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+        return "\(v) (\(b))"
+    }
+
+    /// Where and when the daily copy went, in one line.
+    private var backupWhere: String {
+        let place = Backups.usesICloud ? "Files and iCloud Drive" : "Files"
+        guard let at = Backups.lastBackupAt else { return "Shoebox saves a copy to \(place) once a day, once you keep something." }
+        let when = Calendar.current.isDateInToday(at) ? "today" : at.formatted(.dateTime.month(.abbreviated).day())
+        return "Saved \(when) to \(place)."
+    }
+
     private var dayAnswer: String {
         let n = perDay == Prefs.noLimit ? "All" : "\(perDay)"
         return notificationsOn ? "\(n) · \(time.formatted(date: .omitted, time: .shortened))" : n
-    }
-
-    private var backupAnswer: String {
-        guard let at = Backups.lastBackupAt else { return "None yet" }
-        return Calendar.current.isDateInToday(at) ? "Today" : at.formatted(.dateTime.month(.abbreviated).day())
     }
 
     // MARK: One question per screen
@@ -210,7 +236,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             title("Look")
             choices {
-                ForEach([(0, "Auto"), (1, "Light"), (2, "Dark")], id: \.0) { value, name in
+                ForEach([(0, "Automatic"), (1, "Light"), (2, "Dark")], id: \.0) { value, name in
                     choice(name, appearance == value) { appearance = value; Prefs.appearance = value }
                 }
             }
@@ -302,55 +328,77 @@ struct SettingsView: View {
         }
     }
 
+    /// Backups say they are automatic, like Scales: nothing to do, two plain choices if you want them.
     private var backupsScreen: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let place = Backups.usesICloud ? "Files and iCloud Drive" : "Files"
+        let last = Backups.lastBackupAt.map {
+            Calendar.current.isDateInToday($0) ? "today" : $0.formatted(.dateTime.month(.abbreviated).day())
+        }
+        return VStack(alignment: .leading, spacing: 0) {
             title("Backups")
-            question("Last copy")
-            Text(Backups.lastBackupAt?.formatted(date: .abbreviated, time: .shortened) ?? "None yet")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(Theme.ink)
-                .padding(.horizontal, 6)
+            Text("Nothing to do here: Shoebox saves a copy once a day and keeps the last 7. Back up now adds a copy of your own that is never replaced." + (last.map { " Last saved \($0) to \(place), Shoebox." } ?? ""))
+                .font(.system(size: 16))
+                .foregroundStyle(Theme.quiet)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 14).padding(.horizontal, 6)
             card {
                 if let exportURL {
-                    row {
-                        ShareLink(item: exportURL) {
-                            Text("Save a copy now").fontWeight(.semibold).foregroundStyle(Theme.ink)
-                        }
-                        .frame(minHeight: Metrics.touchMin)
-                        Spacer()
-                    }
+                    ShareLink(item: exportURL) { rowLabel("Back up now", "Save a file", arrow: false) }
+                        .buttonStyle(.plain)
+                    hair
                 }
-                row {
-                    Button("Bring one back") { importing = true }
-                        .fontWeight(.semibold).foregroundStyle(Theme.ink)
-                        .frame(minHeight: Metrics.touchMin)
-                    Spacer()
-                }
+                Button { importing = true } label: { rowLabel("Restore from a backup", "Choose a file", arrow: false) }
+                    .buttonStyle(.plain)
             }
-            .padding(.top, 28)
-            if !importNote.isEmpty { line(importNote) }
+            .padding(.top, 22)
+            note("Restoring only adds. It takes any Shoebox backup, old or new.")
+            if !importNote.isEmpty { note(importNote) }
         }
         .onAppear(perform: prepareExport)
     }
 
+    /// How Shoebox works, shown, like Scales: each move as a small moving picture, then the few rules that matter.
     private var helpScreen: some View {
         VStack(alignment: .leading, spacing: 0) {
-            title("How to use Shoebox")
-            card {
-                row {
-                    Button("The three moves") { showMoves = true }
-                        .fontWeight(.semibold).foregroundStyle(Theme.ink)
-                        .frame(minHeight: Metrics.touchMin)
-                    Spacer()
-                }
-            }
-            .padding(.top, 24)
-            question("Save from any app")
-            Text("Tap Share, then Shoebox.")
+            title("How Shoebox works")
+            MoveDemo(move: .up).padding(.top, 22)
+            howLine("**Flick up** for the next one.", "It comes back when your reason says, or tomorrow.")
+            MoveDemo(move: .down).padding(.top, 26)
+            howLine("**Pull down** to put it away.", "You're done with it. It's kept, and search finds it.")
+            MoveDemo(move: .tap).padding(.top, 26)
+            howLine("**Tap** to open it.", "Edit is there too. Undo lasts five seconds after any move.")
+            howLine("**Keep something new:** tap + New, or Share in any app, then Shoebox.",
+                    "Not in the row? Swipe to the end, tap More, add Shoebox.")
+                .padding(.top, 14)
+
+            Text("Your reason decides when it comes back.")
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Theme.ink)
-                .padding(.horizontal, 6)
-            line("Not in the row? Swipe to the end, tap More, add Shoebox.")
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 34).padding(.horizontal, 6)
+            VStack(alignment: .leading, spacing: 10) {
+                rule("**weekend:** Saturday at 9 AM.")
+                rule("**tonight** or **dinner:** this evening at 6.")
+                rule("**tomorrow** or a day, like **Monday:** that morning at 8.")
+                rule("**before Monday:** the evening before, at 6.")
+                rule("**Nothing about a time:** tomorrow.")
+                rule("**A date in what you keep:** back 5 days before, every day until you put it away.")
+            }
+            .padding(.top, 14).padding(.horizontal, 6)
         }
+    }
+
+    private func howLine(_ head: LocalizedStringKey, _ more: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(head).font(.system(size: 18)).foregroundStyle(Theme.ink)
+            Text(more).font(.system(size: 16)).foregroundStyle(Theme.quiet)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.top, 12).padding(.horizontal, 6)
+    }
+
+    private func rule(_ text: LocalizedStringKey) -> some View {
+        Text(text).font(.system(size: 17)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
     }
 
     private var privacyScreen: some View {
@@ -487,17 +535,43 @@ struct SettingsView: View {
     }
 
     private func link(_ name: String, _ answer: String?, _ target: Page) -> some View {
-        Button { page = target } label: {
-            HStack(spacing: 10) {
-                Text(name).foregroundStyle(Theme.ink)
-                Spacer()
-                if let answer { Text(answer).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
-                Text("›").foregroundStyle(Theme.quiet).font(.system(size: 20))
-            }
-            .frame(minHeight: 52)
-            .contentShape(Rectangle())
+        Button { page = target } label: { rowLabel(name, answer) }
+            .buttonStyle(.plain)
+    }
+
+    /// A row that opens something outside the app: mail, or a page.
+    private func outside(_ name: String, _ address: String) -> some View {
+        Link(destination: URL(string: address)!) { rowLabel(name, nil) }
+            .buttonStyle(.plain)
+    }
+
+    /// One row: its name, its answer in quiet words, and an arrow when it opens a screen.
+    private func rowLabel(_ name: String, _ answer: String?, arrow: Bool = true) -> some View {
+        HStack(spacing: 10) {
+            Text(name).foregroundStyle(Theme.ink)
+            Spacer()
+            if let answer { Text(answer).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
+            if arrow { Text("›").foregroundStyle(Theme.quiet).font(.system(size: 20)) }
         }
-        .buttonStyle(.plain)
+        .frame(minHeight: 52)
+        .contentShape(Rectangle())
+    }
+
+    /// A group's small title, above its card.
+    private func group(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 15))
+            .foregroundStyle(Theme.quiet)
+            .padding(.top, 26).padding(.bottom, 8).padding(.horizontal, 6)
+    }
+
+    /// One quiet line under a card.
+    private func note(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 14))
+            .foregroundStyle(Theme.quiet)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 8).padding(.horizontal, 6)
     }
 
     private var hair: some View { Theme.line.frame(height: 1) }

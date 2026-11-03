@@ -103,20 +103,18 @@ One idea per screen, one clear choice. The words sit along the bottom on the gro
 3. **When should they come out?** A time wheel and one line about the daily notification. Not now, Turn on.
 4. **Three moves. That's the whole app.** Swipe up: Next, it comes back when your why says, or tomorrow. Pull down: Put it away, done, kept, and search finds it. Tap it: Open it, Edit is there too.
 
-Settings › How to use Shoebox › The three moves shows it again.
+Settings › How Shoebox works shows the moves again.
 
 ### 2.8 Settings
 
-Reached from Today and the Box. No paragraphs. One short list in a card one step off the ground (deeper Pistachio in light, lighter Plum in dark), no outline; each row shows its answer on the right. A row opens one small screen: a title, its question, the choices as words, at most one quiet line.
+Reached from Today and the Box. Laid out like Scales' Settings: a few short groups, each under a small quiet title, in cards one step off the ground (deeper Pistachio in light, lighter Plum in dark), no outline. Each row shows its answer on the right. At most one quiet line under a group. A row opens one small screen: a title, its question, the choices as words.
 
-- **Each day:** How many (5, 10 or All; default 10). Remind me (the time, or Off).
-- **Look:** Auto, Light or Dark. The share sheet follows it too.
-- **Pictures:** On or Off. "Your words stay on your phone."
-- **Email:** the address and Copy, or a first name and "Get address". Below it, "Who it's about": one line in your words ("Sam, 4th grade: soccer, band"). Getting an address needs Shoebox Plus (section 9).
-- **Backups:** Last copy; Save a copy now; Bring one back (takes any Shoebox 1 or 2 file).
-- **How to use Shoebox:** The three moves; Share, then Shoebox.
-- Quiet words below: **Privacy** (three short lines) and **Delete everything** (one question, a copy saved first; it also asks the relay to delete your email address and waiting mail, `POST /me/delete`).
-- The version and build number.
+- **Your day:** Each day (How many: 5, 10 or All, default 10; Remind me: the time or Off), Look (Automatic, Light or Dark; the share sheet follows it), Pictures (On or Off).
+- **Email** (when Plus is offered, section 9): Your Shoebox address. Under it: "Forward an email to keep it. Only your phone can read it." The screen has the address and Copy, or a first name and Get address, and "Who it's about".
+- **Back up:** Backups, answered **Automatic**, with one line saying when and where the last copy went. The screen says there is nothing to do (a copy once a day, the last 7 kept), then Back up now (Save a file) and Restore from a backup (Choose a file; only adds, takes any Shoebox 1 or 2 file).
+- **Help and about:** How Shoebox works (each move as a small looping picture, then how your reason sets when a post comes back), Send feedback (mail to support), Support (inmyshoebox.com/support), Privacy (three short lines and the policy), Restore purchases (when Plus is offered), Version.
+- A quiet word below: **Delete everything** (one question, a copy saved first; it also asks the relay to delete your email address and waiting mail, `POST /me/delete`).
+- At the end, the logo and "Your posts stay on your phone."
 
 ### 2.9 The notification
 
