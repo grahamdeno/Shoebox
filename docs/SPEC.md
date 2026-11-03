@@ -23,7 +23,7 @@ Full screen, one post per screen. No list, no second sort screen, no tab bar.
 - **A post:** the photo fills the whole screen, graded (section 5.3). The words sit low on one Liquid Glass panel: your reason in Sunflower, the headline (30 pt bold, 34 pt with no photo), a short snippet, a "Comes back ..." line for dated posts, and the byline ("You, 2 weeks ago, from Safari").
 - **No photo:** a stock picture is found for it (section 4.1). Until then, or when none is found, Plum lit warm from the top corner with a Sunflower glow.
 - **Dated posts:** one line under the words, "Oct 30 at 4:00 PM. Back Oct 25, Oct 29 and Oct 30."
-- **Top left:** "+ New" opens Keep something.
+- **Top left:** "+ New" opens Keep something. On the day's end screen it sits low on the right instead, just above the box, under the right thumb.
 - **Your Shoebox** across the bottom (section 2.2).
 
 **The moves (Scales'):**
@@ -90,7 +90,7 @@ Every screen where you write is the post you are making. What you see while you 
 
 ### 2.6 Today's clear
 
-"That's N for today." or "That's all for today." When posts remain in the Shoebox, one row: **Go through your Shoebox**. It brings the rest out one at a time, soonest first, each once, with Today's moves; when they are done the screen returns. When nothing remains it says when the next one comes back. With nothing kept yet, Today shows one welcome post on the same full-screen card as any post: "Pull me down to put me away. Flick up to see the next one." It teaches the moves by doing them once and is gone after either move. No "Keep something" row (+ New is at the top).
+At the top: the app logo, **Shoebox** and "Keep it. It comes back to you." Then "That's N for today." or "That's all for today." When posts remain in the Shoebox, one row: **Go through your Shoebox**. It brings the rest out one at a time, soonest first, each once, with Today's moves; when they are done the screen returns. When nothing remains it says when the next one comes back. With nothing kept yet, Today shows one welcome post on the same full-screen card as any post: "Pull me down to put me away. Flick up to see the next one." It teaches the moves by doing them once and is gone after either move. No "Keep something" row (+ New is low on the right).
 
 ### 2.7 First run
 
