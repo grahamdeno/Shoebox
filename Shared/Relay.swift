@@ -1,4 +1,5 @@
 import Foundation
+import ShoeboxCore
 import UIKit
 
 /// Shoebox's relay (its own Cloudflare Worker, relay/app). Used for link previews and the email inbox.
@@ -58,7 +59,7 @@ enum Relay {
         save.enrichTries += 1
         guard let p = await preview(url) else { return }
         if let t = p.title?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty,
-           save.title.isEmpty || save.title == save.host || save.title == url.absoluteString {
+           Tidy.isPlaceholder(save.title, url: save.urlString) || save.title == url.absoluteString {
             save.title = String(t.prefix(140))
         }
         if save.snippet.isEmpty, let d = p.description?.trimmingCharacters(in: .whitespacesAndNewlines), !d.isEmpty {

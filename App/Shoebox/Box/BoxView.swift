@@ -1,4 +1,5 @@
 import SwiftData
+import ShoeboxCore
 import SwiftUI
 
 /// The Shoebox: everything you are not done with, in the order the stack will bring it. What you put away
@@ -8,6 +9,8 @@ struct BoxView: View {
     @Query(sort: \Save.createdAt) private var all: [Save]
     @State private var search = ""
     @State private var showPutAway = false
+    /// The folds that are open in Put away, by their key.
+    @State private var openFolds: Set<String> = []
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
 
@@ -120,7 +123,16 @@ struct BoxView: View {
                 List {
                     if showPutAway {
                         if putAway.isEmpty { plain(empty(searching ? "Nothing found." : "Nothing put away yet.")) }
-                        ForEach(putAway, id: \.id) { listRow($0, dim: true) }
+                        if searching {
+                            ForEach(putAway, id: \.id) { listRow($0, dim: true) }
+                        } else {
+                            // Put away, tidied: by topic, largest first, posts from one place folded together (SPEC 2.4).
+                            let byID = Dictionary(putAway.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
+                            ForEach(Tidy.groups(putAway.map(\.tidyItem)), id: \.topic) { group in
+                                plain(sectionTitle("\(group.topic.rawValue) · \(group.count)"))
+                                ForEach(group.rows, id: \.id) { tidyRow($0, byID) }
+                            }
+                        }
                     } else {
                         let up = comingUp
                         let rest = everythingElse
@@ -220,8 +232,8 @@ struct BoxView: View {
     }
 
     /// A post row. Swipe left to delete it: it leaves every list at once, stays in backups, and Undo shows for 5 seconds.
-    private func listRow(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
-        plain(row(s, dim: dim, dated: dated))
+    private func listRow(_ s: Save, dim: Bool, dated: Bool = false, inset: Bool = false) -> some View {
+        plain(row(s, dim: dim, dated: dated).padding(.leading, inset ? 18 : 0))
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 Button(role: .destructive) {
                     perform(on: s) { actions.letGo($0, now: now); return "Deleted" }
@@ -230,6 +242,49 @@ struct BoxView: View {
                 }
                 .tint(Theme.brick)
             }
+    }
+
+    /// One row of the tidied Put away: a post, or a fold that opens to show its posts, set in a little.
+    @ViewBuilder
+    private func tidyRow(_ r: Tidy.Row, _ byID: [String: Save]) -> some View {
+        switch r {
+        case .one(let i):
+            if let s = byID[i.id] { listRow(s, dim: true) }
+        case .fold(let key, let title, let items):
+            plain(foldHeader(key: key, title: title, count: items.count))
+            if openFolds.contains(key) {
+                ForEach(items, id: \.id) { i in
+                    if let s = byID[i.id] { listRow(s, dim: true, inset: true) }
+                }
+            }
+        }
+    }
+
+    private func foldHeader(key: String, title: String, count: Int) -> some View {
+        let open = openFolds.contains(key)
+        return Button {
+            withAnimation(.snappy) { if open { openFolds.remove(key) } else { openFolds.insert(key) } }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.card)
+                    Image(systemName: "square.stack").font(.system(size: 17)).foregroundStyle(Theme.quiet)
+                }
+                .frame(width: 42, height: 42)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.system(size: 16)).foregroundStyle(Theme.quiet).lineLimit(1)
+                    Text("\(count) posts").font(.system(size: 13)).foregroundStyle(Theme.quiet).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+                    .rotationEffect(.degrees(open ? 90 : 0))
+            }
+            .padding(.vertical, 9)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), \(count) posts")
+        .accessibilityHint(open ? "Closes this group" : "Shows these posts")
     }
 
     private func empty(_ text: String) -> some View {
@@ -269,7 +324,7 @@ struct BoxView: View {
                     RowThumb(save: s)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(s.headline)
+                    Text(s.listTitle)
                         .font(.system(size: 16))
                         .foregroundStyle(dim ? Theme.quiet : Theme.ink)
                         .lineLimit(1)
@@ -289,7 +344,9 @@ struct BoxView: View {
     }
 
     /// "2 weeks ago, from Safari"
+    /// Where a post came from. In Put away, when it was put away instead: where it came from is in the post.
     private func meta(_ s: Save) -> String {
-        s.byline().replacingOccurrences(of: "You, ", with: "")
+        if s.status == .kept { return "Put away \(Save.relative(s.updatedAt, now: now))" }
+        return s.byline().replacingOccurrences(of: "You, ", with: "")
     }
 }

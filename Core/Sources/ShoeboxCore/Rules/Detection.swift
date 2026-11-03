@@ -115,7 +115,7 @@ public enum Detection {
     // MARK: Titles
 
     /// Last part of the path, cleaned and capitalized; the host when the path says nothing; the input when it isn't a URL.
-    static func titleFromURL(_ url: String) -> String {
+    public static func titleFromURL(_ url: String) -> String {
         guard let comps = URLComponents(string: url), let rawHost = comps.host, !rawHost.isEmpty else { return url }
         let host = RulesRegex.replace("^www\\.", in: rawHost.lowercased(), with: "")
         let last = comps.percentEncodedPath.split(separator: "/").last.map(String.init) ?? ""
