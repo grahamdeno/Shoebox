@@ -3,7 +3,7 @@ name: screens
 # Runs when a commit message contains [screens].
 on:
   push:
-    branches-ignore: [main, testflight, ci-screens]
+    branches-ignore: [main, testflight, ci-screens, appstore-screens]
 
 jobs:
   screens:
@@ -12,6 +12,12 @@ jobs:
     timeout-minutes: 40
     permissions:
       contents: write
+    # A branch named appstore/... makes the App Store set instead: the 6.9-inch iPhone 17 Pro Max (1320 x 2868),
+    # the listing's screens only, published to the appstore-screens branch.
+    env:
+      DEVICE: ${{ startsWith(github.ref_name, 'appstore/') && 'iPhone 17 Pro Max' || 'iPhone 17 Pro' }}
+      OUT: ${{ startsWith(github.ref_name, 'appstore/') && 'appstore-screens' || 'ci-screens' }}
+      SCREENS: ${{ startsWith(github.ref_name, 'appstore/') && 'today box opened add' || '' }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode
@@ -19,18 +25,20 @@ jobs:
       - name: Build for the simulator
         run: |
           brew install xcodegen && xcodegen generate
-          SIM=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS-26' in k for x in v if x['name'].startswith('iPhone 17 Pro')) if any('iOS-26' in k for k in d) else '')")
+          SIM=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS-26' in k for x in v if (x['name'] == '$DEVICE' if '$DEVICE'.endswith('Max') else x['name'].startswith('$DEVICE'))) if any('iOS-26' in k for k in d) else '')")
           [ -z "$SIM" ] && SIM=$(xcrun simctl list devices available iPhone | grep -Eo '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -1)
           echo "SIM=$SIM" >> $GITHUB_ENV
           set -o pipefail
           xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -destination "id=$SIM" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
             || { grep -E "error:" build.log | sort -u | head -30 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - name: Screenshots
-        run: Scripts/screens.sh "$SIM"
-      - name: Publish to the ci-screens branch
+        run: |
+          [ -z "$SCREENS" ] && unset SCREENS
+          Scripts/screens.sh "$SIM"
+      - name: Publish the screens
         run: |
           cd screens
-          git init -q && git checkout -q -b ci-screens
+          git init -q && git checkout -q -b "$OUT"
           git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "Screens for ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screens
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$OUT"
           echo "::notice::Screens for ${GITHUB_SHA::7}"
