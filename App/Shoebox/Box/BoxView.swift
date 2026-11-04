@@ -90,7 +90,7 @@ struct BoxView: View {
                     Button("Settings") { onSettings() }
                         .font(.system(size: 17))
                         .foregroundStyle(Theme.ink)
-                        .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .trailing)
+                        .frame(minWidth: 110, minHeight: 56, alignment: .trailing)
                         .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 24)
