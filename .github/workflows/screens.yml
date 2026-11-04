@@ -34,11 +34,15 @@ jobs:
         if: startsWith(github.ref_name, 'appstore/')
         run: |
           mkdir -p "$RUNNER_TEMP/demo-photos"
-          for pair in "trail:coastal hiking trail" "bread:sourdough bread loaf" "castiron:cast iron skillet"; do
-            name="${pair%%:*}"; q="${pair#*:}"
-            url=$(curl -fsS -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock \
-              | python3 -c "import json,sys; p=json.load(sys.stdin).get('photos') or []; print(p[0]['url'] if p else '')") || url=""
-            if [ -n "$url" ]; then curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg" && echo "$name: ok"; else echo "::warning::No photo for $name"; fi
+          # Each photo tries plainer words until one finds a picture.
+          for spec in "trail|coastal hiking trail|coast trail|ocean cliffs" "bread|sourdough bread|bread loaf|bread|bakery" "castiron|cast iron skillet|frying pan|skillet|cooking pan"; do
+            name="${spec%%|*}"; rest="${spec#*|}"; got=""
+            IFS='|'; for q in $rest; do
+              url=$(curl -fsS -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock \
+                | python3 -c "import json,sys; p=json.load(sys.stdin).get('photos') or []; print(p[0]['url'] if p else '')") || url=""
+              if [ -n "$url" ] && curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg"; then echo "$name: ok ($q)"; got=1; break; fi
+            done; unset IFS
+            [ -z "$got" ] && echo "::warning::No photo for $name"
           done
       - name: Screenshots
         run: |
