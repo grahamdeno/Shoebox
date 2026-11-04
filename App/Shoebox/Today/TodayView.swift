@@ -309,7 +309,6 @@ struct TodayView: View {
             Spacer()
             BoxGlass()
                 .padding(.horizontal, -10)
-                .ignoresSafeArea(edges: .bottom)
                 .keyframeAnimator(initialValue: BoxShake(), trigger: reduceMotion ? 0 : bump) { content, v in
                     content.offset(x: v.dx)
                 } keyframes: { _ in boxShakeKeyframes }
