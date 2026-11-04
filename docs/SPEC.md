@@ -40,14 +40,14 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 Agreed November 4, 2026 (mock: the "Shoebox box: six glass directions" canvas, board "2 · Working: flick up, pull down"; copies in `docs/design/glass/`). Not a band across the bottom: the post runs to the bottom edge, Plum glass rises into it from below, and the lid is the one solid object on the screen.
 
-- **The glass.** The lower 360 pt of the screen blurs the post and tints it Plum (lighter Plum `#6A4F73` in dark): clear at the top, nearly solid at the bottom edge, so the post's panel sits partly in its glow. No edge, no outline.
-- **The lid.** Sunflower, 44 pt tall, 12 pt in from each screen edge, 8 pt corners, resting canted 2° up to the right on a hinge at its left end, like the logo. A lighter top face (the upper 56%) over a deeper lip (`#D4A21E`), a 1 pt highlight along the top, and a side flap at each end (12 pt wide, hanging 14 pt below the lid, lit on its outer edge, shaded inward), so it reads as the front of a shoebox lid, never as a slider. It casts a soft plum-shade shadow down onto the glass. No glow at rest. The lid's faces, flaps and highlight are separate smooth shapes, so a tilted lid never shows stair-step lines.
+- **The glass.** The lower 200 pt of the screen blurs the post and tints it Plum (lighter Plum `#6A4F73` in dark): clear at the top, nearly solid at the bottom edge, so the post's panel sits partly in its glow. No edge, no outline.
+- **The lid.** Sunflower, 44 pt tall, 12 pt in from each screen edge, 8 pt corners, resting canted 2° up to the right on a hinge at its left end, like the logo. A lighter top face (the upper 56%) over a deeper lip (`#D4A21E`) and a 1 pt highlight along the top. One smooth shape: no side flaps or end pieces. It casts a soft plum-shade shadow down onto the glass. No glow at rest. The faces and highlight are separate smooth shapes, so a tilted lid never shows stair-step lines.
 - Bare: the count of posts not put away at the right, just under the lid, and "Let go to put it away" in Sunflower at the left while a post is pulled down past the threshold.
 - Pulling a post down leans the lid 1.5° further open once it has moved 40 pt. Past the threshold it tips 5° further and glows Sunflower, and the words appear. Let go and the post drops in, shrinking toward the lid.
 - After a flick up, the next post rises out of the lid.
 - Flicking a post up or dropping one in makes the lid and glass shake, with a rustling haptic: quick knocks that spread out and fade over a low rumble (light for a flick, strong for a drop).
 - Pull the lid up, or tap it, and the Shoebox (2.4) rises from under it at the pace of your thumb (not on release); the lid lifts with it. Let go and it settles open or closed by where it is and how fast you were going.
-- Retired: the full-width Sunflower band, the Plum slab, the hinge post.
+- Retired: the full-width Sunflower band, the Plum slab, the hinge post, the side flaps.
 
 ### 2.3 The opened post
 
@@ -65,7 +65,7 @@ Agreed November 4, 2026 (mock: the "Shoebox box: six glass directions" canvas, b
 
 ### 2.4 Shoebox (the library)
 
-- **Opens under the lid.** The sheet is Plum glass over the blurred Today post. The open lid sits along its top edge, tipped about 7° open on its left hinge, where a grab handle would be; pull it down to close the Shoebox, or tap Today.
+- **Opens under the lid.** The sheet is Plum glass over the blurred Today post. The open lid sits along its top edge, lying level (no cant) along its top edge, where a grab handle would be; pull it down to close the Shoebox, or tap Today.
 - "Today" on the left and "Settings" on the right, then a large "Shoebox" title.
 - **Search is at the bottom**, under the thumb: a glass field, no outline, "Search everything", filtering as you type.
 - The list is everything you are not done with, in two calm sections with one row shape (a date, or a small picture when the post has one; the words, up to two lines and never cut off with "…"; one quiet line of where it came from). When you wrote a reason, the reason leads and the title moves to the quiet line.
