@@ -59,13 +59,13 @@ struct BoxLidHide: ViewModifier {
     }
 }
 
-/// The lid along the Shoebox sheet's top edge. It is the box's lid, tipping from its resting 2 degrees to about 7 as the
+/// The lid along the Shoebox sheet's top edge. It is the box's lid, coming level (its rest cant goes to 0) as the
 /// sheet comes up. It shows only once the sheet moves, in the place where the box's own lid was.
 struct BoxSheetLid: View {
     let pull: BoxPull
 
     var body: some View {
-        BoxLid(extraAngle: 5 * Double(pull.progress))
+        BoxLid(extraAngle: -BoxLid.restAngle * Double(pull.progress))
             .opacity(pull.progress > 0.001 ? 1 : 0)
             .accessibilityLabel("Close the Shoebox")
             .accessibilityAddTraits(.isButton)

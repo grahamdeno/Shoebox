@@ -182,8 +182,8 @@ struct TodayView: View {
         return ZStack(alignment: .top) {
             GlassSheet {
                 VStack(spacing: 0) {
-                    // Room for the open lid's flaps along the top edge. The whole top of the Shoebox pulls too.
-                    Color.clear.frame(height: 22)
+                    // Room for the open lid along the top edge. The whole top of the Shoebox pulls too.
+                    Color.clear.frame(height: 12)
                     BoxView(planner: planner, pull: pull, otherPostOpen: opened != nil, onClose: { closeBox() }, onBringBack: { bringBack($0) },
                             onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
                             onHandOff: { if toast == nil { show($0) } },
@@ -338,7 +338,7 @@ struct TodayView: View {
                         .foregroundStyle(Theme.boxText.opacity(0.7))
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, Self.lidTop + BoxLid.height + BoxLid.flapDrop + 8)
+                .padding(.top, Self.lidTop + BoxLid.height + 14)
                 .animation(.snappy, value: ready)
                 BoxLid(extraAngle: ready ? 5 : (leaning ? 1.5 : 0), glowing: ready)
                     .padding(.horizontal, BoxLid.inset)
