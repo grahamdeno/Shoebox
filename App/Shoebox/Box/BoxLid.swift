@@ -113,7 +113,7 @@ struct GlassPlumBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        let tint = scheme == .dark ? Color(UIColor(hex: Theme.plumLight)) : Theme.plum
+        let tint = scheme == .dark ? Theme.boxDark : Theme.plum
         let shape = UnevenRoundedRectangle(topLeadingRadius: topRadius, topTrailingRadius: topRadius, style: .continuous)
         if reduceTransparency {
             shape.fill(tint).ignoresSafeArea()

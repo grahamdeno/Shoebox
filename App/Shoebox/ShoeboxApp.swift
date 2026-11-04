@@ -101,9 +101,15 @@ struct RootView: View {
 /// changes the moment it is tapped.
 private struct AppearanceModifier: ViewModifier {
     @AppStorage("appearance", store: AppGroup.defaults) private var appearance = 0
+    /// Pistachio or Stone, as applied when Settings last closed. The colors read the choice each time they are drawn;
+    /// changing this redraws everything. It follows the choice only once Settings is closed, so the redraw (which starts
+    /// Today fresh) never happens under an open sheet.
+    @AppStorage("colorsApplied", store: AppGroup.defaults) private var colors = "pistachio"
 
     func body(content: Content) -> some View {
-        content.preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)
+        content
+            .id(colors)
+            .preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)
     }
 }
 

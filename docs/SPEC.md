@@ -116,7 +116,7 @@ Settings › How Shoebox works shows the moves again.
 
 Reached from Today and the Box. Laid out like Scales' Settings: a few short groups, each under a small quiet title. The sheet is the same glass as the Shoebox (2.4) over the blurred Today post; the groups are glass cards (a faint Bone fill in dark, a faint Plum Ink fill in light, a 1 pt highlight along the top), no outline. No lid here: the lid appears only where the box is. Each row shows its answer on the right. At most one quiet line under a group. A row opens one small screen: a title, its question, the choices as words.
 
-- **Your day:** Each day (How many: 5, 10 or All, default 10; Remind me: the time or Off), Look (Automatic, Light or Dark; the share sheet follows it), Pictures (On or Off).
+- **Your day:** Each day (How many: 5, 10 or All, default 10; Remind me: the time or Off), Look (Automatic, Light or Dark; then Colors: Pistachio, the default, or Stone; the share sheet follows both), Pictures (On or Off).
 - **Email** (when Plus is offered, section 9): Your Shoebox address. Under it: "Forward an email to keep it. Only your phone can read it." The screen has the address and Copy, or a first name and Get address, and "Who it's about".
 - **Back up:** Backups, answered **Automatic**, with one line saying when and where the last copy went. The screen says there is nothing to do (a copy once a day, the last 7 kept), then Back up now (Save a file) and Restore from a backup (Choose a file; only adds, takes any Shoebox 1 or 2 file).
 - **Help and about:** How Shoebox works (each move as a small looping picture, then how your reason sets when a post comes back), Send feedback (mail to support), Support (inmyshoebox.com/support), Privacy (three short lines and the policy), Restore purchases (when Plus is offered), Version.
@@ -213,6 +213,21 @@ No black anywhere. Brick is the only red and is used for Delete alone. Each colo
 - Plum Ink is the text on light. Plum is the box in light mode and the light-mode accent.
 - Sunflower is the lid, your reason on a photo, and the action word and accent in dark mode.
 - Shadows and scrims are the plum shade, so dark parts stay warm.
+
+#### Stone (a second set of colors, chosen in Settings › Look › Colors)
+
+The same colors as Scales' Stone: warm stone to read on, graphite for anything your hand is on. Dark puts the post on graphite with the sheets a step darker. Sunflower stays the lid, your reason on a photo and the dark accent; the logo and app icon stay Plum. Pistachio stays the default.
+
+| Job | Light | Dark |
+|---|---|---|
+| Ground | Stone `#C9C6BD` | Graphite `#23262B` |
+| Text | `#1F2124` | `#EEEAE2` |
+| Quiet | `#55524B` | `#A5A39D` |
+| Card | `#BDBAB0` | `#2E3238` |
+| Hairlines; fields | `#B3B0A7`; `#ACA9A0` | `#3A3D43`; `#42464C` |
+| Bottom box, Shoebox and Settings glass; posts without a picture | Graphite `#23262B` | `#16181B` |
+| Words on photos and dark | `#EEEAE2` | `#EEEAE2` |
+| Shadows and scrims | `#121316` | same |
 
 Every photo is measured once (average brightness and spread from a 16 by 16 copy) and graded: bright ones get more plum shade and a little less color, dark ones are lifted, flat ones get more contrast. Then a light Oceanic soft-light tint, an edge vignette, and shading top and bottom so the status bar and the glass always read.
 
