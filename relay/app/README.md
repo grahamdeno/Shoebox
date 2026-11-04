@@ -48,6 +48,7 @@ No phone becomes the owner by asking first. The one shared address (optional) is
 
 Secrets: `PIXABAY_API_KEY`, `OWNER_INBOX_KEY` (optional).
 Sandbox purchases (TestFlight, Xcode) are accepted while `ALLOW_SANDBOX` is not `"0"`. Set it to `"0"` once testing is over. `TEST_PURCHASE_ROOT` is for tests only; never set it in production.
+`PLUS_OWNER_ADDRESS` (optional, a plain variable): the owner's own address, such as `graham-k3t7m2qa`. That one address may register its sealing key without a purchase, so its mail works before Shoebox Plus is on sale. It makes no address and takes no seat. Remove it once Plus can be bought.
 The Apple root certificate is in `apple-root-g3.js`. While it is empty the relay refuses every purchase (fails closed).
 Variables: `EMAIL_DOMAIN` (default `inmyshoebox.com`), `EMAIL_ADDRESS` (optional), `MINT_DAILY_CAP`, `MAILBOX_DAILY_CAP`, `STOCK_HOURLY_LIMIT` (all optional). `PIXABAY_BASE_URL` is for local tests only.
 Binding: KV `SHOEBOX`, a namespace made for this Worker.

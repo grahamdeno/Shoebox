@@ -464,6 +464,15 @@ export async function mintAddress(env, request, box, name, { pub, buy } = {}) {
 const PURCHASE_REFUSED = "Shoebox Plus is needed to get an address.";
 const FIVE_PHONES = "This purchase is already on five phones. Write to support@inmyshoebox.com.";
 
+/** The owner's own address may register its sealing key without a purchase, until Shoebox Plus can be bought.
+ *  `PLUS_OWNER_ADDRESS` names it ("graham-k3t7m2qa", the part before the @). Only the phone holding that
+ *  address's inbox key reaches its box, so naming the address gives nobody else anything. It never makes a new
+ *  address, takes no seat, and changes nothing for anyone else. Remove the variable once Plus is on sale. */
+function ownerBox(env, cur) {
+  const owner = String(env.PLUS_OWNER_ADDRESS || "").trim().toLowerCase().split("@")[0];
+  return !!owner && !!cur && String(cur.slug || "").toLowerCase() === owner;
+}
+
 /** The certificates to trust as Apple's root: the embedded one, plus a test root only when a test sets one. */
 function purchaseRoots(env) {
   return [APPLE_ROOT_CA_G3_B64, env.TEST_PURCHASE_ROOT].filter(Boolean).map((b) => b64decode(b));
@@ -575,6 +584,11 @@ async function inboxRoute(request, env, pathname, cors) {
     if (!isPublicKey(pub)) return json(400, "Bad key.", cors);
     const cur = await kv.get(`box:${box}`, "json");
     if (!cur) return json(404, "Get an address first.", cors);
+    if (ownerBox(env, cur)) {
+      await kv.put(`box:${box}`, JSON.stringify({ ...cur, pub, at: Date.now() }), { expirationTtl: BOX_TTL });
+      await kv.put(`alias:${cur.slug}`, box, { expirationTtl: BOX_TTL });
+      return send({ ok: true });
+    }
     const bought = await checkPurchase(env, request, purchase);
     if (!bought.originalTransactionId) return json(bought.status, bought.message, cors);
     if (!(await seatFree(kv, bought.originalTransactionId, box))) return json(403, FIVE_PHONES, cors);

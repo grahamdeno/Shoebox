@@ -466,3 +466,26 @@ test("plain mail from before sealing is still handed over as it was stored", asy
   assert.equal(mails[0].v, undefined, "no version: the phone reads it as plain");
   assert.deepEqual(await (await call(env, "/inbox/file?id=old1&n=0", { key: KEY_A })).json(), { data: "QUJD" });
 });
+
+test("the owner's address registers its key without a purchase; nobody else does", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, PLUS_OWNER_ADDRESS: "Graham-K3T7M2QA@inmyshoebox.com" });
+  const box = await boxOf(KEY_A), other = await boxOf(KEY_B);
+  for (const [b, slug] of [[box, "graham-k3t7m2qa"], [other, "sam-abcd2345"]]) {
+    await kv.put(`alias:${slug}`, b, { expirationTtl: 90 * 86400 });
+    await kv.put(`box:${b}`, JSON.stringify({ slug, at: Date.now() }), { expirationTtl: 90 * 86400 });
+  }
+  const seal = (key) => call(env, "/inbox/seal", { method: "POST", key, body: { pub: PUB } });
+  assert.equal((await seal(KEY_A)).status, 200, "the owner's box, no purchase");
+  assert.equal((await (await call(env, "/inbox", { key: KEY_A })).json()).pub, PUB);
+  assert.equal(keysWith(kv, "buy:").length, 0, "no seat taken");
+  const m = mail("graham-k3t7m2qa@inmyshoebox.com");
+  await RELAY.email(m, env);
+  assert.equal(m.rejected, null, "the owner's mail is taken, sealed");
+  assert.equal((await seal(KEY_B)).status, 402, "another box still needs Plus");
+  // Without the variable, the owner needs Plus like everyone.
+  const plain = newEnv({ SHOEBOX: kv });
+  assert.equal((await call(plain, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB } })).status, 402);
+  // It never makes an address.
+  const fresh = newEnv({ PLUS_OWNER_ADDRESS: "graham-k3t7m2qa" });
+  assert.equal((await call(fresh, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "graham", pub: PUB } })).status, 402);
+});
