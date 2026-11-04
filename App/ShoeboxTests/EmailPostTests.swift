@@ -70,4 +70,11 @@ final class EmailPostTests: XCTestCase {
         let sick = Save(title: "Your clinic visit summary", body: "Thanks for coming in.", kind: .email)
         XCTAssertTrue(StockPhoto.isSensitive(StockPhoto.sensitivityText(sick)))
     }
+
+    @MainActor
+    func testATitleGivesItsOwnPlainWords() {
+        XCTAssertEqual(StockPhoto.clean("washer/dryer delivery", banned: []), "washer dryer delivery")
+        XCTAssertEqual(StockPhoto.clean("enchanted airlie tickets", banned: ["airlie"]), "tickets")
+        XCTAssertNil(StockPhoto.clean("$100 security deposit", banned: []))
+    }
 }

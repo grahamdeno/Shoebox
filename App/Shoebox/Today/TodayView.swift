@@ -115,8 +115,8 @@ struct TodayView: View {
 
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
                 if pull.mounted {
+                    // A tap above the sheet does nothing (a thumb reaching for Settings lands here); a drag closes it.
                     BoxDim(pull: pull)
-                        .onTapGesture { closeBox() }
                         .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
                 }
@@ -182,7 +182,7 @@ struct TodayView: View {
         let drag = boxPull(height: height, top: top)
         // On the header the drag must travel further before it takes over, so a tap on Today or Settings
         // that wobbles a few points is still a tap.
-        let headerDrag = boxPull(height: height, top: top, minimum: 18)
+        let headerDrag = boxPull(height: height, top: top, minimum: 30)
         return ZStack(alignment: .top) {
             GlassSheet {
                 VStack(spacing: 0) {
@@ -198,13 +198,12 @@ struct TodayView: View {
             .frame(height: height - tops.open)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius, style: .continuous))
 
-            // The open lid along the sheet's top edge, where a grab handle would be. Pull it down, or tap, to close.
+            // The open lid along the sheet's top edge, where a grab handle would be. Pull it down to close; a tap does nothing.
             BoxSheetLid(pull: pull)
                 .padding(.horizontal, BoxLid.inset)
                 .offset(y: -Self.sheetLidRise)
                 .contentShape(Rectangle())
                 .gesture(drag)
-                .onTapGesture { closeBox() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .modifier(BoxSheetFade(pull: pull))

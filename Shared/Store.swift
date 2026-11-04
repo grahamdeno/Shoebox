@@ -112,9 +112,9 @@ enum Prefs {
     }
 
     /// Set once the stock picture tries made under the narrow word rules have been forgotten.
-    static var stockRulesWidened2: Bool {
-        get { d.bool(forKey: "stockRulesWidened2") }
-        set { d.set(newValue, forKey: "stockRulesWidened2") }
+    static var stockRulesWidened3: Bool {
+        get { d.bool(forKey: "stockRulesWidened3") }
+        set { d.set(newValue, forKey: "stockRulesWidened3") }
     }
 
     /// The colors the app behind Settings was last redrawn in. Settings changes `colors` at once and this when it closes,

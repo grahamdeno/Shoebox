@@ -49,12 +49,21 @@ enum StockPhoto {
         func release() { if !gone() { s.stockTriedAt = previous } }
 
         if isSensitive(sensitivityText(s)) { return .notLookedUp }
+        // The title's own plain words ("delivery", "tickets", "soccer field"), never a name from the post.
+        let titleWords = clean(s.title, banned: properNouns(in: s.title).subtracting(vocabulary))
         let words = await phrase(for: s)
         if Task.isCancelled { release(); return .skipped }
-        guard let phrase = words else { return .noPlainWords }
-        // A dated post from email (a newsletter date) gets a picture of its own subject or none: the words must
+        // A dated post from email (a newsletter date) gets a picture of its own subject or none: the search must
         // name something in its title ("trumpet", "lacrosse"), not a stand-in like a mountain or a classroom.
-        if s.kind == .email, s.eventDate != nil, !sharesWord(phrase, with: s.title) { return .notItsSubject }
+        // When the suggested words miss the title, the title's own plain words are searched instead.
+        let datedEmail = s.kind == .email && s.eventDate != nil
+        let chosen: String?
+        if datedEmail {
+            chosen = words.flatMap { sharesWord($0, with: s.title) ? $0 : nil } ?? titleWords
+        } else {
+            chosen = words ?? titleWords
+        }
+        guard let phrase = chosen else { return words == nil && titleWords == nil ? .noPlainWords : .notItsSubject }
         let (found, status) = await search(phrase)
         if Task.isCancelled { release(); return .skipped }
         guard let found else {
@@ -99,10 +108,10 @@ enum StockPhoto {
     /// Once, after the word rules were widened (November 4, 2026): every post still without a picture gets a fresh try,
     /// whenever it was last tried under the old rules.
     static func forgetOldTries(_ saves: [Save]) -> Int {
-        guard !Prefs.stockRulesWidened2 else { return 0 }
+        guard !Prefs.stockRulesWidened3 else { return 0 }
         var n = 0
         for s in saves where s.imageData == nil && s.stockTriedAt != nil { s.stockTriedAt = nil; n += 1 }
-        Prefs.stockRulesWidened2 = true
+        Prefs.stockRulesWidened3 = true
         return n
     }
 
@@ -202,7 +211,7 @@ enum StockPhoto {
         bicycle bike skateboard yoga fitness weights walking park dog cat birds horse farm barn tractor fishing boat \
         sailing painting art studio paper craft camera photography notebook journal calendar clock desk lamp window \
         community market festival fair parade fireworks picnic grill barbecue snack sports team trophy medal ribbon \
-        science lab telescope robot circuit machine tools workshop wood carpentry \
+        science lab telescope robot circuit machine tools workshop wood carpentry washer dryer \
         laundry washing appliance appliances delivery truck package packages boxes moving shopping store cart clothes \
         shoes sneakers jacket fashion jewelry watch watches gift wrapping birthday cupcakes cupcake candy chocolate \
         flowers bouquet wedding family friends kids children toys games puzzle movie cinema theater theatre tickets \
