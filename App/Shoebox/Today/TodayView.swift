@@ -47,6 +47,7 @@ struct TodayView: View {
     @State private var flyOpacity: Double = 1
     @State private var busy = false
     @State private var bump = 0
+    @State private var backfilling = false
     /// The next post rises out of the lid after a flick up: 1 while it waits down at the lid, 0 once risen.
     @State private var rise: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -135,6 +136,7 @@ struct TodayView: View {
             showScreenForScreenshots()
             // Build the Shoebox sheet once, out of sight, so the first pull has nothing to build.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { pull.mounted = true }
+            Task { try? await Task.sleep(for: .seconds(3)); await backfillPictures() }
         }
         .onChange(of: pulling) { _, now in
             // A drag the system cancelled (an edge swipe, a call) never ends: settle where it stopped.
@@ -143,7 +145,7 @@ struct TodayView: View {
                 settleBox(open: pull.progress > 0.5)
             }
         }
-        .onChange(of: phase) { _, p in if p == .active { refreshPick() } }
+        .onChange(of: phase) { _, p in if p == .active { refreshPick(); Task { await backfillPictures() } } }
         .onChange(of: all.count) { _, _ in refreshPick() }
         .fullScreenCover(item: $opened) { item in
             let save = item.save
@@ -681,6 +683,27 @@ struct TodayView: View {
         try? context.save()
         for s in queue.prefix(3) where s.imageData == nil {
             await StockPhoto.fill(s)
+        }
+        try? context.save()
+    }
+
+    /// Posts that sit in the Shoebox never reach the front of Today, so they never got a picture. A few at a time, newest
+    /// first, each opening of the app: the link's own picture, then a stock one. A miss is tried again tomorrow, not now.
+    private func backfillPictures() async {
+        guard !backfilling else { return }
+        backfilling = true
+        defer { backfilling = false }
+        let waiting = rules.library(all, now: now)
+            .filter { s in
+                s.imageData == nil && s.kind != .photo && (s.stockTriedAt.map { now.timeIntervalSince($0) >= 86_400 } ?? true)
+            }
+            // Never-tried first, so posts the rules skip (health, money) do not hold the line every day.
+            .sorted { ($0.stockTriedAt != nil ? 1 : 0, -$0.createdAt.timeIntervalSince1970) < ($1.stockTriedAt != nil ? 1 : 0, -$1.createdAt.timeIntervalSince1970) }
+            .prefix(6)
+        for s in waiting {
+            if Task.isCancelled { break }
+            if s.enrichedAt == nil, s.url != nil { await Relay.enrich(s) }
+            if s.imageData == nil { await StockPhoto.fill(s) }
         }
         try? context.save()
     }
