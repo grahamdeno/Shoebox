@@ -267,8 +267,9 @@ enum Inbox {
     }
 
     /// Settles the sealing key with the relay and returns the key to open mail with (nil when this phone has none).
-    /// A key is made only when it is about to be registered, and registering needs Plus; without it the mail waits
-    /// unopened and Settings says so. Quiet: it never asks for anything.
+    /// A key is made only when it is about to be registered. The relay decides whether it takes it: with Plus, or for
+    /// the owner's own address before Plus is on sale. Otherwise the mail waits and Settings says so. Quiet: it never
+    /// asks the person for anything.
     static func settleSealing(held: String?, hasAddress: Bool, key: String, force: Bool, now: Date = Date()) async -> Curve25519.KeyAgreement.PrivateKey? {
         var mine: Curve25519.KeyAgreement.PrivateKey?
         if case .found(let k) = MailboxKeys.sealingKeyState() { mine = k }
@@ -285,7 +286,11 @@ enum Inbox {
         case .register:
             Prefs.sealingRegistered = false
             if held != nil, Prefs.sealMismatchSince == nil { Prefs.sealMismatchSince = now }
-            guard let purchase = await Plus.proof(), let sealing = mine ?? MailboxKeys.sealingKey() else { return mine }
+            // Without Plus the relay still answers for the owner's own address (PLUS_OWNER_ADDRESS) and says 402 to
+            // anyone else, so the phone asks either way. A key is made only when the relay holds none, or after the
+            // wait (above), so asking without Plus never replaces a key that works.
+            guard let sealing = mine ?? MailboxKeys.sealingKey() else { return mine }
+            let purchase = await Plus.proof() ?? ""
             let body = try? JSONSerialization.data(withJSONObject: ["pub": MailboxKeys.publicText(sealing), "purchase": purchase])
             let req = Relay.request("inbox/seal", method: "POST", body: body, key: key)
             if let (_, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200 {
