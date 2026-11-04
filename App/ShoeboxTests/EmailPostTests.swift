@@ -60,4 +60,14 @@ final class EmailPostTests: XCTestCase {
         s.stockTriedAt = now.addingTimeInterval(-90_000)
         XCTAssertFalse(StockPhoto.recentlyTried(s, now: now))
     }
+
+    @MainActor
+    func testAnEmailFooterDoesNotStopThePicture() {
+        let footer = String(repeating: "News of the week for families. ", count: 80)
+            + "Legal | Privacy | Apply for our credit card | Health insurance partners"
+        let s = Save(title: "Lacrosse interest meeting", body: "Come meet the coaches on the field. " + footer, kind: .email)
+        XCTAssertFalse(StockPhoto.isSensitive(StockPhoto.sensitivityText(s)))
+        let sick = Save(title: "Your clinic visit summary", body: "Thanks for coming in.", kind: .email)
+        XCTAssertTrue(StockPhoto.isSensitive(StockPhoto.sensitivityText(sick)))
+    }
 }

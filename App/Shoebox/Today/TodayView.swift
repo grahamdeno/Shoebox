@@ -705,10 +705,12 @@ struct TodayView: View {
             // Never-tried first, so posts the rules skip (health, money) do not hold the line every day.
             .sorted { ($0.stockTriedAt != nil ? 1 : 0, -$0.createdAt.timeIntervalSince1970) < ($1.stockTriedAt != nil ? 1 : 0, -$1.createdAt.timeIntervalSince1970) }
             .prefix(10)
+        if !waiting.isEmpty { Prefs.pictureLog = [:] }
         for s in waiting {
             if Task.isCancelled { break }
             if s.enrichedAt == nil, s.url != nil { await Relay.enrich(s) }
-            if s.imageData == nil { await StockPhoto.fill(s) }
+            if s.imageData != nil { StockPhoto.record(.found); continue }
+            StockPhoto.record(await StockPhoto.fill(s))
         }
         try? context.save()
     }

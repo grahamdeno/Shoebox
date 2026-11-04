@@ -266,7 +266,28 @@ struct SettingsView: View {
                 choice("Off", !stock) { stock = false; Prefs.stockPictures = false }
             }
             line("Your words stay on your phone.")
+            if let last = pictureSummary {
+                line(last)
+            }
         }
+    }
+
+    /// One quiet line on the last look through the Shoebox: what found a picture and where the rest stopped.
+    private var pictureSummary: String? {
+        let log = Prefs.pictureLog
+        guard !log.isEmpty else { return nil }
+        let names: [(StockPhoto.Outcome, String)] = [
+            (.found, "found a picture"), (.notLookedUp, "not looked up (health, money or legal)"),
+            (.noPlainWords, "no plain words to search"), (.notItsSubject, "dated email with nothing to picture"),
+            (.noneFound, "nothing found"), (.serverBusy, "server busy"), (.serverNo, "server didn't answer"),
+            (.downloadFailed, "picture didn't download"),
+        ]
+        let parts = names.compactMap { o, name -> String? in
+            guard let n = log[o.rawValue] else { return nil }
+            if o == .serverNo, let code = log["code"] { return "\(n) \(name) (\(code == 0 ? "no connection" : String(code)))" }
+            return "\(n) \(name)"
+        }
+        return "Last look: " + parts.joined(separator: ", ") + "."
     }
 
     private var emailScreen: some View {
