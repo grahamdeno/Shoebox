@@ -47,6 +47,9 @@ struct TodayView: View {
     @State private var flyOpacity: Double = 1
     @State private var busy = false
     @State private var bump = 0
+    /// The next post rises out of the lid after a flick up: 1 while it waits down at the lid, 0 once risen.
+    @State private var rise: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let rules = TodayRules()
     private let actions = SaveActions()
@@ -55,6 +58,9 @@ struct TodayView: View {
     static let upDistance: CGFloat = 100
     static let downDistance: CGFloat = 160
     static let stripHeight: CGFloat = 120
+    /// How far the lid sits below the top of the strip, and how far above the Shoebox sheet's top edge it rides.
+    static let lidTop: CGFloat = 8
+    static let sheetLidRise: CGFloat = 34
 
     private var now: Date { Date() }
     private var queue: [Save] {
@@ -88,9 +94,9 @@ struct TodayView: View {
                             .accessibilityHidden(true)
                     }
                     card(current, geo)
-                        .scaleEffect(cardScale, anchor: .bottom)
-                        .offset(y: resisted(drag) + fly)
-                        .opacity(flyOpacity)
+                        .scaleEffect(cardScale * (reduceMotion ? 1 : 1 - 0.08 * rise), anchor: .bottom)
+                        .offset(y: resisted(drag) + fly + (reduceMotion ? 0 : 180 * rise))
+                        .opacity(flyOpacity * (1 - Double(rise)))
                         .id(current.id)
                         .gesture(cardGesture(current, height: height))
                         .accessibilityElement(children: .combine)
@@ -111,6 +117,9 @@ struct TodayView: View {
                     BoxDim(pull: pull)
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
                 }
+
+                glass
+                    .modifier(BoxStripFade(pull: pull))
 
                 strip
                     .modifier(BoxStripFade(pull: pull))
@@ -161,7 +170,7 @@ struct TodayView: View {
 
     /// Where the top of the sheet sits: hidden behind the box, and fully open just under the status bar.
     private func boxTops(_ height: CGFloat, _ top: CGFloat) -> (closed: CGFloat, open: CGFloat) {
-        (height - Self.stripHeight + 40, top + 10)
+        (height - Self.stripHeight + Self.lidTop + Self.sheetLidRise, top + 48)
     }
 
     private func boxSheet(height: CGFloat, top: CGFloat) -> some View {
@@ -170,21 +179,31 @@ struct TodayView: View {
         // On the header the drag must travel further before it takes over, so a tap on Today or Settings
         // that wobbles a few points is still a tap.
         let headerDrag = boxPull(height: height, top: top, minimum: 18)
-        return VStack(spacing: 0) {
-            // The handle: pull it down to close, like any sheet. The whole top of the Shoebox pulls too.
-            Capsule().fill(Theme.quiet.opacity(0.45)).frame(width: 38, height: 5)
-                .frame(maxWidth: .infinity, minHeight: 28)
+        return ZStack(alignment: .top) {
+            GlassSheet {
+                VStack(spacing: 0) {
+                    // Room for the open lid's flaps along the top edge. The whole top of the Shoebox pulls too.
+                    Color.clear.frame(height: 22)
+                    BoxView(planner: planner, pull: pull, otherPostOpen: opened != nil, onClose: { closeBox() }, onBringBack: { bringBack($0) },
+                            onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
+                            onHandOff: { if toast == nil { show($0) } },
+                            pullGesture: AnyGesture(headerDrag.map { _ in () }))
+                }
+                .frame(height: height - tops.open)
+            }
+            .frame(height: height - tops.open)
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius, style: .continuous))
+
+            // The open lid along the sheet's top edge, where a grab handle would be. Pull it down, or tap, to close.
+            BoxSheetLid(pull: pull)
+                .padding(.horizontal, BoxLid.inset)
+                .offset(y: -Self.sheetLidRise)
                 .contentShape(Rectangle())
                 .gesture(drag)
-            BoxView(planner: planner, pull: pull, otherPostOpen: opened != nil, onClose: { closeBox() }, onBringBack: { bringBack($0) },
-                    onBrowse: { closeBox(); startBrowsing() }, onSettings: { showSettings = true },
-                    onHandOff: { if toast == nil { show($0) } },
-                    pullGesture: AnyGesture(headerDrag.map { _ in () }))
+                .onTapGesture { closeBox() }
         }
-        .frame(height: height - tops.open)
-        .background(Theme.ground)
-        .clipShape(UnevenRoundedRectangle(topLeadingRadius: Metrics.sheetRadius, topTrailingRadius: Metrics.sheetRadius, style: .continuous))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .modifier(BoxSheetFade(pull: pull))
         .modifier(BoxSheetOffset(pull: pull, closed: tops.closed, open: tops.open))
         .ignoresSafeArea()
     }
@@ -283,53 +302,59 @@ struct TodayView: View {
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
     }
 
-    /// Your Shoebox, across the bottom: a Plum box (a lighter Plum in dark) with its Sunflower lid on top, like the logo.
-    /// The lid lifts and tips open once a post is far enough to drop in, and the whole box rattles
-    /// when a post is flicked away or dropped into it. Tap it or pull it up to open the Box.
+    /// The glass the box rises out of (SPEC 2.2): the lower 360 pt of the screen, clear at the top and nearly solid at the
+    /// bottom edge. It shakes with the lid.
+    private var glass: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            BoxGlass()
+                .padding(.horizontal, -10)
+                .keyframeAnimator(initialValue: BoxShake(), trigger: reduceMotion ? 0 : bump) { content, v in
+                    content.offset(x: v.dx)
+                } keyframes: { _ in boxShakeKeyframes }
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .allowsHitTesting(false)
+    }
+
+    /// Your Shoebox, across the bottom: the Sunflower lid on the glass, with the count under it. The lid leans a little
+    /// when a post is pulled down, and tips open with a glow once it is far enough to drop in. The glass and lid rattle
+    /// when a post is flicked away or dropped in. Tap the box or pull it up to open the Shoebox.
     private var strip: some View {
         let ready = crossed == -1
-        let growth = drag > 0 ? min(40, drag * 0.25) : 0
+        let leaning = drag > 40 && !ready
         return VStack(spacing: 0) {
             Spacer()
             ZStack(alignment: .top) {
-                // Smoked glass: the photo blurs through, so the box belongs to every post.
-                // Plum glass in both modes, the same box as the logo.
-                Color.clear
-                    .glassEffect(.regular.tint(Theme.boxGlass.opacity(0.88)), in: Rectangle())
-                    .padding(.top, 16)
-                    .ignoresSafeArea(edges: .bottom)
                 HStack(alignment: .center, spacing: 12) {
-                    // Bare: the lid and the box say what it is. Only the drop hint speaks, and the count.
+                    // Bare: the lid says what it is. Only the drop hint speaks, and the count.
                     Text(ready ? "Let go to put it away" : "")
                         .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.lid)
                     Spacer()
                     Text("\(boxCount)")
                         .font(.system(size: 17))
                         .monospacedDigit()
                         .foregroundStyle(Theme.boxText.opacity(0.7))
                 }
-                .foregroundStyle(Theme.boxText)
                 .padding(.horizontal, 24)
-                .padding(.top, 68)
-                lid(ready: ready)
+                .padding(.top, Self.lidTop + BoxLid.height + BoxLid.flapDrop + 8)
+                .animation(.snappy, value: ready)
+                BoxLid(extraAngle: ready ? 5 : (leaning ? 1.5 : 0), glowing: ready)
+                    .padding(.horizontal, BoxLid.inset)
+                    .padding(.top, Self.lidTop)
+                    .keyframeAnimator(initialValue: BoxShake(), trigger: reduceMotion ? 0 : bump) { content, v in
+                        content.rotationEffect(.degrees(v.angle), anchor: .leading).offset(y: v.lift)
+                    } keyframes: { _ in lidShakeKeyframes }
+                    // The Shoebox sheet carries its own lid once it starts to move.
+                    .modifier(BoxLidHide(pull: pull))
             }
-            .frame(height: Self.stripHeight + growth)
+            .frame(height: Self.stripHeight)
             .contentShape(Rectangle())
             .onTapGesture { openBox() }
-            .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
+            .keyframeAnimator(initialValue: BoxShake(), trigger: reduceMotion ? 0 : bump) { content, v in
                 content.offset(x: v.dx)
-            } keyframes: { _ in
-                KeyframeTrack(\.dx) {
-                    LinearKeyframe(0, duration: 0.001)
-                    CubicKeyframe(-4, duration: 0.04)
-                    CubicKeyframe(4, duration: 0.06)
-                    CubicKeyframe(-3, duration: 0.06)
-                    CubicKeyframe(2, duration: 0.06)
-                    CubicKeyframe(-1, duration: 0.06)
-                    CubicKeyframe(0, duration: 0.08)
-                }
-            }
-            .animation(.snappy, value: ready)
+            } keyframes: { _ in boxShakeKeyframes }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel("Your Shoebox, \(boxCount)")
@@ -337,51 +362,39 @@ struct TodayView: View {
         }
     }
 
-    /// The Sunflower lid: hinged at the left, resting almost flat, tipped open when a post is ready to drop in.
-    /// Bumped, it knocks against the box.
-    private func lid(ready: Bool) -> some View {
-        // A shoebox top: lit along its top edge, a deeper lip where it folds down over the sides, and a shadow
-        // cast down onto the box. The lip and the highlight are their own shapes with soft vector edges: a hard
-        // colour stop inside a tilted gradient is not smoothed and shows as a stair-step line.
-        let shape = RoundedRectangle(cornerRadius: 7, style: .continuous)
-        return shape
-            .fill(Theme.lid)
-            .overlay(alignment: .bottom) {
-                Rectangle().fill(Theme.lidLip).frame(height: 11)
-            }
-            .overlay(alignment: .top) {
-                Rectangle().fill(Theme.onPhoto.opacity(0.5)).frame(height: 1.5)
-            }
-            .clipShape(shape)
-            .compositingGroup()
-            .frame(height: 54)
-            .padding(.horizontal, -8)
-            .shadow(color: Theme.shade.opacity(ready ? 0 : 0.35), radius: 2.5, y: 3)
-            .shadow(color: ready ? Theme.lid.opacity(0.65) : Theme.shade.opacity(0.32), radius: ready ? 12 : 10, y: ready ? 0 : 9)
-            .rotationEffect(.degrees(ready ? -4 : -0.6), anchor: .leading)
-            .offset(y: ready ? -6 : 0)
-            .keyframeAnimator(initialValue: BoxShake(), trigger: bump) { content, v in
-                content.rotationEffect(.degrees(v.angle), anchor: .leading).offset(y: v.lift)
-            } keyframes: { _ in
-                KeyframeTrack(\.angle) {
-                    LinearKeyframe(0, duration: 0.001)
-                    CubicKeyframe(-5, duration: 0.05)
-                    CubicKeyframe(3, duration: 0.07)
-                    CubicKeyframe(-3.5, duration: 0.07)
-                    CubicKeyframe(2, duration: 0.07)
-                    CubicKeyframe(-1, duration: 0.06)
-                    CubicKeyframe(0, duration: 0.08)
-                }
-                KeyframeTrack(\.lift) {
-                    LinearKeyframe(0, duration: 0.001)
-                    CubicKeyframe(-5, duration: 0.05)
-                    CubicKeyframe(0, duration: 0.07)
-                    CubicKeyframe(-3, duration: 0.07)
-                    CubicKeyframe(0, duration: 0.07)
-                    CubicKeyframe(-1, duration: 0.06)
-                    CubicKeyframe(0, duration: 0.08)
-                }
-            }
+    @KeyframesBuilder<BoxShake>
+    private var boxShakeKeyframes: some Keyframes<BoxShake> {
+        KeyframeTrack(\.dx) {
+            LinearKeyframe(0, duration: 0.001)
+            CubicKeyframe(-4, duration: 0.04)
+            CubicKeyframe(4, duration: 0.06)
+            CubicKeyframe(-3, duration: 0.06)
+            CubicKeyframe(2, duration: 0.06)
+            CubicKeyframe(-1, duration: 0.06)
+            CubicKeyframe(0, duration: 0.08)
+        }
+    }
+
+    @KeyframesBuilder<BoxShake>
+    private var lidShakeKeyframes: some Keyframes<BoxShake> {
+        KeyframeTrack(\.angle) {
+            LinearKeyframe(0, duration: 0.001)
+            CubicKeyframe(-5, duration: 0.05)
+            CubicKeyframe(3, duration: 0.07)
+            CubicKeyframe(-3.5, duration: 0.07)
+            CubicKeyframe(2, duration: 0.07)
+            CubicKeyframe(-1, duration: 0.06)
+            CubicKeyframe(0, duration: 0.08)
+        }
+        KeyframeTrack(\.lift) {
+            LinearKeyframe(0, duration: 0.001)
+            CubicKeyframe(-5, duration: 0.05)
+            CubicKeyframe(0, duration: 0.07)
+            CubicKeyframe(-3, duration: 0.07)
+            CubicKeyframe(0, duration: 0.07)
+            CubicKeyframe(-1, duration: 0.06)
+            CubicKeyframe(0, duration: 0.08)
+        }
     }
 
     /// Rattle the box: the lid knocks and the haptics rustle.
@@ -564,8 +577,15 @@ struct TodayView: View {
             still.disablesAnimations = true
             withTransaction(still) {
                 drag = 0; fly = 0; flyScale = 1; flyOpacity = 1
+                // Up: the next post waits down at the lid, then rises out of it. Away: it comes in as before.
+                rise = up ? 1 : 0
             }
             busy = false
+            if up {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+                    withAnimation(reduceMotion ? .easeOut(duration: 0.25) : .spring(response: 0.42, dampingFraction: 0.82)) { rise = 0 }
+                }
+            }
         }
     }
 

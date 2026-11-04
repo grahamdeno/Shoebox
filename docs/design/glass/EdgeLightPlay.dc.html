@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lid seen edge-on, working</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+@keyframes rattleL0{0%{transform:translateX(0)}20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}100%{transform:translateX(0)}}
+@keyframes rattleL1{0%{transform:translateX(0)}20%{transform:translateX(-2px)}40%{transform:translateX(2px)}60%{transform:translateX(-1px)}80%{transform:translateX(1px)}100%{transform:translateX(0)}}
+@keyframes rattleS0{0%{transform:translate(0,0)}10%{transform:translate(-5px,3px)}22%{transform:translate(5px,-1px)}34%{transform:translate(-4px,2px)}46%{transform:translate(3px,0)}60%{transform:translate(-2px,1px)}75%{transform:translate(1px,0)}100%{transform:translate(0,0)}}
+@keyframes rattleS1{0%{transform:translate(0,0)}10%{transform:translate(-5px,3px)}22%{transform:translate(5px,-1px)}34%{transform:translate(-4px,2px)}46%{transform:translate(3px,0)}60%{transform:translate(-2px,1px)}75%{transform:translate(1px,0)}100%{transform:translate(0,0)}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #3B2240; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #F1E9D8; user-select: none; -webkit-user-select: none;">
+
+  <sc-if value="{{post.photo}}" hint-placeholder-val="{{ true }}">
+    <img src="/_blob/b0043549d3875705321a2c85d0660139" alt="A tuna salad sandwich, cut in half" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%;">
+  </sc-if>
+  <sc-if value="{{post.plain}}" hint-placeholder-val="{{ false }}">
+    <div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: radial-gradient(120% 70% at 30% 30%, rgba(249,201,58,0.22) 0%, rgba(249,201,58,0) 60%), linear-gradient(180deg, #4A2C52 0%, #3B2240 60%, #2C1832 100%);"></div>
+  </sc-if>
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(26,16,32,0.6) 0%, rgba(26,16,32,0.1) 22%, rgba(26,16,32,0.1) 50%, rgba(26,16,32,0.3) 100%);"></div>
+
+  <div style="position: absolute; top: 58px; left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center;">
+    <button style="font-size: 19px; font-weight: 500; min-height: 44px;">+ New</button>
+    <span style="font-size: 17px; opacity: 0.75;">{{counter}}</span>
+  </div>
+
+  <sc-if value="{{toast.on}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; top: 112px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; padding: 10px 18px; border-radius: 18px; background: rgba(26,16,32,0.5); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); border: 1px solid rgba(241,233,216,0.2); white-space: nowrap; z-index: 5;">
+      <span style="font-size: 15px;">{{toast.text}}</span>
+      <sc-if value="{{toast.undo}}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{undo}}" style="font-size: 15px; font-weight: 600; color: #F9C93A; min-height: 32px;">Undo</button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 360px; background: linear-gradient(180deg, rgba(59,34,64,0) 0%, rgba(59,34,64,0.45) 38%, rgba(59,34,64,0.8) 70%, rgba(59,34,64,0.94) 100%); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 45%); mask-image: linear-gradient(180deg, transparent 0%, black 45%);"></div>
+
+  <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 28px; right: 28px; top: 300px; display: flex; flex-direction: column; gap: 14px;">
+      <h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 700; letter-spacing: -0.6px;">That's all for today.</h1>
+      <button onClick="{{restart}}" style="align-self: flex-start; font-size: 19px; font-weight: 600; color: #F9C93A; min-height: 44px;">Start over</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showCard}}" hint-placeholder-val="{{ true }}">
+    <div onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" style="position: absolute; left: 14px; right: 14px; bottom: 164px; padding: 18px 22px 16px; border-radius: 26px; background: rgba(26,16,32,0.42); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); border: 1px solid rgba(241,233,216,0.16); box-shadow: inset 0 1px 0 rgba(241,233,216,0.22), 0 12px 28px rgba(26,16,32,0.3); touch-action: none; cursor: grab; z-index: 3; transform: translateY({{card.y}}px) scale({{card.s}}); opacity: {{card.o}}; transition: {{card.t}};">
+      <sc-if value="{{post.hasReason}}" hint-placeholder-val="{{ true }}">
+        <p style="margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #F9C93A;">{{post.reason}}</p>
+      </sc-if>
+      <h1 style="margin: 0 0 8px; font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -0.5px;">{{post.title}}</h1>
+      <p style="margin: 0 0 8px; font-size: 16px; line-height: 21px; opacity: 0.85;">{{post.body}}</p>
+      <p style="margin: 0; font-size: 13px; opacity: 0.6;">{{post.byline}}</p>
+    </div>
+  </sc-if>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 140px; animation: {{rattle}}; z-index: 2;">
+    <div aria-hidden="true" style="position: absolute; left: {{lid.inset}}px; right: {{lid.inset}}px; top: 10px; height: {{lid.h}}px; border-radius: {{lid.radius}}px; background: linear-gradient(180deg, #FFEAA8 0%, #FBD457 10%, #F9C93A 30%, #F7C535 56%, #D9A722 57%, #D4A21E 75%, #C2921A 100%); box-shadow: 0 0 {{lid.glow}}px rgba(249,201,58,{{lid.glowA}}), inset 0 1px 0 rgba(255,250,232,0.95), inset 0 -1px 0 rgba(120,80,10,0.35), 0 3px 4px rgba(26,16,32,0.4), 0 12px 20px rgba(26,16,32,0.55); transform: rotate({{lid.r}}deg); transform-origin: 0 50%; transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;"><sc-if value="{{lid.sides}}" hint-placeholder-val="{{ true }}"><span style="position: absolute; left: 0; top: 0; width: {{lid.sideW}}px; height: {{lid.sideH}}px; border-radius: {{lid.radius}}px 2px 3px 3px; background: linear-gradient(90deg, #E0AE28 0%, #D4A21E 55%, #B8891A 100%); box-shadow: inset 1px 1px 0 rgba(255,236,170,0.75), 0 6px 10px rgba(26,16,32,0.45);"></span><span style="position: absolute; right: 0; top: 0; width: {{lid.sideW}}px; height: {{lid.sideH}}px; border-radius: 2px {{lid.radius}}px 3px 3px; background: linear-gradient(90deg, #B8891A 0%, #D4A21E 45%, #E0AE28 100%); box-shadow: inset -1px 1px 0 rgba(255,236,170,0.75), 0 6px 10px rgba(26,16,32,0.45);"></span></sc-if></div>
+    <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: {{lid.shadowTop}}px; height: 26px; background: linear-gradient(180deg, rgba(26,16,32,0.5) 0%, rgba(26,16,32,0) 100%);"></div>
+    <button aria-label="Open your Shoebox" style="position: absolute; left: 0; right: 0; top: {{lid.btnTop}}px; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 26px 10px 26px;">
+      <span style="font-size: 16px; font-weight: 500; color: #F9C93A;">{{lid.words}}</span>
+      <span style="font-size: 17px; font-weight: 500; opacity: 0.85;">{{count}}</span>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lidHeight":{"editor":"range","default":44,"min":16,"max":72,"step":2,"unit":"px"},"lidInset":{"editor":"range","default":12,"min":-6,"max":32,"step":2,"unit":"px"},"lidRadius":{"editor":"range","default":8,"min":0,"max":22,"step":1,"unit":"px"},"lidAngle":{"editor":"range","default":2,"min":0,"max":10,"step":0.5,"unit":"deg"},"lidSides":{"editor":"boolean","default":true},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { i: 0, dy: 0, drag: false, phase: 'idle', count: 20, shake: 0, strong: false, toast: '', toastUndo: false, toastKey: 0, last: null };
+    this.startY = 0;
+    this.t0 = 0;
+    this.posts = [
+      { photo: true, reason: 'Recipe for lunch some day', title: 'Matthew McConaughey tuna salad recipe', body: 'Instagram reel with the tuna salad recipe Matthew McConaughey mentioned on a podcast, with apple, pickles and wasabi.', byline: 'You, last week, from Instagram' },
+      { photo: false, reason: 'Book it before it fills', title: 'Carolina Beach campsites for May', body: 'Waterfront sites for the long weekend open to reservations on Nov 14 at 9 AM.', byline: 'You, yesterday, from Safari' },
+      { photo: false, reason: 'Read on the flight', title: 'Shape Up, chapter 3', body: 'Set the appetite, not the estimate: decide how much time a problem is worth before shaping it.', byline: 'You, 3 days ago, from Safari' },
+      { photo: false, reason: '', title: 'Cross country banquet', body: 'Saturday, Nov 14 · 5:00 PM · Cafeteria · Potluck.', byline: 'From Roosevelt newsletter' },
+      { photo: false, reason: 'For the garage', title: 'Pegboard tool wall', body: 'Two 4 by 8 sheets, 1 inch spacers, and the hook kit from the hardware store.', byline: 'You, Monday, a note' }
+    ];
+    this.down = (e) => {
+      if (this.state.phase !== 'idle') return;
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      this.startY = e.clientY;
+      this.t0 = Date.now();
+      this.setState({ drag: true, dy: 0 });
+    };
+    this.move = (e) => {
+      if (!this.state.drag) return;
+      const raw = e.clientY - this.startY;
+      const a = Math.abs(raw);
+      const v = a <= 40 ? a : 40 + (a - 40) * 0.5;
+      this.setState({ dy: raw < 0 ? -v : v });
+    };
+    this.up = () => {
+      if (!this.state.drag) return;
+      const dy = this.state.dy;
+      if (Math.abs(dy) < 6 && Date.now() - this.t0 < 350) {
+        this.setState({ drag: false, dy: 0 });
+        this.say('A tap opens the post', false);
+        return;
+      }
+      if (dy <= -100) { this.leave('up'); return; }
+      if (dy >= 160) { this.leave('down'); return; }
+      this.setState({ drag: false, dy: 0 });
+    };
+    this.undo = () => {
+      const last = this.state.last;
+      if (last === null) return;
+      this.setState({ i: last, count: this.state.count + 1, last: null, toast: '', phase: 'enterStart', dy: 0 });
+      setTimeout(() => this.setState({ phase: 'idle' }), 40);
+    };
+    this.restart = () => {
+      this.setState({ i: 0, count: 20, last: null, toast: '', phase: 'enterStart', dy: 0 });
+      setTimeout(() => this.setState({ phase: 'idle' }), 40);
+    };
+  }
+  leave(dir) {
+    this.setState({ drag: false, phase: dir === 'up' ? 'flyUp' : 'drop' });
+    if (dir === 'up') this.rattle(false);
+    setTimeout(() => {
+      const next = { phase: 'enterStart', i: this.state.i + 1, dy: 0 };
+      if (dir === 'down') { next.count = this.state.count - 1; next.last = this.state.i; }
+      this.setState(next);
+      if (dir === 'down') { this.rattle(true); this.say('Put away', true); }
+      setTimeout(() => this.setState({ phase: 'idle' }), 40);
+    }, dir === 'up' ? 320 : 300);
+  }
+  rattle(strong) {
+    this.setState({ shake: this.state.shake + 1, strong: strong });
+  }
+  say(text, undo) {
+    const k = this.state.toastKey + 1;
+    this.setState({ toast: text, toastUndo: undo, toastKey: k });
+    setTimeout(() => { if (this.state.toastKey === k) this.setState({ toast: '' }); }, undo ? 5000 : 1800);
+  }
+  renderVals() {
+    const st = this.state;
+    const done = st.i >= this.posts.length;
+    const p = this.posts[Math.min(st.i, this.posts.length - 1)];
+    let card = { y: st.dy, s: 1, o: 1, t: st.drag ? 'none' : 'transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s' };
+    if (st.phase === 'flyUp') card = { y: -900, s: 1, o: 1, t: 'transform 0.32s cubic-bezier(0.4, 0, 1, 1)' };
+    if (st.phase === 'drop') card = { y: 520, s: 0.5, o: 0, t: 'transform 0.3s cubic-bezier(0.5, 0, 1, 1), opacity 0.28s ease-in' };
+    if (st.phase === 'enterStart') card = { y: 180, s: 0.92, o: 0, t: 'none' };
+    const open = (st.drag && st.dy >= 160) || st.phase === 'drop';
+    const leaning = st.drag && st.dy > 40 && !open;
+    const h = Math.max(16, Math.min(72, Number(this.props.lidHeight ?? 44)));
+    const inset = Math.max(-6, Math.min(32, Number(this.props.lidInset ?? 12)));
+    const radius = Math.max(0, Math.min(22, Number(this.props.lidRadius ?? 8)));
+    const angle = -Math.max(0, Math.min(10, Number(this.props.lidAngle ?? 2)));
+    const sides = this.props.lidSides ?? true;
+    const lid = {
+      sides: !!sides,
+      sideW: 12,
+      sideH: h + 14,
+      h: h,
+      inset: inset,
+      radius: radius,
+      shadowTop: 10 + h,
+      btnTop: 14 + h,
+      r: angle + (open ? -5 : leaning ? -1.5 : 0),
+      glow: open ? 30 : 0,
+      glowA: open ? 0.8 : 0,
+      words: open ? 'Let go to put it away' : ''
+    };
+    const rattle = st.shake ? (st.strong ? 'rattleS' + (st.shake % 2) + ' 0.6s ease-out' : 'rattleL' + (st.shake % 2) + ' 0.35s ease-out') : 'none';
+    return {
+      post: { photo: !done && !!p.photo, plain: done || !p.photo, hasReason: !!p.reason, reason: p.reason, title: p.title, body: p.body, byline: p.byline },
+      card: card,
+      showCard: !done,
+      done: done,
+      counter: done ? '' : (st.i + 1) + ' of ' + this.posts.length,
+      count: st.count,
+      lid: lid,
+      rattle: rattle,
+      toast: { on: !!st.toast, text: st.toast, undo: st.toastUndo },
+      down: this.down, move: this.move, up: this.up, undo: this.undo, restart: this.restart
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -38,12 +38,16 @@ The post follows the finger 1:1 for 40 pt, then at half speed, and springs back 
 
 ### 2.2 Your Shoebox (the bottom box)
 
-A glass box across the bottom, Plum in light and Bone in dark like the logo, under a tall Sunflower lid hinged at the left like the logo. The lid has a deeper lip along its lower edge and casts a shadow down onto the box, so it sits over the sides like a shoebox top. Bare: only the count of posts not put away at the right, and "Let go to put it away" while a post is pulled down. The lid and the box say what it is. The lid's lip and highlight are separate shapes with smooth edges, so a tilted lid never shows stair-step lines.
+Agreed November 4, 2026 (mock: the "Shoebox box: six glass directions" canvas, board "2 · Working: flick up, pull down"; copies in `docs/design/glass/`). Not a band across the bottom: the post runs to the bottom edge, Plum glass rises into it from below, and the lid is the one solid object on the screen.
 
-- It grows a little as a post is pulled toward it.
-- Past the threshold the lid tips open and glows, and the words change to "Let go to put it away".
-- Flicking a post up or dropping one in makes the box shake and the lid knock, with a rustling haptic: quick knocks that spread out and fade over a low rumble.
-- Pull it up and the Shoebox slides out from behind the box at the pace of your thumb (not on release). Let go and it settles open or closed by where it is and how fast you were going. Tap also opens it. Pull the handle at the top of the Shoebox down to close it, or tap Today.
+- **The glass.** The lower 360 pt of the screen blurs the post and tints it Plum (lighter Plum `#6A4F73` in dark): clear at the top, nearly solid at the bottom edge, so the post's panel sits partly in its glow. No edge, no outline.
+- **The lid.** Sunflower, 44 pt tall, 12 pt in from each screen edge, 8 pt corners, resting canted 2° up to the right on a hinge at its left end, like the logo. A lighter top face (the upper 56%) over a deeper lip (`#D4A21E`), a 1 pt highlight along the top, and a side flap at each end (12 pt wide, hanging 14 pt below the lid, lit on its outer edge, shaded inward), so it reads as the front of a shoebox lid, never as a slider. It casts a soft plum-shade shadow down onto the glass. No glow at rest. The lid's faces, flaps and highlight are separate smooth shapes, so a tilted lid never shows stair-step lines.
+- Bare: the count of posts not put away at the right, just under the lid, and "Let go to put it away" in Sunflower at the left while a post is pulled down past the threshold.
+- Pulling a post down leans the lid 1.5° further open once it has moved 40 pt. Past the threshold it tips 5° further and glows Sunflower, and the words appear. Let go and the post drops in, shrinking toward the lid.
+- After a flick up, the next post rises out of the lid.
+- Flicking a post up or dropping one in makes the lid and glass shake, with a rustling haptic: quick knocks that spread out and fade over a low rumble (light for a flick, strong for a drop).
+- Pull the lid up, or tap it, and the Shoebox (2.4) rises from under it at the pace of your thumb (not on release); the lid lifts with it. Let go and it settles open or closed by where it is and how fast you were going.
+- Retired: the full-width Sunflower band, the Plum slab, the hinge post.
 
 ### 2.3 The opened post
 
@@ -61,10 +65,12 @@ A glass box across the bottom, Plum in light and Bone in dark like the logo, und
 
 ### 2.4 Shoebox (the library)
 
-- "Today" on the left and "Settings" on the right, a large "Shoebox" title, then search ("Search everything").
-- The list is everything you are not done with, in two calm sections with one row shape (a date or a small picture, one line of title, one quiet line of where it came from):
-  - **Coming up:** posts dated in the next two months, soonest first, with the date block at the left. Posts dated later sit in Everything else until they are within two months.
-  - **Everything else:** newest first, with the post's picture as a small tile (a card-colored tile lit with Sunflower when it has none).
+- **Opens under the lid.** The sheet is Plum glass over the blurred Today post. The open lid sits along its top edge, tipped about 7° open on its left hinge, where a grab handle would be; pull it down to close the Shoebox, or tap Today.
+- "Today" on the left and "Settings" on the right, then a large "Shoebox" title.
+- **Search is at the bottom**, under the thumb: a glass field, no outline, "Search everything", filtering as you type.
+- The list is everything you are not done with, in two calm sections with one row shape (a date, or a small picture when the post has one; the words, up to two lines and never cut off with "…"; one quiet line of where it came from). When you wrote a reason, the reason leads and the title moves to the quiet line.
+  - **Coming up:** posts dated in the next two months, soonest first, with the date block at the left. A day within the next 7 days has its number in Sunflower. Posts dated later sit in Everything else until they are within two months.
+  - **Everything else:** newest first, with the post's picture as a small tile. A post without a picture has no tile: never an empty or colored square.
 - The last row, **Go through them one at a time**, closes the Shoebox and brings the posts out on Today with the same moves.
 - One word at the top right, **Put away (41)**, shows only what you are done with, newest first. The title becomes "Put away" and the word becomes **Shoebox**. It does not show when nothing is put away.
 - **Put away is by topic**, like Scales' Insights (rules on the phone, `Tidy.topics` in ShoeboxCore; nothing kept is changed). Each topic is one row, closed until tapped: its count large on the left, its name, and its newest post in one quiet line. The topics are School, Sports, Food, Travel, Home & money, Shopping, Work, Apps, Watch, Reading, and Something else last; the largest first, newest first inside. An email is read for its topic by its words too, so a newsletter goes where its news is. Anything the rules can't place is Something else. The same title shows once. No folds. Searching shows a plain list. Rows look as in the Shoebox.
@@ -108,7 +114,7 @@ Settings › How Shoebox works shows the moves again.
 
 ### 2.8 Settings
 
-Reached from Today and the Box. Laid out like Scales' Settings: a few short groups, each under a small quiet title, in cards one step off the ground (deeper Pistachio in light, lighter Plum in dark), no outline. Each row shows its answer on the right. At most one quiet line under a group. A row opens one small screen: a title, its question, the choices as words.
+Reached from Today and the Box. Laid out like Scales' Settings: a few short groups, each under a small quiet title. The sheet is the same glass as the Shoebox (2.4) over the blurred Today post; the groups are glass cards (a faint Bone fill in dark, a faint Plum Ink fill in light, a 1 pt highlight along the top), no outline. No lid here: the lid appears only where the box is. Each row shows its answer on the right. At most one quiet line under a group. A row opens one small screen: a title, its question, the choices as words.
 
 - **Your day:** Each day (How many: 5, 10 or All, default 10; Remind me: the time or Off), Look (Automatic, Light or Dark; the share sheet follows it), Pictures (On or Off).
 - **Email** (when Plus is offered, section 9): Your Shoebox address. Under it: "Forward an email to keep it. Only your phone can read it." The screen has the address and Copy, or a first name and Get address, and "Who it's about".
