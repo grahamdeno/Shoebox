@@ -34,13 +34,20 @@ jobs:
         if: startsWith(github.ref_name, 'appstore/')
         run: |
           mkdir -p "$RUNNER_TEMP/demo-photos"
+          export USED="$RUNNER_TEMP/used-ids.txt"
           # Each photo tries plainer words until one finds a picture.
-          for spec in "trail|coastal hiking trail|coast trail|ocean cliffs" "bread|sourdough bread|bread loaf|bread|bakery" "castiron|cast iron skillet|frying pan|skillet|cooking pan"; do
+          for spec in "trail|coastal hiking trail|coast trail|ocean cliffs" "bread|bread loaf|baguette|bakery bread|sourdough bread" "castiron|cast iron pan|frying pan|skillet|cooking pan"; do
             name="${spec%%|*}"; rest="${spec#*|}"; got=""
             IFS='|'; for q in $rest; do
               url=$(curl -fsS -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock \
-                | python3 -c "import json,sys; p=json.load(sys.stdin).get('photos') or []; print(p[0]['url'] if p else '')") || url=""
-              if [ -n "$url" ] && curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg"; then echo "$name: ok ($q)"; got=1; break; fi
+                | python3 -c "
+          import json,sys,os
+          used=set(open(os.environ['USED']).read().split()) if os.path.exists(os.environ['USED']) else set()
+          p=[x for x in (json.load(sys.stdin).get('photos') or []) if x['id'] not in used]
+          print(p[0]['id']+' '+p[0]['url'] if p else '')") || url=""
+              # Never the same photo twice: each answer skips ids already used.
+              if [ -n "$url" ]; then id="${url%% *}"; url="${url#* }"; fi
+              if [ -n "$url" ] && curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg"; then echo "$name: ok ($q, $id)"; echo "$id" >> "$USED"; got=1; break; fi
               sleep 7  # Pixabay refuses searches that come too close together
             done; unset IFS
             [ -z "$got" ] && echo "::warning::No photo for $name"
