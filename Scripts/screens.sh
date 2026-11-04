@@ -7,6 +7,12 @@ xcrun simctl boot "$SIM" || true
 xcrun simctl bootstatus "$SIM" -b
 xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged --batteryLevel 100 || true
 xcrun simctl install "$SIM" "$APP"
+# Real photos for the sample posts, if any are in Scripts/demo-photos (licensed for marketing; see its README).
+if ls Scripts/demo-photos/*.jpg >/dev/null 2>&1; then
+  DATA=$(xcrun simctl get_app_container "$SIM" com.grahamdeno.shoebox data)
+  mkdir -p "$DATA/Documents/DemoPhotos"
+  cp Scripts/demo-photos/*.jpg "$DATA/Documents/DemoPhotos/"
+fi
 xcrun simctl spawn "$SIM" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true || true
 mkdir -p screens
 SCREENS="${SCREENS:-today up away opened box add clear welcome share time learn settings}"

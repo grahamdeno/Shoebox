@@ -16,22 +16,34 @@ enum SampleData {
                          body: "A 4 mile coastal loop with a lookout halfway. Parking fills by 9 on weekends, so go early. The trailhead parking details are at https://example.com/trail/parking.",
                          note: "Take the kids in the fall", origin: "Safari", kind: .link,
                          urlString: "https://example.com/trail", createdAt: now - 14 * day)
-        trail.imageData = Self.picture(top: 0x6E8392, bottom: 0x3F5566, accent: 0xE8D9B5)
+        trail.imageData = Self.photo("trail") ?? Self.picture(top: 0x6E8392, bottom: 0x3F5566, accent: 0xE8D9B5)
         let teams = Save(title: "Why small teams ship faster", snippet: "Three habits that cut handoffs in half.",
                          body: "Small teams ship faster because they hand off less. Three habits help: one owner per outcome, decisions written down the day they're made, and demos every week.",
                          note: "Read before Monday", origin: "Safari", kind: .link,
                          urlString: "https://example.com/teams", createdAt: now - 9 * day)
-        teams.imageData = Self.picture(top: 0x9C826B, bottom: 0x5E4B3C, accent: 0xF2E3CF)
-        let pictureDay = Save(title: "Picture day is Nov 12", snippet: "Order forms are due the week before. Retakes are in December.",
-                           body: "Picture day is Thursday, November 12. Order forms are due the week before. Retakes are in December.",
+        teams.imageData = Self.photo("teams") ?? Self.picture(top: 0x9C826B, bottom: 0x5E4B3C, accent: 0xF2E3CF)
+        let pictureDay = Save(title: "Picture day", snippet: "Order forms are due the week before. Retakes are in December.",
+                           body: "Picture day is coming up. Order forms are due the week before. Retakes are in December.",
                            origin: "via the school newsletter email", kind: .email,
                            eventDate: event, createdAt: now - 2 * day)
         let retro = Save(title: "Retro format for PI planning", snippet: "Start, stop, continue, with one vote each. Try it with the team Tuesday.",
                          origin: "a note", kind: .note, createdAt: now - day / 2)
         let castIron = Save(title: "Cast iron care, the short version", snippet: "Dry it on the burner, thin coat of oil, wipe it back off.",
                             note: "Before the next cookout", origin: "Safari", kind: .link, urlString: "https://example.com/cast-iron", createdAt: now - 5 * day)
-        castIron.imageData = Self.picture(top: 0x4A4A48, bottom: 0x1F1F1E, accent: 0xC77B4A)
-        for s in [trail, pictureDay, teams, retro, castIron] {
+        castIron.imageData = Self.photo("cookout") ?? Self.picture(top: 0x4A4A48, bottom: 0x1F1F1E, accent: 0xC77B4A)
+        // The post the screenshots lead with: forwarded by email, dated, with a reason, back on Today now.
+        let saturday = Self.nextSaturday(after: now, hour: 17)
+        let concert = Save(title: "Fall band concert",
+                           snippet: "Saturday at 5 in the school gym. Band students arrive by 4:30 in black and white.",
+                           body: "The fall band concert is Saturday at 5 PM in the school gym. Band students arrive by 4:30, dressed in black and white. Families are welcome; doors open at 4:45.",
+                           note: "Bring the good camera", origin: "via your Shoebox email", kind: .email,
+                           status: .away, returnDate: now - 3_600, eventDate: saturday, createdAt: now - 2 * day)
+        concert.eventHasTime = true
+        concert.emailFrom = "office@example.org"
+        concert.emailSubject = "Fall band concert"
+        concert.emailReceivedAt = now - 2 * day
+        concert.imageData = Self.photo("concert") ?? Self.picture(top: 0x7A4E3A, bottom: 0x2E1C24, accent: 0xF9C93A)
+        for s in [concert, trail, pictureDay, teams, retro, castIron] {
             s.enrichedAt = now
             context.insert(s)
         }
@@ -47,6 +59,25 @@ enum SampleData {
         let all = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         for s in all where s.status != .kept { s.status = .away; s.returnDate = Date() + 3 * 86_400 }
         try? context.save()
+    }
+
+    /// A real photo for the screenshots, if one was copied into the simulator (Scripts/screens.sh copies
+    /// Scripts/demo-photos/<name>.jpg into Documents/DemoPhotos). Nil otherwise, and the drawn one is used.
+    static func photo(_ name: String) -> Data? {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        guard let data = try? Data(contentsOf: docs.appending(path: "DemoPhotos/\(name).jpg")) else { return nil }
+        return Relay.thumbnail(data, maxWidth: 1600) ?? data
+    }
+
+    /// The next Saturday at least two days away, at the given hour.
+    static func nextSaturday(after now: Date, hour: Int) -> Date {
+        let cal = Calendar.current
+        var day = cal.startOfDay(for: now)
+        for _ in 0..<9 {
+            day = cal.date(byAdding: .day, value: 1, to: day) ?? day
+            if cal.component(.weekday, from: day) == 7, day.timeIntervalSince(now) > 2 * 86_400 { break }
+        }
+        return cal.date(bySettingHour: hour, minute: 0, second: 0, of: day) ?? day
     }
 
     /// A soft landscape: sky, a far ridge and a near one, standing in for a page's photo.
