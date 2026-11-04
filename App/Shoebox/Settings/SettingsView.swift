@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var page: Page?
     @State private var perDay = Prefs.perDay
     @State private var appearance = Prefs.appearance
+    @State private var colors = Prefs.colors
     @State private var stock = Prefs.stockPictures
     @State private var time = DailyTime.date(fromMinute: Prefs.dailyMinute)
     @State private var notificationsOn = Prefs.notificationsOn
@@ -86,7 +87,7 @@ struct SettingsView: View {
                 card {
                     link("Each day", dayAnswer, .day)
                     hair
-                    link("Look", ["Automatic", "Light", "Dark"][min(max(appearance, 0), 2)], .look)
+                    link("Look", (colors == "stone" ? "Stone, " : "") + ["Automatic", "Light", "Dark"][min(max(appearance, 0), 2)], .look)
                     hair
                     link("Pictures", stock ? "On" : "Off", .pictures)
                 }
@@ -243,6 +244,12 @@ struct SettingsView: View {
                 }
             }
             .padding(.top, 24)
+            question("Colors")
+            choices {
+                choice("Pistachio", colors != "stone") { colors = "pistachio"; Prefs.colors = "pistachio" }
+                choice("Stone", colors == "stone") { colors = "stone"; Prefs.colors = "stone" }
+            }
+            line("Stone is warm grey and graphite, as in Scales.")
         }
     }
 

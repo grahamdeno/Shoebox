@@ -40,4 +40,22 @@ final class EmailPostTests: XCTestCase {
         XCTAssertFalse(StockPhoto.sharesWord("mountain forest", with: "8th grade field trip"))
         XCTAssertFalse(StockPhoto.sharesWord("library books", with: "Yearbook order deadline"))
     }
+
+    @MainActor
+    func testPhotoWordsKeepTheListedWordsInsteadOfDroppingThePhrase() {
+        XCTAssertEqual(StockPhoto.clean("laundry room washing machine", banned: []), "laundry room washing machine")
+        XCTAssertEqual(StockPhoto.clean("cozy reading nook armchair", banned: []), "cozy reading")
+        XCTAssertEqual(StockPhoto.clean("Emma soccer field", banned: ["emma"]), "soccer field")
+        XCTAssertNil(StockPhoto.clean("xyzzy plugh", banned: []))
+        XCTAssertEqual(StockPhoto.clean("beach beach sunset ocean waves sand", banned: []), "beach sunset ocean waves")
+    }
+
+    @MainActor
+    func testTriesBeforeTheWiderRulesDoNotCount() {
+        let s = Save(title: "A hike")
+        s.stockTriedAt = StockPhoto.rulesChanged.addingTimeInterval(-60)
+        XCTAssertFalse(StockPhoto.recentlyTried(s, now: StockPhoto.rulesChanged.addingTimeInterval(60)))
+        s.stockTriedAt = StockPhoto.rulesChanged.addingTimeInterval(60)
+        XCTAssertTrue(StockPhoto.recentlyTried(s, now: StockPhoto.rulesChanged.addingTimeInterval(3600)))
+    }
 }

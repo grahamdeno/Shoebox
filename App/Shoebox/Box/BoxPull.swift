@@ -73,12 +73,17 @@ struct BoxSheetLid: View {
     }
 }
 
-/// Today dims as the sheet rises.
+/// Today dims as the sheet rises, and stops taking touches.
 struct BoxDim: View {
     let pull: BoxPull
 
     var body: some View {
-        Theme.shade.opacity(0.4 * pull.progress).ignoresSafeArea().allowsHitTesting(false)
+        // While the Shoebox is out, the dimmed Today above it belongs to the sheet: a drag there closes the sheet and a tap
+        // closes it. Nothing reaches the post underneath.
+        Theme.shade.opacity(0.4 * pull.progress)
+            .contentShape(Rectangle())
+            .ignoresSafeArea()
+            .allowsHitTesting(pull.progress > 0.02)
     }
 }
 

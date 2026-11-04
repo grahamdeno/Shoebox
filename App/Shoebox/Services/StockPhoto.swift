@@ -28,7 +28,7 @@ enum StockPhoto {
     /// is still there and still has none.
     static func fill(_ s: Save) async {
         guard Prefs.stockPictures, s.imageData == nil, s.deletedAt == nil, s.kind != .photo else { return }
-        if let tried = s.stockTriedAt, Date().timeIntervalSince(tried) < 86_400 { return }
+        if recentlyTried(s) { return }
         let previous = s.stockTriedAt
         s.stockTriedAt = Date()
         func gone() -> Bool { s.modelContext == nil || s.isDeleted || s.deletedAt != nil }
@@ -59,6 +59,15 @@ enum StockPhoto {
         s.updatedAt = Date()
     }
 
+    /// Tries made before the word rules were widened (November 4, 2026) don't count: those posts get another look now.
+    static let rulesChanged = Date(timeIntervalSince1970: 1_793_808_000)
+
+    /// Tried within the last day, under the current rules.
+    static func recentlyTried(_ s: Save, now: Date = Date()) -> Bool {
+        guard let tried = s.stockTriedAt, tried > rulesChanged else { return false }
+        return now.timeIntervalSince(tried) < 86_400
+    }
+
     /// True when a word of the phrase (or its singular) is in the title.
     static func sharesWord(_ phrase: String, with title: String) -> Bool {
         let t = Set(title.lowercased().split(whereSeparator: { !$0.isLetter }).map { String($0) })
@@ -86,14 +95,16 @@ enum StockPhoto {
         return nil
     }
 
-    /// Lowercase letters and spaces, one to five words, each from the list of plain scene words,
-    /// and nothing that looks like a name from the post.
+    /// Only the words from the list of plain scene words are kept, never one that looks like a name from the post, and at
+    /// most four. Words off the list are dropped, not the whole phrase: "laundry room washing machine" still finds a
+    /// laundry room. Nil when no listed word is left.
     static func clean(_ raw: String, banned: Set<String>) -> String? {
         let letters = raw.lowercased().map { $0.isLetter ? $0 : " " }
+        var seen = Set<String>()
         let words = String(letters).split(separator: " ").map(String.init)
-        guard (1...5).contains(words.count),
-              words.allSatisfy({ $0.count >= 3 && vocabulary.contains($0) && !banned.contains($0) }) else { return nil }
-        return words.joined(separator: " ")
+            .filter { $0.count >= 3 && vocabulary.contains($0) && !banned.contains($0) && seen.insert($0).inserted }
+        guard !words.isEmpty else { return nil }
+        return words.prefix(4).joined(separator: " ")
     }
 
     private static let titles: Set<String> = ["mr", "mrs", "ms", "dr", "prof", "sr", "jr", "st", "mt", "vs", "coach", "fr", "rev"]
@@ -153,7 +164,20 @@ enum StockPhoto {
         bicycle bike skateboard yoga fitness weights walking park dog cat birds horse farm barn tractor fishing boat \
         sailing painting art studio paper craft camera photography notebook journal calendar clock desk lamp window \
         community market festival fair parade fireworks picnic grill barbecue snack sports team trophy medal ribbon \
-        science lab telescope robot circuit machine tools workshop wood carpentry
+        science lab telescope robot circuit machine tools workshop wood carpentry \
+        laundry washing appliance appliances delivery truck package packages boxes moving shopping store cart clothes \
+        shoes sneakers jacket fashion jewelry watch watches gift wrapping birthday cupcakes cupcake candy chocolate \
+        flowers bouquet wedding family friends kids children toys games puzzle movie cinema theater theatre tickets \
+        popcorn museum gallery zoo aquarium amusement carnival rides ferris wheel ice skating rink hockey golf tennis \
+        volleyball gymnastics cheer cheerleading track bus car road trip highway gas station parking garage driveway \
+        yard lawn porch patio deck pool backyard furniture sofa couch bedroom bed pillow blanket bathroom shower \
+        cleaning paint renovation hammer drill ladder plumbing light lights lamp electric solar energy battery phone \
+        tablet screen headphones podcast radio news newspaper magazine letter mail envelope stamp postcard pen \
+        signature form clipboard checklist notes planner schedule sticky graduation diploma cap gown uniform \
+        volunteer charity donation church chapel candle prayer pets puppy kitten vet aquarium fish garden vegetable \
+        apples pumpkin squash soup pasta tacos sushi burger sandwich lunch lunchbox picnic restaurant cafe bakery \
+        wine beer cocktail drinks juice smoothie water bottle thanksgiving turkey easter eggs valentine hearts \
+        fourth july flag veterans memorial monument history castle
         """.split(whereSeparator: { $0.isWhitespace || $0 == "\\" }).map(String.init))
 
     /// Plain keyword rules for phones without Apple Intelligence.

@@ -116,6 +116,8 @@ struct TodayView: View {
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
                 if pull.mounted {
                     BoxDim(pull: pull)
+                        .onTapGesture { closeBox() }
+                        .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
                 }
 
@@ -533,7 +535,8 @@ struct TodayView: View {
     private func cardGesture(_ current: Save, height: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { v in
-                guard !busy else { return }
+                // The Shoebox is out over the post: the post takes no moves until it is closed.
+                guard !busy, pull.progress < 0.02 else { return }
                 if !dragging { dragging = true; dragStart = Date() }
                 let dy = v.translation.height
                 if abs(dy) < 6 && abs(v.translation.width) < 6 { return }
@@ -546,6 +549,7 @@ struct TodayView: View {
             }
             .onEnded { v in
                 guard !busy else { return }
+                if pull.progress >= 0.02 && !dragging { return }
                 dragging = false
                 crossed = 0
                 let dy = v.translation.height
@@ -695,11 +699,11 @@ struct TodayView: View {
         defer { backfilling = false }
         let waiting = rules.library(all, now: now)
             .filter { s in
-                s.imageData == nil && s.kind != .photo && (s.stockTriedAt.map { now.timeIntervalSince($0) >= 86_400 } ?? true)
+                s.imageData == nil && s.kind != .photo && !StockPhoto.recentlyTried(s, now: now)
             }
             // Never-tried first, so posts the rules skip (health, money) do not hold the line every day.
             .sorted { ($0.stockTriedAt != nil ? 1 : 0, -$0.createdAt.timeIntervalSince1970) < ($1.stockTriedAt != nil ? 1 : 0, -$1.createdAt.timeIntervalSince1970) }
-            .prefix(6)
+            .prefix(10)
         for s in waiting {
             if Task.isCancelled { break }
             if s.enrichedAt == nil, s.url != nil { await Relay.enrich(s) }

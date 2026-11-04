@@ -99,6 +99,12 @@ enum Prefs {
         set { d.set(newValue == noLimit ? 0 : newValue, forKey: "dailyLimit") }
     }
 
+    /// The colors: "pistachio" (the default) or "stone" (warm stone and graphite, as in Scales).
+    static var colors: String {
+        get { d.string(forKey: "colors") ?? "pistachio" }
+        set { d.set(newValue, forKey: "colors") }
+    }
+
     /// 0 follows the phone, 1 is always light, 2 is always dark.
     static var appearance: Int {
         get { d.integer(forKey: "appearance") }
