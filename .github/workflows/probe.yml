@@ -8,9 +8,8 @@ jobs:
     steps:
       - name: Ask the relay for photos
         run: |
-          for q in "pizza" "skillet" "coffee cup" "soccer field" "coastal hiking trail" "tickets" "delivery truck"; do
+          for q in "bread loaf" "frying pan" "coffee cup" "soccer field" "coastal hiking trail" "tickets" "delivery truck"; do
             code=$(curl -s -o body.json -w "%{http_code}" -D headers.txt -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock)
             n=$(python3 -c "import json; print(len(json.load(open('body.json')).get('photos') or []))" 2>/dev/null || echo "?")
-            echo "$q -> HTTP $code, photos $n, $(grep -i '^x-cache' headers.txt | tr -d '\r'), $(head -c 160 body.json)"
-            sleep 2
+            echo "$q -> HTTP $code, photos $n, $(grep -iE '^x-(cache|reason)' headers.txt | tr '\n' ' ' | tr -d '\r'), $(head -c 160 body.json)"
           done
