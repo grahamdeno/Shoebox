@@ -24,6 +24,11 @@ struct ShoeboxApp: App {
             Prefs.onboarded = !["welcome", "share", "time", "learn"].contains(screen)
             Prefs.pickDay = nil
             if screen == "clear" { SampleData.clearToday(opened.mainContext) }
+            // `-colors stone` for the screenshots of the second set of colors.
+            let colors = UserDefaults.standard.string(forKey: "colors") == "stone" ? "stone" : "pistachio"
+            Prefs.colors = colors
+            Prefs.colorsApplied = colors
+            Prefs.stockRulesWidened2 = true
         }
         #endif
     }

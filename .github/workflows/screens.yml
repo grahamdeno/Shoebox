@@ -17,7 +17,6 @@ jobs:
     env:
       DEVICE: ${{ startsWith(github.ref_name, 'appstore/') && 'iPhone 17 Pro Max' || 'iPhone 17 Pro' }}
       OUT: ${{ startsWith(github.ref_name, 'appstore/') && 'appstore-screens' || 'ci-screens' }}
-      SCREENS: ${{ startsWith(github.ref_name, 'appstore/') && 'today box opened add' || '' }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode
@@ -31,9 +30,19 @@ jobs:
           set -o pipefail
           xcodebuild -project Shoebox.xcodeproj -scheme Shoebox -destination "id=$SIM" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
             || { grep -E "error:" build.log | sort -u | head -30 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+      - name: Real photos for the App Store set (from Pixabay, through the app's relay)
+        if: startsWith(github.ref_name, 'appstore/')
+        run: |
+          mkdir -p "$RUNNER_TEMP/demo-photos"
+          for pair in "trail:coastal hiking trail" "bread:sourdough bread loaf" "castiron:cast iron skillet"; do
+            name="${pair%%:*}"; q="${pair#*:}"
+            url=$(curl -fsS -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock \
+              | python3 -c "import json,sys; p=json.load(sys.stdin).get('photos') or []; print(p[0]['url'] if p else '')") || url=""
+            if [ -n "$url" ]; then curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg" && echo "$name: ok"; else echo "::warning::No photo for $name"; fi
+          done
       - name: Screenshots
         run: |
-          [ -z "$SCREENS" ] && unset SCREENS
+          if [ "$OUT" = appstore-screens ]; then Scripts/appstore-screens.sh "$SIM" "$RUNNER_TEMP/demo-photos"; exit 0; fi
           Scripts/screens.sh "$SIM"
       - name: Publish the screens
         run: |
