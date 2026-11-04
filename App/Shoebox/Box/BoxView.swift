@@ -1,6 +1,7 @@
 import SwiftData
 import ShoeboxCore
 import SwiftUI
+import UIKit
 
 /// The Shoebox: everything you are not done with, in the order the stack will bring it. What you put away
 /// (done) is out of the list until you ask for it with one word at the top right. Searching looks everywhere.
@@ -13,6 +14,9 @@ struct BoxView: View {
     @State private var openTopics: Set<String> = []
     @State private var opened: OpenedPost?
     @State private var toast: Toast?
+    /// How high the keyboard stands over the bottom of the screen, so the search field rides it.
+    @State private var keyboard: CGFloat = 0
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     let planner: LaterPlanner
     /// Tells the Shoebox when it has been closed, so a showing Undo can move to Today.
@@ -114,12 +118,6 @@ struct BoxView: View {
                 .contentShape(Rectangle())
                 .simultaneousGesture(pullGesture)
 
-                TextField("Search everything", text: $search)
-                    .font(.system(size: 16))
-                    .well()
-                    .padding(.horizontal, 24)
-                    .submitLabel(.search)
-
                 List {
                     if showPutAway {
                         if putAway.isEmpty { plain(empty(searching ? "Nothing found." : "Nothing put away yet.")) }
@@ -179,10 +177,12 @@ struct BoxView: View {
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
                 // The last row stops well above the home indicator, not on it.
-                .contentMargins(.bottom, 64, for: .scrollContent)
+                .contentMargins(.bottom, 130, for: .scrollContent)
                 .environment(\.defaultMinListRowHeight, 1)
                 .scrollDismissesKeyboard(.interactively)
             }
+
+            searchField
 
             if let toast {
                 HStack {
@@ -193,11 +193,15 @@ struct BoxView: View {
                     }
                 }
                 .padding(.trailing, 16)
-                .padding(.bottom, 20)
+                .padding(.bottom, 92 + keyboard)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .background(Theme.ground.ignoresSafeArea())
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
+            guard let end = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            let screen = UIScreen.main.bounds.height
+            withAnimation(.easeOut(duration: 0.25)) { keyboard = max(0, screen - end.minY) }
+        }
         .fullScreenCover(item: $opened) { item in
             let save = item.save
             OpenedView(
@@ -212,6 +216,43 @@ struct BoxView: View {
         .onChange(of: pull?.closedTick ?? 0) { _, _ in
             if let toast { onHandOff(toast); self.toast = nil }
         }
+    }
+
+    /// Search sits at the bottom, under the thumb: a glass field with no outline, riding the keyboard. The list fades into it.
+    private var searchField: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            ZStack(alignment: .bottom) {
+                LinearGradient(colors: [Theme.boxGlass.opacity(0), Theme.boxGlass.opacity(0.9)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.6))
+                    .frame(height: 130)
+                    .allowsHitTesting(false)
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Theme.quiet)
+                        .accessibilityHidden(true)
+                    TextField("Search everything", text: $search)
+                        .font(.system(size: 17))
+                        .foregroundStyle(Theme.ink)
+                        .tint(Theme.accent)
+                        .submitLabel(.search)
+                        .frame(minHeight: 44)
+                }
+                .padding(.horizontal, 16)
+                .frame(height: 50)
+                .background {
+                    let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    if reduceTransparency {
+                        shape.fill(Theme.card)
+                    } else {
+                        Color.clear.glassEffect(.regular, in: shape)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, max(30, keyboard + 8))
+            }
+        }
+        .ignoresSafeArea(.keyboard)
     }
 
     /// Makes the change, keeps it, and shows Undo for 5 seconds.
@@ -303,43 +344,57 @@ struct BoxView: View {
             .padding(.bottom, 4)
     }
 
-    /// One shape for every row: a date or a small picture, one line of title, one quiet line of where it came from.
+    /// One shape for every row: a date, or a picture only when the post has one; the words on up to two lines; one quiet
+    /// line of where it came from. When you wrote a reason, the reason leads and the title moves to the quiet line.
     private func row(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
-        Button { if opened == nil, !otherPostOpen { opened = OpenedPost(save: s) } } label: {
-            HStack(spacing: 14) {
+        let reason = s.note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = s.listTitle
+        let leads = reason.isEmpty ? title : reason
+        let quiet = (reason.isEmpty || reason == title) ? meta(s) : "\(title), \(meta(s))"
+        return Button { if opened == nil, !otherPostOpen { opened = OpenedPost(save: s) } } label: {
+            HStack(spacing: 16) {
                 if dated, let day = s.eventDate {
-                    VStack(spacing: 2) {
+                    VStack(spacing: 0) {
                         Text(day.formatted(.dateTime.month(.abbreviated)).uppercased())
-                            .font(.system(size: 11, weight: .bold))
+                            .font(.system(size: 11, weight: .semibold))
                             .tracking(0.8)
                             .foregroundStyle(Theme.quiet)
                         Text(day.formatted(.dateTime.day()))
-                            .font(.system(size: 21, weight: .semibold))
+                            .font(.system(size: 24, weight: .medium))
                             .monospacedDigit()
-                            .foregroundStyle(dim ? Theme.quiet : Theme.ink)
+                            .foregroundStyle(dim ? Theme.quiet : (soon(day) ? Theme.lid : Theme.ink))
                     }
-                    .frame(width: 42)
-                } else {
+                    .frame(width: 40)
+                } else if s.imageData != nil {
+                    // A tile only for a real picture: never an empty or colored square.
                     RowThumb(save: s)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(s.listTitle)
-                        .font(.system(size: 16))
+                    Text(leads)
+                        .font(.system(size: 17))
                         .foregroundStyle(dim ? Theme.quiet : Theme.ink)
-                        .lineLimit(1)
-                    Text(meta(s))
-                        .font(.system(size: 13))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(quiet)
+                        .font(.system(size: 14))
                         .foregroundStyle(Theme.quiet)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, 9)
-            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
-            .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            .overlay(alignment: .bottom) { Rectangle().fill(Theme.bone.opacity(0.10)).frame(height: 1) }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// A day within the next 7 days, today included.
+    private func soon(_ day: Date) -> Bool {
+        let cal = Calendar.current
+        let n = cal.dateComponents([.day], from: cal.startOfDay(for: now), to: cal.startOfDay(for: day)).day ?? 99
+        return n >= 0 && n <= 7
     }
 
     /// "2 weeks ago, from Safari"

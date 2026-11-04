@@ -39,6 +39,29 @@ struct BoxStripFade: ViewModifier {
     }
 }
 
+/// The lid on Today's box steps aside the moment the Shoebox sheet starts to move: the sheet carries an identical lid.
+struct BoxLidHide: ViewModifier {
+    let pull: BoxPull
+
+    func body(content: Content) -> some View {
+        content.opacity(pull.progress > 0.001 ? 0 : 1)
+    }
+}
+
+/// The lid along the Shoebox sheet's top edge. It is the box's lid, tipping from its resting 2 degrees to about 7 as the
+/// sheet comes up. It shows only once the sheet moves, in the place where the box's own lid was.
+struct BoxSheetLid: View {
+    let pull: BoxPull
+
+    var body: some View {
+        BoxLid(extraAngle: 5 * Double(pull.progress))
+            .opacity(pull.progress > 0.001 ? 1 : 0)
+            .accessibilityLabel("Close the Shoebox")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHidden(pull.progress < 0.98)
+    }
+}
+
 /// Today dims as the sheet rises.
 struct BoxDim: View {
     let pull: BoxPull
@@ -71,22 +94,22 @@ enum Thumbs {
     }
 }
 
-/// The small tile at the left of a row: the post's own picture, or a card-colored tile lit with Sunflower when it has none.
+/// The small picture at the left of a row, shown only for a post that has a picture (SPEC 2.4). While it is read from
+/// the data it is quiet glass, never a colored square.
 struct RowThumb: View {
     let save: Save
     @State private var image: UIImage?
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
         ZStack {
             if let image = image ?? Thumbs.cached(save.id) {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
-                shape.fill(Theme.card)
-                RadialGradient(colors: [Theme.lid.opacity(0.45), .clear], center: .topLeading, startRadius: 0, endRadius: 46)
+                shape.fill(Theme.bone.opacity(0.08))
             }
         }
-        .frame(width: 42, height: 42)
+        .frame(width: 52, height: 52)
         .clipShape(shape)
         .task(id: save.id) {
             guard image == nil, Thumbs.cached(save.id) == nil, let data = save.imageData else { return }

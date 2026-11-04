@@ -34,14 +34,16 @@ struct SettingsView: View {
     @State private var exportURL: URL?
 
     var body: some View {
-        ZStack {
-            Theme.ground.ignoresSafeArea()
-            if let page {
-                screen(page)
-                    .transition(.opacity)
-            } else {
-                root
-                    .transition(.opacity)
+        // The same glass as the Shoebox over the blurred Today post; no lid here (SPEC 2.8).
+        GlassSheet(inPresentation: true) {
+            ZStack {
+                if let page {
+                    screen(page)
+                        .transition(.opacity)
+                } else {
+                    root
+                        .transition(.opacity)
+                }
             }
         }
         .animation(.easeOut(duration: 0.18), value: page)
@@ -592,12 +594,31 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background { GlassCard() }
     }
 
     private func row<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         HStack(spacing: 12) { content() }
             .frame(minHeight: 52)
+    }
+}
+
+/// A group's card on the glass: a faint Bone fill, a 1 pt highlight along the top, no outline. With Reduce Transparency
+/// it is the solid card color.
+struct GlassCard: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+        if reduceTransparency {
+            shape.fill(Theme.card)
+        } else {
+            shape.fill(Theme.bone.opacity(0.08))
+                .overlay(alignment: .top) {
+                    shape.stroke(LinearGradient(colors: [Theme.bone.opacity(0.16), .clear], startPoint: .top, endPoint: .center), lineWidth: 1)
+                }
+                .shadow(color: Theme.shade.opacity(0.18), radius: 9, y: 8)
+        }
     }
 }
 
