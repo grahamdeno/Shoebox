@@ -709,7 +709,10 @@ struct TodayView: View {
             if Task.isCancelled { break }
             if s.enrichedAt == nil, s.url != nil { await Relay.enrich(s) }
             if s.imageData != nil { StockPhoto.record(.found); continue }
-            StockPhoto.record(await StockPhoto.fill(s))
+            let outcome = await StockPhoto.fill(s)
+            StockPhoto.record(outcome)
+            // Pixabay asked us to slow down: the rest wait for the next opening.
+            if outcome == .serverBusy { break }
         }
         try? context.save()
     }
