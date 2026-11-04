@@ -489,3 +489,56 @@ test("the owner's address registers its key without a purchase; nobody else does
   const fresh = newEnv({ PLUS_OWNER_ADDRESS: "graham-k3t7m2qa" });
   assert.equal((await call(fresh, "/inbox/address", { method: "POST", key: KEY_A, body: { name: "graham", pub: PUB } })).status, 402);
 });
+
+test("website requests: kept once per email, posted sealed to the owner's Shoebox, bots and floods turned away", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, PLUS_OWNER_ADDRESS: "graham-k3t7m2qa" });
+  const box = await boxOf(KEY_A);
+  await kv.put("alias:graham-k3t7m2qa", box, { expirationTtl: 90 * 86400 });
+  await kv.put(`box:${box}`, JSON.stringify({ slug: "graham-k3t7m2qa", at: Date.now() }), { expirationTtl: 90 * 86400 });
+  assert.equal((await call(env, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB } })).status, 200);
+  const ask = (kind, body, ip = "7.7.7.7") => call(env, `/request/${kind}`, { method: "POST", body, ip });
+
+  assert.equal((await ask("android", { email: "nope" })).status, 400);
+  assert.equal((await ask("android", { email: "bot@example.com", website: "x" })).status, 200, "the bot is told yes");
+  assert.equal(keysWith(kv, "req:").length, 0, "and nothing is kept");
+
+  const res = await ask("android", { email: "Sis@Example.com", name: "Sis", phone: "Pixel 9" });
+  assert.equal(res.status, 200);
+  const kept = await kv.get(keysWith(kv, "req:android:")[0], "json");
+  assert.equal(kept.email, "sis@example.com");
+  assert.deepEqual(kept.answers, { phone: "Pixel 9" });
+  assert.ok(kv.ttl.get(keysWith(kv, "req:android:")[0]) > 0, "it expires");
+
+  const posted = keysWith(kv, `m:${box}:`);
+  assert.equal(posted.length, 1, "one post in the owner's Shoebox");
+  const stored = await kv.get(posted[0], "json");
+  assert.equal(stored.v, 1);
+  const opened = await openJSON(stored, `${box}:${stored.id}`);
+  assert.equal(opened.subject, "Android request from Sis");
+  assert.match(opened.text, /phone: Pixel 9/);
+
+  // Asking again refreshes the kept answers and posts nothing new.
+  assert.equal((await ask("android", { email: "sis@example.com", name: "Sis", phone: "Pixel 10" }, "7.7.7.8")).status, 200);
+  assert.equal(keysWith(kv, "req:android:").length, 1);
+  assert.equal(keysWith(kv, `m:${box}:`).length, 1);
+  assert.deepEqual((await kv.get(keysWith(kv, "req:android:")[0], "json")).answers, { phone: "Pixel 10" });
+
+  // The beta form's answers come through as they are.
+  assert.equal((await ask("beta", { email: "a@b.co", name: "A", iphone: "yes", places: ["Notes", "Safari"], story: "lost a form" }, "7.7.7.9")).status, 200);
+  assert.deepEqual((await kv.get(keysWith(kv, "req:beta:")[0], "json")).answers, { iphone: "yes", places: ["Notes", "Safari"], story: "lost a form" });
+
+  // A few a network a day.
+  const statuses = [];
+  for (let i = 0; i < 5; i++) statuses.push((await ask("android", { email: `p${i}@example.com` }, "9.9.9.9")).status);
+  assert.deepEqual(statuses, [200, 200, 200, 429, 429]);
+  // Only the two kinds, and only from the website.
+  assert.equal((await ask("ios", { email: "a@b.co" })).status, 404);
+  assert.equal((await call(env, "/request/android", { method: "POST", body: { email: "a@b.co" }, origin: "https://evil.example" })).status, 403);
+});
+
+test("a request with no owner key is still kept", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  assert.equal((await call(env, "/request/android", { method: "POST", body: { email: "x@example.com" } })).status, 200);
+  assert.equal(keysWith(kv, "req:android:").length, 1);
+  assert.equal(keysWith(kv, "m:").length, 0);
+});

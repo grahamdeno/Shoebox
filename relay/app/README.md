@@ -1,6 +1,6 @@
 # Shoebox app relay
 
-The Cloudflare Worker `shoebox-app-relay` for the Shoebox iPhone app, at `https://api.inmyshoebox.com`. It has eight routes and nothing else. Mail is sealed (HPKE, RFC 9180) to a public key the phone gives it, so the relay cannot read what it stores. Making or re-keying an address needs Shoebox Plus, proven by a StoreKit signed receipt that the relay verifies itself (`purchase.js`).
+The Cloudflare Worker `shoebox-app-relay` for the Shoebox iPhone app, at `https://api.inmyshoebox.com`. It has nine routes and nothing else. Mail is sealed (HPKE, RFC 9180) to a public key the phone gives it, so the relay cannot read what it stores. Making or re-keying an address needs Shoebox Plus, proven by a StoreKit signed receipt that the relay verifies itself (`purchase.js`).
 
 | Route | What it does |
 |---|---|
@@ -12,6 +12,7 @@ The Cloudflare Worker `shoebox-app-relay` for the Shoebox iPhone app, at `https:
 | `GET /inbox/file?id=&n=` | One attachment of a waiting mail. |
 | `POST /inbox/ack` | Forgets mail the phone has saved. |
 | `POST /me/delete` | Forgets the address, the box and all waiting mail for the phone, and frees its purchase seat. Safe to repeat. |
+| `POST /request/beta`, `POST /request/android` | A request from the website. Kept 180 days (one per email), and posted, sealed, to the owner's Shoebox (`REQUESTS_TO`, else `PLUS_OWNER_ADDRESS`). Three a network a day. |
 
 Mail sent to an address arrives through Email Routing (`email()` in `worker.js`).
 
