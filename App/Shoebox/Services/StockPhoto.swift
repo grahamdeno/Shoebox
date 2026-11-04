@@ -254,11 +254,23 @@ enum StockPhoto {
 
     // MARK: The server and the pick
 
-    /// The server's photos for the words, and its status (0 when there was no answer at all).
+    /// Pixabay refuses searches that come too close together (tested November 4: one second apart, most are refused;
+    /// six seconds apart, nearly all go through). Searches from this phone wait their turn.
+    static let searchGap: TimeInterval = 6
+    private static var lastSearch = Date.distantPast
+
+    /// The server's photos for the words, and its status (0 when there was no answer at all; 429 when Pixabay was busy).
     private static func search(_ phrase: String) async -> ([Candidate]?, Int) {
+        let wait = searchGap - Date().timeIntervalSince(lastSearch)
+        if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+        lastSearch = Date()
+        if Task.isCancelled { return (nil, 0) }
         let req = Relay.request("stock", query: [.init(name: "q", value: phrase), .init(name: "n", value: "6")])
         guard let (data, res) = try? await URLSession.shared.data(for: req) else { return (nil, 0) }
-        let code = (res as? HTTPURLResponse)?.statusCode ?? 0
+        let http = res as? HTTPURLResponse
+        var code = http?.statusCode ?? 0
+        // The relay reports Pixabay's own refusal as a 502 with x-reason pixabay-429: that is busy, not broken.
+        if code == 502, http?.value(forHTTPHeaderField: "x-reason") == "pixabay-429" { code = 429 }
         guard code == 200 else { return (nil, code) }
         return ((try? JSONDecoder().decode(Reply.self, from: data))?.photos, code)
     }
