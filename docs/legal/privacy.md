@@ -32,6 +32,8 @@ Our server is a small program that runs on Cloudflare. It has three jobs.
 
 Newsletters and school notices can include children's names and details. Shoebox is not made for children and we do not knowingly collect information from children. A parent or other adult chooses what to forward. Any such email is deleted from our server after 7 days at most. The line you write in Settings about who your mail is about is read on your phone and is never sent to us.
 
+**4. A request from our website.** If you ask for the iPhone beta, or to hear when Shoebox is on Android, our server keeps your email address, your name if you give it, and your answers, for up to 180 days, so we can write to you about it. A copy reaches Graham in his own Shoebox, sealed like any forwarded email. Nothing else is done with it, and it is not shared. Write to support@inmyshoebox.com to have yours deleted sooner.
+
 ## What we keep, and for how long
 
 | What | Why | How long |
@@ -39,6 +41,7 @@ Newsletters and school notices can include children's names and details. Shoebox
 | Forwarded email and attachments | So your phone can collect them | Up to 7 days, or until your phone has saved them |
 | Your email address and its mailbox record | So mail reaches you | Until 90 days after your phone last asked for mail, or until you choose Delete everything |
 | Link and picture results | Speed | Up to 24 hours |
+| A beta or Android request from our website | To write to you about it | Up to 180 days, or sooner if you ask |
 | Rate-limit counters | Stop abuse | An hour or a day. They hold only a scrambled form of a network address, never the address itself |
 
 We do not keep a list of who uses Shoebox, and we cannot see your posts.

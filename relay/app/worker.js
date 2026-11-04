@@ -1,7 +1,7 @@
 /*
  * Shoebox app relay: the Cloudflare Worker for the Shoebox iPhone app (1.0 and later).
  *
- * Eight routes, nothing else. Everything the old relay (relay/perplexity-relay.js) also does for Shoebox 1
+ * Nine routes, nothing else. Everything the old relay (relay/perplexity-relay.js) also does for Shoebox 1
  * (AI calls, reminders, Apple Music, stats, beta sign-up, calendar and file pass-through) is not here on purpose.
  *
  *   GET  /preview?url=[&text=1]   a page's title, description, pictures and, with text=1, its readable text
@@ -12,6 +12,7 @@
  *   GET  /inbox/file?id=&n=       one attachment of a waiting mail (sealed)
  *   POST /inbox/ack               forget mail the phone has saved { ids }
  *   POST /me/delete               forget everything kept for this phone
+ *   POST /request/beta|android    a request from the website: kept 180 days, and posted, sealed, to the owner's Shoebox
  *   (email)                       mail to <name>-<8 letters>@inmyshoebox.com waits here 7 days, sealed
  *
  * Sealed mail: before a message is stored it is sealed (HPKE, seal.js) to the public key the phone registered. What is
@@ -145,6 +146,7 @@ const RELAY = {
     if (request.method === "GET" && pathname === "/stock") return stock(request, env, searchParams, cors, origin);
     if (request.method === "POST" && pathname === "/me/delete") return deleteMe(request, env, cors);
     if (["/inbox", "/inbox/ack", "/inbox/file", "/inbox/address", "/inbox/seal"].includes(pathname)) return inboxRoute(request, env, pathname, cors);
+    if (request.method === "POST" && (pathname === "/request/beta" || pathname === "/request/android")) return requestRoute(request, env, pathname.split("/")[2], cors);
     return json(404, "Not found.", cors);
   },
 };
@@ -471,6 +473,73 @@ const FIVE_PHONES = "This purchase is already on five phones. Write to support@i
 function ownerBox(env, cur) {
   const owner = String(env.PLUS_OWNER_ADDRESS || "").trim().toLowerCase().split("@")[0];
   return !!owner && !!cur && String(cur.slug || "").toLowerCase() === owner;
+}
+
+/* ---- Requests from the website: the iPhone beta and "tell me when it's on Android" ----
+ * Kept as `req:<kind>:<id>` for 180 days so they can be exported, one per email address (asking again refreshes it),
+ * and posted to the owner's Shoebox as sealed mail when the owner's address has a sealing key
+ * (`REQUESTS_TO`, else `PLUS_OWNER_ADDRESS`). Nothing is sent anywhere else. A few a network a day.
+ */
+const REQUEST_TTL = 180 * 86400;
+const REQUESTS_PER_NETWORK_DAILY = 3;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** The answers as plain short text: strings up to 1,200 characters, lists of up to 10 short strings. */
+export function cleanRequest(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return "Bad request.";
+  const line = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]+/g, " ").trim().slice(0, n);
+  const email = line(body.email, 120).toLowerCase();
+  if (!EMAIL_RE.test(email)) return "Please add your email address.";
+  const answers = {};
+  for (const [k, v] of Object.entries(body).slice(0, 16)) {
+    if (["email", "name", "website", "kind"].includes(k) || !/^[a-z_]{1,24}$/.test(k)) continue;
+    if (Array.isArray(v)) answers[k] = v.slice(0, 10).map((x) => line(x, 80)).filter(Boolean);
+    else if (v !== null && typeof v === "object") continue;
+    else answers[k] = String(v ?? "").trim().slice(0, 1200);
+  }
+  return { email, name: line(body.name, 80), answers };
+}
+
+async function requestRoute(request, env, kind, cors) {
+  const kv = env.SHOEBOX;
+  if (!kv) return json(501, "Requests aren't set up. Write to support@inmyshoebox.com instead.", cors);
+  const text = await request.text();
+  if (text.length > 8000) return json(413, "That's too long.", cors);
+  let body;
+  try { body = JSON.parse(text); } catch { return json(400, "Bad request.", cors); }
+  const ok = () => new Response(JSON.stringify({ ok: true }), { headers: { ...cors, "content-type": "application/json" } });
+  if (body && body.website) return ok(); // the hidden field only a bot fills in
+  const r = cleanRequest(body);
+  if (typeof r === "string") return json(400, r, cors);
+  if (!(await underLimit(env, request, "request", REQUESTS_PER_NETWORK_DAILY, 86400))) {
+    return json(429, "Thanks, we have your request. Try again tomorrow if something changed.", cors);
+  }
+  const who = (await sha256(`${kind}:${r.email}`)).slice(0, 32);
+  const seen = await kv.get(`reqe:${kind}:${who}`);
+  const id = seen || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  await kv.put(`req:${kind}:${id}`, JSON.stringify({ id, kind, at: Date.now(), ...r }), { expirationTtl: REQUEST_TTL });
+  if (seen) return ok();
+  await kv.put(`reqe:${kind}:${who}`, id, { expirationTtl: REQUEST_TTL });
+  await postToOwner(env, kind, id, r);
+  return ok();
+}
+
+/** One new request as a post in the owner's Shoebox, sealed like any mail. Quietly nothing without a sealing key. */
+async function postToOwner(env, kind, id, r) {
+  const owner = String(env.REQUESTS_TO || env.PLUS_OWNER_ADDRESS || "").trim().toLowerCase().split("@")[0];
+  if (!owner) return;
+  const box = await env.SHOEBOX.get(`alias:${owner}`);
+  const held = box ? await env.SHOEBOX.get(`box:${box}`, "json") : null;
+  if (!held || !isPublicKey(held.pub)) return;
+  const who = r.name || r.email;
+  const lines = [`${kind === "android" ? "Android request" : "Beta request"} from ${who} (${r.email}).`];
+  for (const [k, v] of Object.entries(r.answers)) lines.push(`${k}: ${Array.isArray(v) ? v.join(", ") : v}`);
+  const sealed = await sealJSON(held.pub, {
+    from: r.email, fromName: r.name || undefined,
+    subject: `${kind === "android" ? "Android request" : "Beta request"} from ${who}`,
+    text: lines.join("\n"), links: [], attachments: [],
+  }, `${box}:${id}`);
+  await env.SHOEBOX.put(`m:${box}:${id}`, JSON.stringify({ v: 1, id, at: Date.now(), ...sealed }), { expirationTtl: MAIL_TTL });
 }
 
 /** The certificates to trust as Apple's root: the embedded one, plus a test root only when a test sets one. */
