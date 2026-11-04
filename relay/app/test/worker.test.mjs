@@ -242,7 +242,40 @@ test("the stock route answers only Shoebox's origin and asks for 1 to 80 charact
   // No Pixabay key set: a plain 502 with no photos, not a crash.
   const res = await call(env, "/stock?q=garden");
   assert.equal(res.status, 502);
+  assert.equal(res.headers.get("x-reason"), "no-key");
   assert.deepEqual(await res.json(), { photos: [] });
+});
+
+test("a rate counter that KV refuses to write never stops a photo search", async () => {
+  const kv = memoryKV();
+  kv.put = async () => { throw new Error("KV PUT failed: 429 Too Many Requests"); };
+  const env = newEnv({ SHOEBOX: kv, PIXABAY_API_KEY: "k" });
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ hits: [{ id: 1, largeImageURL: "https://pixabay.com/get/a.jpg", imageWidth: 800, imageHeight: 1200, tags: "bread" }] }), { status: 200 });
+  try {
+    for (const q of ["bread", "skillet", "coffee cup"]) {
+      const res = await call(env, "/stock?q=" + encodeURIComponent(q));
+      assert.equal(res.status, 200, q);
+      assert.equal((await res.json()).photos.length, 1, q);
+    }
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("a Pixabay refusal says why, without the words or the key", async () => {
+  const env = newEnv({ PIXABAY_API_KEY: "secret-key" });
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("rate limited", { status: 429 });
+  try {
+    const res = await call(env, "/stock?q=private%20words");
+    assert.equal(res.status, 502);
+    assert.equal(res.headers.get("x-reason"), "pixabay-429");
+    const text = await res.text();
+    assert.ok(!text.includes("secret-key") && !text.includes("private"));
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("previews refuse private addresses and non-links", async () => {

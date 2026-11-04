@@ -316,7 +316,7 @@ function pixabayBase(env) {
 }
 
 async function stock(request, env, params, cors, origin) {
-  const headers = { ...cors, "content-type": "application/json", "access-control-expose-headers": "retry-after, x-cache" };
+  const headers = { ...cors, "content-type": "application/json", "access-control-expose-headers": "retry-after, x-cache, x-reason" };
   const out = (status, body, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, "cache-control": status === 200 ? "public, max-age=86400" : "no-store", ...extra } });
   try {
     if (origin !== STOCK_ORIGIN) return out(403, { error: { message: "This relay only serves Shoebox." } });
@@ -332,41 +332,47 @@ async function stock(request, env, params, cors, origin) {
     if (hit) return out(200, await hit.json(), { "x-cache": "HIT" });
 
     // A search that reaches Pixabay counts against this network: about 60 an hour, then 429.
+    // A counter that can't be read or written (KV limits) never stops the search: the hourly cap is a courtesy.
     const kv = env.SHOEBOX;
     if (kv) {
       const ip = request.headers.get("cf-connecting-ip") || "unknown";
       const hour = Math.floor(Date.now() / 3600e3);
       const rk = `stk:${(await sha256(`stock:${ip}`)).slice(0, 32)}:${hour}`;
-      const used = await spent(kv, rk);
+      let used = 0;
+      try { used = await spent(kv, rk); } catch { console.log("stock: counter read failed"); }
       const limit = parseInt(env.STOCK_HOURLY_LIMIT, 10) || STOCK_HOURLY;
       if (used >= limit) {
         const wait = String(Math.max(1, (hour + 1) * 3600 - Math.floor(Date.now() / 1000)));
         return out(429, { photos: [], error: { message: "Too many photo searches from this network. Try again in an hour." } }, { "retry-after": wait });
       }
-      await kv.put(rk, String(used + 1), { expirationTtl: 7200 });
+      try { await kv.put(rk, String(used + 1), { expirationTtl: 7200 }); } catch { console.log("stock: counter write failed"); }
     }
 
-    if (!env.PIXABAY_API_KEY) return out(502, { photos: [] });
+    // On a failure, a short reason (never the words, the address or the key) in x-reason and the log.
+    const fail = (reason) => { console.log(`stock: ${reason}`); return out(502, { photos: [] }, { "x-reason": reason }); };
+    if (!env.PIXABAY_API_KEY) return fail("no-key");
     // Pixabay's per_page minimum is 3: ask for at least 3, then keep n.
     const qs = new URLSearchParams({ key: env.PIXABAY_API_KEY, q: query, image_type: "photo", orientation: "vertical", safesearch: "true", min_width: "600", per_page: String(Math.max(n, 3)) });
     let res;
     try {
       res = await fetch(`${pixabayBase(env)}/api/?${qs}`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     } catch {
-      return out(502, { photos: [] }); // never pass the error on: it could name the URL, which holds the key
+      return fail("pixabay-unreachable"); // never pass the error on: it could name the URL, which holds the key
     }
-    if (!res.ok) return out(502, { photos: [] });
+    if (!res.ok) return fail(`pixabay-${res.status}`);
     const data = await res.json().catch(() => null);
-    if (!data || typeof data !== "object" || !Array.isArray(data.hits)) return out(502, { photos: [] });
+    if (!data || typeof data !== "object" || !Array.isArray(data.hits)) return fail("pixabay-bad-answer");
     const body = { photos: pixabayPhotos(data.hits, n) };
     if (cache) {
       const keep = new Response(JSON.stringify(body), { headers: { "content-type": "application/json", "cache-control": `public, max-age=${STOCK_CACHE_SECONDS}` } });
       await cache.put(cacheKey, keep).catch(() => {});
     }
     return out(200, body, { "x-cache": "MISS" });
-  } catch {
-    // Never pass the underlying message on: it could contain the search words or the key.
-    return out(502, { photos: [] });
+  } catch (e) {
+    // Never pass the underlying message on: it could contain the search words or the key. Only its kind.
+    const kind = (e && e.name) || "error";
+    console.log(`stock: threw ${kind}`);
+    return out(502, { photos: [] }, { "x-reason": `threw-${kind}` });
   }
 }
 
