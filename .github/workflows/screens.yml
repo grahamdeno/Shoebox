@@ -41,8 +41,10 @@ jobs:
               url=$(curl -fsS -H "Origin: https://inmyshoebox.com" --get --data-urlencode "q=$q" --data-urlencode "n=3" https://api.inmyshoebox.com/stock \
                 | python3 -c "import json,sys; p=json.load(sys.stdin).get('photos') or []; print(p[0]['url'] if p else '')") || url=""
               if [ -n "$url" ] && curl -fsSL "$url" -o "$RUNNER_TEMP/demo-photos/$name.jpg"; then echo "$name: ok ($q)"; got=1; break; fi
+              sleep 7  # Pixabay refuses searches that come too close together
             done; unset IFS
             [ -z "$got" ] && echo "::warning::No photo for $name"
+            sleep 7
           done
       - name: Screenshots
         run: |
