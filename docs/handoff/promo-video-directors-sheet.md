@@ -5,7 +5,7 @@
 
 ## Read these first (rules that can't bend)
 
-1. **Real screens only, sample data only.** Every app screen in the video comes from the screenshots CI makes with sample data (branch `ci-screens` of `grahamdeno/Shoebox`, files `light-<screen>.png` and `dark-<screen>.png`). Never use a recording or screenshot of Graham's own phone: it holds his family's school mail and names.
+1. **Real screens only, sample data only, the newest set only.** Every app screen in the video comes from the screenshots CI makes with sample data (branch `ci-screens` of `grahamdeno/Shoebox`, files `light-<screen>.png` and `dark-<screen>.png`). Use them only if the `ci-screens` commit message names a commit at or after the one that added "Fall band concert" to `App/Shoebox/Model/SampleData.swift`; if not, stop and tell Graham the screenshots are stale. Never use a recording or screenshot of Graham's own phone: it holds his family's school mail and names.
 2. **Show only what exists.** No Android, Apple Watch, widgets, Lock Screen, Siri or Mac. No prices. Shoebox Plus is named only on the email beat.
 3. **No other company's interface.** The "messy phone" opening uses abstract shapes, not real screenshots of Safari, Messages, Mail or anyone's app. No Apple logos or App Store badge until the app is live in the store.
 4. **Approval before render.** Send Graham one still per beat (the storyboard) and wait for his yes before rendering. Then send the cuts for his yes before anything goes on the website.
@@ -35,17 +35,21 @@ Busy adults who save things to come back to and rarely do: a parent with school 
 | # | Time | Picture | Caption | How |
 |---|---|---|---|---|
 | 1 | 0:00 to 0:04 | Abstract cards (links, a flyer, an email) pile up and slide off a phone outline. | You saved it. Then it was gone. | Cards in Bone and lighter Plum on Plum. Gentle drift, not chaos. |
-| 2 | 0:04 to 0:08 | The Shoebox logo: the Sunflower lid settles onto the box. | Keep it. It comes back to you. | Lid drops 12 pt with a soft settle. The box tap sound lands here. |
-| 3 | 0:08 to 0:15 | `light-share`: the share sheet keeping a link, with the reason line. | Keep it from anywhere. | Push in on the reason field, then spotlight it. |
-| 4 | 0:15 to 0:20 | `light-add`: Keep something with a photo or note. | Say why in a few words. | Mask wipe from shot 3. |
-| 5 | 0:20 to 0:28 | `light-today`: a dated post ("Saturday, Nov 14 · 5:00 PM"). Then a small timeline: 5 days before, 1 day before, the day, then Kept. | It reads the day it's about. | Spotlight the date line. Timeline builds left to right in Sunflower dots. |
+| 2 | 0:04 to 0:08 | `light-welcome`: the logo and "Keep it. It comes back to you." | Keep it. It comes back to you. | Mask the logo tile in first, then the words. The box tap sound lands as the logo settles. The line is already on screen, so the caption sits below it or is left off. |
+| 3 | 0:08 to 0:15 | `light-share`: "Save from anywhere": Tap Share, Tap Shoebox, Say why. | Keep it from anywhere. | Spotlight the three steps one at a time, top to bottom. |
+| 4 | 0:15 to 0:20 | `light-add`: Keep something, "Paste a link or write a note", Photo or file. | Or keep it here. | Mask wipe from shot 3. Spotlight the writing panel. |
+| 5 | 0:20 to 0:28 | `light-today`: the "Fall band concert" post, full screen, with its date line (Saturday, 5 PM) and the reason "Bring the good camera". Then a small timeline: 5 days before, 1 day before, the day, then Kept. | It reads the day it's about. | Spotlight the date line, then the reason. Timeline builds left to right in Sunflower dots. |
 | 6 | 0:28 to 0:33 | `light-up`: flick up for the next one. | Flick up: next. | Thumb dot moves up, post lifts out. |
 | 7 | 0:33 to 0:38 | `light-away`: pull down, the lid opens, the post drops into the box. | Pull down: put it away. | Thumb dot down, post shrinks into the box, box tap sound. |
 | 8 | 0:38 to 0:42 | `light-opened`: the opened post. | Tap: open it. | Press on the dot, gentle 4% push-in. |
-| 9 | 0:42 to 0:48 | Email beat: a plain envelope shape becomes a short post (`light-today` or `light-opened` with an email post). | Forward an email. Keep what matters. | Small line under the caption: "Shoebox Plus. Sealed so only your phone can read it." |
+| 9 | 0:42 to 0:48 | Email beat: a plain envelope shape slides in and becomes `light-opened`, the band concert post opened, showing "via your Shoebox email". | Forward an email. Keep what matters. | Spotlight "via your Shoebox email". Small line under the caption: "Shoebox Plus. Sealed so only your phone can read it." |
 | 10 | 0:48 to 0:53 | `light-box`, then `dark-box`: the Shoebox list, Coming up first. | Everything you're not done with. | Cross-dissolve light to dark, push out 4%. |
 | 11 | 0:53 to 0:57 | `dark-settings` (or `dark-today`): the dark look. | On your phone. No account. No ads. | Hold, no motion but a slow 2% push. |
-| 12 | 0:57 to 1:00 | End card: logo, "Shoebox for iPhone", `inmyshoebox.com`. | Join the beta. | Pistachio ground. Hold 3 seconds. |
+| 12 | 0:57 to 1:00 | End card: the logo from `light-welcome`, "Shoebox for iPhone", `inmyshoebox.com`. | Join the beta. | Pistachio ground. Hold 3 seconds. |
+
+## The screenshots to use
+
+`light-welcome`, `light-share`, `light-add`, `light-today`, `light-up`, `light-away`, `light-opened`, `light-box`, `dark-box`, `dark-settings`, `dark-today`. The others (`time`, `learn`, `clear`) are not used. If the photo on the band concert post is a drawn shape rather than a photo, say so in the storyboard: real photos go in `Scripts/demo-photos` and need a fresh screenshot run.
 
 ## The other cuts
 
