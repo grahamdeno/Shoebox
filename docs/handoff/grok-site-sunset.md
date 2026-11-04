@@ -5,7 +5,7 @@
 
 ## Irreversible or public. Read these first.
 
-1. **Deploy the new relay** with the request routes (step 1). **ASK.** Rollback: `npx wrangler rollback 25327fde-d57c-4e44-af5a-970f666aec84 --name shoebox-app-relay`.
+1. **Deploy the new relay** with the request routes (step 1). **ASK.** Rollback: `npx wrangler rollback 99987eae-fd0b-4728-85b5-270a1d67e44e --name shoebox-app-relay`.
 2. **Publish the website changes** (steps 2 to 4): the home page, the beta form's new address, the Android page and the privacy policy's new section. **ASK** once for all of them, showing the diff.
 3. **Take down the old relay** `shoebox-relay` at `shoebox-api.tangomike.app` (step 6). **ASK.** Today: remove its domain and route only, so it can be brought back. Do not delete the Worker or its KV namespace `SHOEBOX`. Deleting them is a separate yes, in 30 days.
 
