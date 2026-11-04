@@ -313,6 +313,7 @@ struct TodayView: View {
                     content.offset(x: v.dx)
                 } keyframes: { _ in boxShakeKeyframes }
         }
+        .ignoresSafeArea(edges: .bottom)
         .allowsHitTesting(false)
     }
 
