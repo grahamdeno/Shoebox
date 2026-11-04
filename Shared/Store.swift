@@ -105,10 +105,16 @@ enum Prefs {
         set { d.set(newValue, forKey: "colors") }
     }
 
+    /// Where the last pass over the Shoebox stopped for each post without a picture, by count. On the phone only.
+    static var pictureLog: [String: Int] {
+        get { (d.dictionary(forKey: "pictureLog") as? [String: Int]) ?? [:] }
+        set { d.set(newValue, forKey: "pictureLog") }
+    }
+
     /// Set once the stock picture tries made under the narrow word rules have been forgotten.
-    static var stockRulesWidened: Bool {
-        get { d.bool(forKey: "stockRulesWidened") }
-        set { d.set(newValue, forKey: "stockRulesWidened") }
+    static var stockRulesWidened2: Bool {
+        get { d.bool(forKey: "stockRulesWidened2") }
+        set { d.set(newValue, forKey: "stockRulesWidened2") }
     }
 
     /// The colors the app behind Settings was last redrawn in. Settings changes `colors` at once and this when it closes,

@@ -48,10 +48,10 @@ struct BoxLid: View {
     }
 }
 
-/// The glass the box rises out of: the lower 360 pt of the screen blurs the post and tints it Plum, clear at the top and
+/// The glass the box rises out of: the lower 150 pt of the screen (ending just above the lid, clear of the post's panel) blurs the post and tints it Plum, clear at the top and
 /// nearly solid at the bottom edge, with no edge or outline (SPEC 2.2). With Reduce Transparency it is solid Plum instead.
 struct BoxGlass: View {
-    static let height: CGFloat = 200
+    static let height: CGFloat = 150
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
@@ -74,7 +74,7 @@ struct BoxGlass: View {
             }
         }
         .mask(
-            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .white, location: 0.45)],
+            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .white, location: 0.3)],
                            startPoint: .top, endPoint: .bottom)
         )
         .frame(height: Self.height)
