@@ -6,7 +6,7 @@ Retrieved Nov 4, 2026. Each was resized to 1600 px wide, saved as JPEG (quality 
 
 | File | What it shows | Photographer (as listed) | Page | License | Retrieved |
 |---|---|---|---|---|---|
-| `concert.jpg` | Music room with lights turned on: a drum kit, mic stand and keyboard in a warm, hazy brick-walled room. No people. The keyboard's maker name was retouched out. | John Matychuk | https://unsplash.com/photos/music-room-with-lights-turned-on-gUK3lA3K7Yo | Unsplash License | 2026-11-04 |
-| `trail.jpg` | A winding path with a rope fence down a green headland, overlooking the sea and distant mountains. No people. | Winston Chen | https://unsplash.com/photos/a-winding-path-overlooks-a-vast-ocean-with-distant-mountains-NIYG-9aPp0Q | Unsplash License | 2026-11-04 |
+| `concert.jpg` | An orchestra on a warmly lit stage seen from the audience: the conductor from behind, string players at music stands, audience heads silhouetted in front. No logos or writing. | Pencari Angin | https://unsplash.com/photos/orchestra-playing-in-dim-lit-room-nnS5adiX5mA | Unsplash License | 2026-11-04 |
+| `trail.jpg` | A dirt footpath along a grassy coastal cliff above a blue sea at dusk (North Devon, UK). No people, no writing. | Konara Bandara | https://unsplash.com/photos/dirt-path-on-coastal-cliff-OyN-LbibGlw | Unsplash License | 2026-11-04 |
 | `cookout.jpg` | Steak in a cast iron pan cooking over a campfire. No people, no maker marks visible. | Greg Rosenke | https://unsplash.com/photos/cast-iron-pan-cooking-steak-over-a-glowing-campfire-0xw02zgRQeA | Unsplash License | 2026-11-04 |
 | `teams.jpg` | Open blank notebook with a pen and pencils on a wooden desk. No logos or writing. | Clay Banks | https://unsplash.com/photos/open-notebook-with-pen-and-pencils-on-desk-n9AaeihA9HI | Unsplash License | 2026-11-04 |
