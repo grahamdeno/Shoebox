@@ -105,6 +105,19 @@ enum Prefs {
         set { d.set(newValue, forKey: "colors") }
     }
 
+    /// Set once the stock picture tries made under the narrow word rules have been forgotten.
+    static var stockRulesWidened: Bool {
+        get { d.bool(forKey: "stockRulesWidened") }
+        set { d.set(newValue, forKey: "stockRulesWidened") }
+    }
+
+    /// The colors the app behind Settings was last redrawn in. Settings changes `colors` at once and this when it closes,
+    /// so choosing Stone never resets Today or closes Settings under your finger.
+    static var colorsApplied: String {
+        get { d.string(forKey: "colorsApplied") ?? colors }
+        set { d.set(newValue, forKey: "colorsApplied") }
+    }
+
     /// 0 follows the phone, 1 is always light, 2 is always dark.
     static var appearance: Int {
         get { d.integer(forKey: "appearance") }

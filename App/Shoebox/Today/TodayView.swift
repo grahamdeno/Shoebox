@@ -697,6 +697,7 @@ struct TodayView: View {
         guard !backfilling else { return }
         backfilling = true
         defer { backfilling = false }
+        if StockPhoto.forgetOldTries(all) > 0 { try? context.save() }
         let waiting = rules.library(all, now: now)
             .filter { s in
                 s.imageData == nil && s.kind != .photo && !StockPhoto.recentlyTried(s, now: now)

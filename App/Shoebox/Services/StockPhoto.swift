@@ -59,13 +59,20 @@ enum StockPhoto {
         s.updatedAt = Date()
     }
 
-    /// Tries made before the word rules were widened (November 4, 2026) don't count: those posts get another look now.
-    static let rulesChanged = Date(timeIntervalSince1970: 1_793_808_000)
-
-    /// Tried within the last day, under the current rules.
+    /// Tried within the last day.
     static func recentlyTried(_ s: Save, now: Date = Date()) -> Bool {
-        guard let tried = s.stockTriedAt, tried > rulesChanged else { return false }
+        guard let tried = s.stockTriedAt else { return false }
         return now.timeIntervalSince(tried) < 86_400
+    }
+
+    /// Once, after the word rules were widened (November 4, 2026): every post still without a picture gets a fresh try,
+    /// whenever it was last tried under the old rules.
+    static func forgetOldTries(_ saves: [Save]) -> Int {
+        guard !Prefs.stockRulesWidened else { return 0 }
+        var n = 0
+        for s in saves where s.imageData == nil && s.stockTriedAt != nil { s.stockTriedAt = nil; n += 1 }
+        Prefs.stockRulesWidened = true
+        return n
     }
 
     /// True when a word of the phrase (or its singular) is in the title.
@@ -174,7 +181,7 @@ enum StockPhoto {
         cleaning paint renovation hammer drill ladder plumbing light lights lamp electric solar energy battery phone \
         tablet screen headphones podcast radio news newspaper magazine letter mail envelope stamp postcard pen \
         signature form clipboard checklist notes planner schedule sticky graduation diploma cap gown uniform \
-        volunteer charity donation church chapel candle prayer pets puppy kitten vet aquarium fish garden vegetable \
+        volunteer charity candle pets puppy kitten aquarium fish garden vegetable \
         apples pumpkin squash soup pasta tacos sushi burger sandwich lunch lunchbox picnic restaurant cafe bakery \
         wine beer cocktail drinks juice smoothie water bottle thanksgiving turkey easter eggs valentine hearts \
         fourth july flag veterans memorial monument history castle

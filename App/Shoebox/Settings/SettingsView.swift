@@ -47,6 +47,10 @@ struct SettingsView: View {
                 }
             }
         }
+        // Settings shows a new set of colors the moment it is chosen. Only the drawing is rebuilt: which screen you are
+        // on is kept here, outside it. The rest of the app follows when Settings closes.
+        .id(colors)
+        .onDisappear { if Prefs.colorsApplied != Prefs.colors { Prefs.colorsApplied = Prefs.colors } }
         .animation(.easeOut(duration: 0.18), value: page)
         .onAppear { removing = MailboxKeys.pendingDelete() != nil }
         .task { await Plus.checkStore(); sandbox = Plus.inSandbox }

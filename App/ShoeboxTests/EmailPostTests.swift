@@ -51,11 +51,13 @@ final class EmailPostTests: XCTestCase {
     }
 
     @MainActor
-    func testTriesBeforeTheWiderRulesDoNotCount() {
+    func testATryWaitsADay() {
         let s = Save(title: "A hike")
-        s.stockTriedAt = StockPhoto.rulesChanged.addingTimeInterval(-60)
-        XCTAssertFalse(StockPhoto.recentlyTried(s, now: StockPhoto.rulesChanged.addingTimeInterval(60)))
-        s.stockTriedAt = StockPhoto.rulesChanged.addingTimeInterval(60)
-        XCTAssertTrue(StockPhoto.recentlyTried(s, now: StockPhoto.rulesChanged.addingTimeInterval(3600)))
+        let now = Date()
+        XCTAssertFalse(StockPhoto.recentlyTried(s, now: now))
+        s.stockTriedAt = now.addingTimeInterval(-3600)
+        XCTAssertTrue(StockPhoto.recentlyTried(s, now: now))
+        s.stockTriedAt = now.addingTimeInterval(-90_000)
+        XCTAssertFalse(StockPhoto.recentlyTried(s, now: now))
     }
 }
