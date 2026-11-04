@@ -39,6 +39,17 @@ struct BoxStripFade: ViewModifier {
     }
 }
 
+/// The sheet is unseen until it starts to move, so its header never shows through the glass at the bottom of Today.
+struct BoxSheetFade: ViewModifier {
+    let pull: BoxPull
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(Double(min(1, pull.progress * 6)))
+            .allowsHitTesting(pull.progress > 0.02)
+    }
+}
+
 /// The lid on Today's box steps aside the moment the Shoebox sheet starts to move: the sheet carries an identical lid.
 struct BoxLidHide: ViewModifier {
     let pull: BoxPull

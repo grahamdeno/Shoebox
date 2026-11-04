@@ -170,7 +170,7 @@ struct TodayView: View {
 
     /// Where the top of the sheet sits: hidden behind the box, and fully open just under the status bar.
     private func boxTops(_ height: CGFloat, _ top: CGFloat) -> (closed: CGFloat, open: CGFloat) {
-        (height - Self.stripHeight + Self.lidTop + Self.sheetLidRise, top + 36)
+        (height - Self.stripHeight + Self.lidTop + Self.sheetLidRise, top + 48)
     }
 
     private func boxSheet(height: CGFloat, top: CGFloat) -> some View {
@@ -203,6 +203,7 @@ struct TodayView: View {
                 .onTapGesture { closeBox() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .modifier(BoxSheetFade(pull: pull))
         .modifier(BoxSheetOffset(pull: pull, closed: tops.closed, open: tops.open))
         .ignoresSafeArea()
     }
