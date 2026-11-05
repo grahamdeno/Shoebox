@@ -1,4 +1,4 @@
-Shoebox promo voice settings (approved by Graham, Nov 4, 2026)
+Shoebox voice settings (approved by Graham, Nov 4, 2026). Used for every video.
 
 Engine:      Kokoro-82M v1.0 (ONNX), run locally with kokoro-onnx 0.6.1 (Python).
              Model license Apache-2.0: https://huggingface.co/hexgrad/Kokoro-82M
@@ -26,16 +26,23 @@ Loudness:    Final mix -16 LUFS integrated, true peak -1.5 dBTP
              (about 14 dB under). The music dips another 4 dB while the voice speaks
              (0.25 s smoothing). Music fades in over 1.5 s and out over 2.5 s.
 Delivery:    AAC 160 kb/s, 48000 Hz stereo, muxed into H.264 MP4.
-Lines:       the 12 lines in the Voice column of docs/video/01-promo.md, spoken as written:
+Tagline:     "Keep it. It comes back to you." is rendered as TWO clips, "Keep it." and
+             "It comes back to you.", with 0.5 s of silence between them, every time it is
+             spoken. One clip runs the words together.
+Lines:       the 9 lines in the Voice column of docs/video/01-promo.md (second edition),
+             spoken as written. Timings per shot are filled in here after the re-render.
               1 You saved it. Then it was gone.
-              2 Shoebox. Keep it, and it comes back to you.
+              2 Shoebox. Keep it. [0.5 s] It comes back to you.
               3 Keep anything, from any app. Say why in a few words.
-              4 Or keep it right here.
-              5 Shoebox reads the day it's about, and brings it back before that day.
-              6 Flick up for the next one.
-              7 Pull down when you're done.
-              8 Tap to open it.
-              9 Forward an email, and keep just what matters.
-             10 Everything you're not done with, in one calm place.
-             11 On your phone. No account. No ads.
-             12 Shoebox for iPhone. Join the beta.
+              4 Shoebox reads the day it's about, and brings it back before then.
+              5 Forward the school newsletter. Shoebox finds the dates that are about your
+                family, and makes each one its own post. They come back before the day.
+              6 Flick up for the next one. Pull down when you're done. Tap to open.
+              7 Everything you're not done with, in one calm place.
+              8 It reads on your phone, with Apple Intelligence. Your mail is sealed, so only
+                your phone can open it. No account. No ads.
+              9 Shoebox for iPhone. Join the beta.
+             First edition (Nov 4, 2026) timings, for the record:
+             60 s cut:       1@0.6 2@5.15 3@8.6 4@15.7 5@20.7 6@28.5 7@33.4 8@38.4
+                             9@42.9 10@48.5 11@53.5 12@57.3 (seconds)
+             30 s vertical:  2@1.15 5@5.2 6@12.5 7@16.9 9@22.4 12@27.3

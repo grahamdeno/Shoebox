@@ -4,7 +4,7 @@ Follow `docs/video/style.md` for everything not said here.
 
 **Job:** one idea each, for a weekly post. **Where:** LinkedIn and Instagram. **Shape:** 9:16, 15 seconds each, voice and captions, the same music family. Each ends on a 2-second end card: "Shoebox for iPhone", `inmyshoebox.com`, "Join the beta".
 
-Make them one at a time, in this order, each with its own storyboard and yes.
+Make them one at a time, each with its own storyboard and yes. 3b first: it is the one that sells.
 
 ## 3a. It reads the date
 
@@ -15,13 +15,13 @@ Make them one at a time, in this order, each with its own storyboard and yes.
 | 9 to 13 s | `light-box`, Coming up. | Every date you've kept, soonest first. | Coming up, soonest first. |
 | 13 to 15 s | End card | Shoebox. | Join the beta. |
 
-## 3b. Forward an email
+## 3b. One newsletter, just your dates
 
 | Time | Picture | Voice | Caption |
 |---|---|---|---|
-| 0 to 3 s | A plain envelope shape on Plum. | Newsletters bury the one thing you need. | One line you need, buried. |
-| 3 to 9 s | The envelope becomes `light-opened`: "via your Shoebox email". | Forward it to your Shoebox address. You get a short post with just what matters. | Forward it. Keep what matters. |
-| 9 to 13 s | `light-today`, the same post on Today. | It's sealed, so only your phone can read it. | Sealed for your phone only. |
+| 0 to 3 s | A plain envelope shape on Plum, a few abstract lines of Bone text with six short Sunflower marks where the dates are. | The school newsletter. Twelve things, six of them yours. | Twelve things. Six of them yours. |
+| 3 to 8 s | The envelope becomes `light-dates`: one date post on Today, "from Maple Grove newsletter" in the byline. | Forward it to your Shoebox address. Every date about your family becomes its own post. | Each date, its own post. |
+| 8 to 13 s | `light-box`, Coming up, the six rows revealed top to bottom. | They come back before the day. It reads on your phone, with Apple Intelligence. | Back before the day. Read on your phone. |
 | 13 to 15 s | End card, with "Shoebox Plus" small under it. | Shoebox. | Join the beta. |
 
 ## 3c. Three moves
