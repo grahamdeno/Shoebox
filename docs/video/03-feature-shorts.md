@@ -2,9 +2,13 @@
 
 Follow `docs/video/style.md` for everything not said here.
 
-**Job:** one idea each, for a weekly post. **Where:** LinkedIn and Instagram. **Shape:** 9:16, 15 seconds each, voice and captions, the same music family. Each ends on a 2-second end card: "Shoebox for iPhone", `inmyshoebox.com`, "Join the beta".
+**Job:** one idea each, for a weekly post. **Where:** LinkedIn and Instagram, posted by Graham. Not on the website. **Shape:** 9:16, 1080×1920, 15 to 20 seconds, voice and captions, the same music family. Each ends on a 2-second end card: the logo, "Shoebox for iPhone", `inmyshoebox.com`, "Join the beta" with a Sunflower underline.
 
-Make them one at a time, each with its own storyboard and yes. 3b first: it is the one that sells.
+**Time shots from the voice, not from the table.** At these voice settings a line runs about 0.36 s a word, plus 0.6 s at the start of each shot. If the lines don't fit 15 s, run longer (up to 20 s). Don't cut words or rush the voice.
+
+**Privacy wording** follows style.md rule 6. Use the fixed sentences, whole, as voice or as a small line. Never "nothing leaves your phone". Date reading uses plain rules on the phone, so don't tie Apple Intelligence to dates.
+
+Make them one at a time, each with its own storyboard and yes. Order: 3b (made), then 3d, 3a, 3c.
 
 ## 3a. It reads the date
 
@@ -44,13 +48,15 @@ Made and approved November 5, 2026. **20 seconds** (not 15), 1080×1920. File: `
 
 ## 3d. Private by design
 
-| Time | Picture | Voice | Caption |
-|---|---|---|---|
-| 0 to 4 s | `dark-today` | Your saves stay on your phone. | It stays on your phone. |
-| 4 to 9 s | `dark-settings`, spotlight on Backups: Automatic. | No account. A backup every day, to your Files and iCloud Drive. | No account. Daily backups. |
-| 9 to 13 s | `dark-box` | No ads. No tracking. Nothing sold. | No ads. No tracking. |
-| 13 to 15 s | End card | Shoebox. | Join the beta. |
+Up to 20 s.
+
+| # | Picture | Voice | Caption | Small line |
+|---|---|---|---|---|
+| 1 | `dark-today` | It reads on your phone, with Apple Intelligence. | Read on your phone. | Your posts stay on your phone. |
+| 2 | `dark-settings`, spotlight on Backups: Automatic. | No account. A backup every day, to your Files and iCloud Drive. | No account. Daily backups. | none |
+| 3 | `dark-opened`, spotlight on "via your Shoebox email". | Your mail is sealed, so only your phone can open it. No ads. No tracking. | Sealed mail. No ads. No tracking. | Shoebox Plus. |
+| 4 | End card | Shoebox. | (on the card) | none |
 
 ## Files
 
-`shoebox-short-date-15.mp4`, `shoebox-short-email-15.mp4`, `shoebox-short-moves-15.mp4`, `shoebox-short-private-15.mp4`, each with its `.vtt` and a poster.
+`shoebox-short-<name>-<seconds>.mp4`, named by the length made: `shoebox-short-date-15.mp4`, `shoebox-short-email-20.mp4` (made), `shoebox-short-moves-15.mp4`, `shoebox-short-private-20.mp4`. Each has its `.vtt` and a poster. A copy of each `.vtt` goes in this folder in the records PR.
