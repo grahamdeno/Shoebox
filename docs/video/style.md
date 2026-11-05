@@ -8,8 +8,8 @@
 1. **Sample data only.** Every app screen comes from the screenshots CI makes with sample data: branch `ci-screens` of `grahamdeno/Shoebox`, files `light-<screen>.png` and `dark-<screen>.png`. Footage comes from CI recordings when a sheet asks for them. Never use anything from Graham's own phone: it holds his family's school mail and names.
 2. **Fresh screens only.** The `ci-screens` commit message names the commit the screenshots were built from ("Screens for <sha>"). They are fresh when `App/Shoebox/Model/SampleData.swift` and `Scripts/demo-photos/` are the same in that commit as on `main` (`git diff --stat <sha> origin/main -- App/Shoebox/Model/SampleData.swift Scripts/demo-photos` prints nothing). Compare content, not dates: a merge copies the same files to `main` later. If they differ, stop and tell Graham the screenshots are stale.
 3. **Show only what exists.** No Android, Apple Watch, widgets, Lock Screen, Siri or Mac. No prices. Name Shoebox Plus only where a sheet does.
-4. **No one else's interface or marks.** Abstract shapes stand in for other apps (Safari, Messages, Mail). No Apple logos, no App Store badge until the app is in the store, no brand names on screen.
-5. **No people.** No faces, hands or children, real or generated. The thumb dot stands in for a hand.
+4. **No one else's interface or marks.** Abstract shapes stand in for other apps (Safari, Messages, Mail). No Apple logos, no App Store badge until the app is in the store, no brand names or logos added by the video. Words that are part of Shoebox's own screens ("In Safari, Photos, or any app", "from Safari") are fine.
+5. **No recognizable people.** No faces you could recognize, no hands, no children, real or generated. Distant figures in a sample photo, seen small or from behind (the orchestra on the concert post), are fine. The thumb dot stands in for a hand.
 6. **Ask twice.** Send Graham the storyboard (one still per shot, with its caption and line of voice) and wait for his yes. Then send the finished cut and wait for his yes before it goes anywhere.
 
 ## Who we're talking to
@@ -29,7 +29,8 @@ Busy adults who save things to come back to and rarely do: a parent with school 
 | Motion | Slow and calm. Push-ins of 3 to 6% over 700 to 900 ms, ease in-out. Cross-dissolves of 300 ms, or a rounded-card mask wipe. No whip pans, spins, 3D flips or bounces. |
 | Gestures | A soft thumb dot (Bone at 85%, 26 pt), like the app's own How Shoebox works pictures: up for Next, down into the box for Put away, a press for Open. |
 | Focus | To point at something, dim the rest with the shade color at 40% and leave one rounded spotlight. One at a time. |
-| End card | The logo from `light-welcome` on Pistachio, "Shoebox for iPhone", `inmyshoebox.com`, and the sheet's call to action. 3 seconds. |
+| End card | The logo from `light-welcome` on Pistachio, "Shoebox for iPhone", `inmyshoebox.com`, and the sheet's call to action as plain words underlined in Sunflower, never a pill or button. 3 seconds. |
+| Status bar | Mask the status bar (time, signal, battery) on every phone screen. |
 
 ## Sound
 
