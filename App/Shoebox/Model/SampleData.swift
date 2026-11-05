@@ -10,7 +10,6 @@ enum SampleData {
         guard count == 0 else { return }
         let now = Date()
         let day: TimeInterval = 86_400
-        let event = Calendar.current.date(byAdding: .day, value: 12, to: now)
 
         let trail = Save(title: "A trail worth the drive", snippet: "Coastal loop, 4 miles, about 2 hours away. A lookout halfway and a beach at the end.",
                          body: "A 4 mile coastal loop with a lookout halfway. Parking fills by 9 on weekends, so go early. The trailhead parking details are at https://example.com/trail/parking.",
@@ -22,10 +21,6 @@ enum SampleData {
                          note: "Read before Monday", origin: "Safari", kind: .link,
                          urlString: "https://example.com/teams", createdAt: now - 9 * day)
         teams.imageData = Self.photo("teams") ?? Self.picture(top: 0x9C826B, bottom: 0x5E4B3C, accent: 0xF2E3CF)
-        let pictureDay = Save(title: "Picture day", snippet: "Order forms are due the week before. Retakes are in December.",
-                           body: "Picture day is coming up. Order forms are due the week before. Retakes are in December.",
-                           origin: "via the school newsletter email", kind: .email,
-                           eventDate: event, createdAt: now - 2 * day)
         let retro = Save(title: "Retro format for PI planning", snippet: "Start, stop, continue, with one vote each. Try it with the team Tuesday.",
                          origin: "a note", kind: .note, createdAt: now - day / 2)
         let castIron = Save(title: "Cast iron care, the short version", snippet: "Dry it on the burner, thin coat of oil, wipe it back off.",
@@ -43,15 +38,56 @@ enum SampleData {
         concert.emailSubject = "Fall band concert"
         concert.emailReceivedAt = now - 2 * day
         concert.imageData = Self.photo("concert") ?? Self.picture(top: 0x7A4E3A, bottom: 0x2E1C24, accent: 0xF9C93A)
-        for s in [concert, trail, pictureDay, teams, retro, castIron] {
+        // "dates" opens on the newsletter's first date post: everything older steps aside until tomorrow.
+        if UserDefaults.standard.string(forKey: "screen") == "dates" {
+            for s in [concert, trail, teams, retro, castIron] { s.status = .away; s.returnDate = now + 3 * day }
+        }
+        for s in [concert, trail, teams, retro, castIron] {
             s.enrichedAt = now
             context.insert(s)
         }
+        for s in Self.newsletter(now: now) { s.enrichedAt = now; context.insert(s) }
         let away = Save(title: "Cleats size check", origin: "a note", kind: .note,
                         status: .away, returnDate: now + 2 * day, createdAt: now - 7 * day)
         let kept = Save(title: "Gutter cleaning quotes", origin: "via your Shoebox email", kind: .email, status: .kept, createdAt: now - 20 * day)
         for s in [away, kept] { s.enrichedAt = now; context.insert(s) }
         try? context.save()
+    }
+
+    /// Six dates from one fictional school newsletter, made the way `Inbox` makes them: one post per date that is about
+    /// "Sam, 7th grade, band", the day first, "from Maple Grove newsletter" in the byline, no picture, on Today when it arrives.
+    static func newsletter(now: Date) -> [Save] {
+        let cal = Calendar.current
+        let received = now - 3 * 3_600
+        let dayText = DateFormatter(); dayText.dateFormat = "EEEE, MMM d"
+        let timeText = DateFormatter(); timeText.dateFormat = "h:mm a"
+        // (days out, title, hour or nil, the rest of the first line, more words)
+        let dates: [(Int, String, Int?, String, String)] = [
+            (9, "Picture day", nil, "Order forms are due the week before.", "Retakes are in December."),
+            (13, "Early release day", nil, "Students go home at 12:30.", "Buses run early. After-school clubs are off."),
+            (16, "Field trip forms due", nil, "7th grade, signed and back in the office.", "Forms are in the Friday folder."),
+            (20, "Band fundraiser pickup", 16, "Gym lobby. Bring the pickup slip.", "Orders not picked up by 5 PM go home Monday."),
+            (27, "No school: teacher workday", nil, "No classes for students.", "Regular schedule resumes the next day."),
+            (34, "Winter band concert", 18, "Auditorium. 7th and 8th grade band.", "Arrive by 5:45 in black and white."),
+        ]
+        var made: [Save] = []
+        for (i, d) in dates.enumerated() {
+            var day = cal.startOfDay(for: cal.date(byAdding: .day, value: d.0, to: now) ?? now)
+            while cal.isDateInWeekend(day) { day = cal.date(byAdding: .day, value: 1, to: day) ?? day }
+            let at = d.2.flatMap { cal.date(bySettingHour: $0, minute: d.2 == 18 ? 30 : 0, second: 0, of: day) } ?? day
+            var first = dayText.string(from: day)
+            if d.2 != nil { first += " · " + timeText.string(from: at) }
+            let words = "\(first) · \(d.3) \(d.4)"
+            let s = Save(title: d.1, snippet: words, body: words,
+                         origin: "Maple Grove newsletter", kind: .email, createdAt: received + Double(i) * 60)
+            s.eventDate = at
+            s.eventHasTime = d.2 != nil
+            s.emailFrom = "office@example.org"
+            s.emailSubject = "Maple Grove Middle School: November news"
+            s.emailReceivedAt = received
+            made.append(s)
+        }
+        return made
     }
 
     /// Puts everything on Today away, for the "Today's clear" screen.

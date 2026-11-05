@@ -69,7 +69,7 @@ struct Onboarding: View {
             title("Save from anywhere.")
             numbered(1, "Tap Share", "In Safari, Photos, or any app.")
             numbered(2, "Tap Shoebox", "Not in the row? Swipe to the end, tap More, then add Shoebox.")
-            numbered(3, "Say why, tap Keep", "\"For the trip\" brings it back before the trip.")
+            numbered(3, "Say why, tap Keep", "\"Before Saturday\" brings it back Friday evening.")
             VStack(alignment: .leading, spacing: 8) {
                 Text("Or forward email").font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)
                 if let address {

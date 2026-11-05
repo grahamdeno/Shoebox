@@ -15,7 +15,7 @@ if ls Scripts/demo-photos/*.jpg >/dev/null 2>&1; then
 fi
 xcrun simctl spawn "$SIM" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true || true
 mkdir -p screens
-SCREENS="${SCREENS:-today up away opened box add clear welcome share time learn settings}"
+SCREENS="${SCREENS:-today dates up away opened box add clear welcome share time learn settings}"
 for look in light dark; do
   xcrun simctl ui "$SIM" appearance $look
   for screen in $SCREENS; do
