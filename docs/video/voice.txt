@@ -16,21 +16,29 @@ Call:        Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin").create(text, voice="a
 Output:      24000 Hz mono float. Each line is rendered on its own, leading and trailing
              silence is trimmed, and it is resampled to 48000 Hz stereo for the mix.
 Line gap:    0.9 s between lines (the approved sample). In the cuts, each line starts at
-             its shot's time on the sheet instead:
-             60 s cut:       1@0.6 2@5.15 3@8.6 4@15.7 5@20.7 6@28.5 7@33.4 8@38.4
-                             9@42.9 10@48.5 11@53.5 12@57.3 (seconds)
-             30 s vertical:  2@1.15 5@5.2 6@12.5 7@16.9 9@22.4 12@27.3
-Loudness:    Final mix -16 LUFS integrated, true peak -1.5 dBTP
-             (two-pass ffmpeg loudnorm I=-16:TP=-1.5:LRA=11, linear=true).
-             Before normalizing: voice is about -15 LUFS and the music bed about -29 LUFS
-             (about 14 dB under). The music dips another 4 dB while the voice speaks
-             (0.25 s smoothing). Music fades in over 1.5 s and out over 2.5 s.
+             its shot's time instead.
+Tagline:     "Keep it. It comes back to you." is rendered as TWO clips, "Shoebox. Keep it."
+             and "It comes back to you.", with 0.5 s of silence between them, every time it
+             is spoken. One clip runs the words together.
+Timings:     second edition (Nov 4, 2026), each line's start-end in seconds:
+             60 s cut:      1 0.6-2.4 | 2a 4.6-5.8, 2b 6.3-7.5 | 3 8.6-11.8 | 4 15.7-19.2 |
+                            5 23.6-32.3 | 6a 36.4-37.7, 6b 39.9-41.1, 6c 43.4-44.4 |
+                            7 46.4-49.1 | 8 50.7-56.8 | 9 57.3-59.8
+             30 s vertical: 2a 0.25-1.44, 2b 1.94-3.11 | 4 3.65-7.19 | 5 7.90-16.59 |
+                            6a 17.80-19.11, 6b 19.70-20.88, 6c 21.60-22.58 |
+                            8f 23.50-26.16 | 9 27.25-29.75
+             (2a/2b are the two tagline clips; 6a-6c are the three sentences of line 6;
+              8f is a separate clip of line 8's first sentence, used only in the 30 s cut.)
+             Captions: shoebox-promo-60.vtt and shoebox-promo-30-vertical.vtt in this folder.
+Loudness:    Final mix -16 LUFS integrated, true peak at most -1.5 dBTP. A peak limiter
+             (ffmpeg alimiter limit=0.5) runs first, then two-pass ffmpeg loudnorm
+             I=-16:TP=-1.5:LRA=11, linear=true. Voice speech about -18 dBFS RMS before
+             normalizing, music bed about 12 dB under it and ducked another 4 dB while the
+             voice speaks (0.25 s smoothing). Music fades in over 1.5 s and out over 2.5 s.
+             Measured: 60 s cut -16.1 LUFS, -2.4 dBTP; 30 s vertical -16.0 LUFS, -2.1 dBTP.
 Delivery:    AAC 160 kb/s, 48000 Hz stereo, muxed into H.264 MP4.
-Tagline:     "Keep it. It comes back to you." is rendered as TWO clips, "Keep it." and
-             "It comes back to you.", with 0.5 s of silence between them, every time it is
-             spoken. One clip runs the words together.
 Lines:       the 9 lines in the Voice column of docs/video/01-promo.md (second edition),
-             spoken as written. Timings per shot are filled in here after the re-render.
+             spoken as written:
               1 You saved it. Then it was gone.
               2 Shoebox. Keep it. [0.5 s] It comes back to you.
               3 Keep anything, from any app. Say why in a few words.
@@ -42,7 +50,15 @@ Lines:       the 9 lines in the Voice column of docs/video/01-promo.md (second e
               8 It reads on your phone, with Apple Intelligence. Your mail is sealed, so only
                 your phone can open it. No account. No ads.
               9 Shoebox for iPhone. Join the beta.
+             Line 8 as spoken: the full line runs 7.9 s and would run into the end card, so
+             the 60 s cut speaks it without "No account. No ads." and the 30 s vertical
+             speaks only "It reads on your phone, with Apple Intelligence." In both, the
+             caption is "On your phone. Sealed mail. No account." and the small line under
+             it is "It reads on your phone, with Apple Intelligence. No ads."
+             The 30 s vertical uses lines 2, 4, 5, 6, 8 (first sentence) and 9.
              First edition (Nov 4, 2026) timings, for the record:
              60 s cut:       1@0.6 2@5.15 3@8.6 4@15.7 5@20.7 6@28.5 7@33.4 8@38.4
                              9@42.9 10@48.5 11@53.5 12@57.3 (seconds)
              30 s vertical:  2@1.15 5@5.2 6@12.5 7@16.9 9@22.4 12@27.3
+             First edition loudness: voice about -15 LUFS and the music bed about -29 LUFS
+             before normalizing (about 14 dB under).
