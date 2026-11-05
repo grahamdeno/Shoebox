@@ -23,6 +23,7 @@ struct ShoeboxApp: App {
             let screen = UserDefaults.standard.string(forKey: "screen") ?? ""
             Prefs.onboarded = !["welcome", "share", "time", "learn"].contains(screen)
             Prefs.pickDay = nil
+            if Prefs.mailFor.isEmpty { Prefs.mailFor = "Sam, 7th grade, band" }
             if screen == "clear" { SampleData.clearToday(opened.mainContext) }
         }
         #endif

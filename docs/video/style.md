@@ -10,7 +10,8 @@
 3. **Show only what exists.** No Android, Apple Watch, widgets, Lock Screen, Siri or Mac. No prices. Name Shoebox Plus only where a sheet does.
 4. **No one else's interface or marks.** Abstract shapes stand in for other apps (Safari, Messages, Mail). No Apple logos, no App Store badge until the app is in the store, no brand names or logos added by the video. Words that are part of Shoebox's own screens ("In Safari, Photos, or any app", "from Safari") are fine.
 5. **No recognizable people.** No faces you could recognize, no hands, no children, real or generated. Distant figures in a sample photo, seen small or from behind (the orchestra on the concert post), are fine. The thumb dot stands in for a hand.
-6. **Ask twice.** Send Graham the storyboard (one still per shot, with its caption and line of voice) and wait for his yes. Then send the finished cut and wait for his yes before it goes anywhere.
+6. **The privacy line is fixed.** Say it this way, and only this way: *It reads on your phone, with Apple Intelligence. Your mail is sealed, so only your phone can open it.* Never "your data never leaves your device" or "nothing leaves your phone": forwarded email, link previews and the generic stock-picture words do pass through Shoebox's server (sealed, cached a day, or generic), and the privacy policy says so. On phones without Apple Intelligence the app reads with plain rules, which is why the App Store text says "Best on iPhones with Apple Intelligence".
+7. **Ask twice.** Send Graham the storyboard (one still per shot, with its caption and line of voice) and wait for his yes. Then send the finished cut and wait for his yes before it goes anywhere.
 
 ## Who we're talking to
 
@@ -35,6 +36,7 @@ Busy adults who save things to come back to and rarely do: a parent with school 
 ## Sound
 
 - **Voice: the same in every video.** One calm adult voice: warm, mid-range, female, unhurried, plain American English, like a friend explaining something she uses. Not an announcer, not upbeat, not salesy. About 130 words a minute, with pauses where the screen does the work. It must not imitate any real person. Keep the voice settings (model, voice name, speed) in `docs/video/voice.txt` once Graham approves the first video, and use them every time after.
+- **The tagline has a pause in it.** "Keep it. It comes back to you." is two sentences with a breath between them. Render "Keep it." and "It comes back to you." as two separate clips and put 0.5 s of silence between them, every time the line is spoken, in every video. Rendered as one line it runs together ("keep it it comes back to you"), which is wrong.
 - **Captions always.** Every spoken line is also on screen. Captions are the script trimmed to 7 words or fewer; they need not match word for word.
 - **Music:** warm, sparse piano or acoustic guitar, 90 to 100 BPM, under the voice, royalty-free with a license Graham can keep (write it in `music-license.txt` with each video). The same track family across videos.
 - **One sound effect:** a soft wooden "box" tap when a post drops into the box or the lid settles.
@@ -54,10 +56,11 @@ H.264 MP4, 30 fps, AAC audio. 16:9 at 1920×1080, vertical at 1080×1920. A post
 | `learn` | "Three moves. That's the whole app." |
 | `add` | Keep something: write a note or paste a link, Photo or file |
 | `today` | The Fall band concert post on Today, its date and reason |
+| `dates` | One date post made from the school newsletter on Today: "from Maple Grove newsletter" in the byline, the day and time on its first line |
 | `up` | Flicking it up for the next one |
 | `away` | Pulling it down: "Let go to put it away" |
 | `opened` | The opened post, "via your Shoebox email" |
-| `box` | The Shoebox list: Coming up, then everything else |
+| `box` | The Shoebox list: Coming up (the six newsletter dates and the concert, soonest first), then everything else |
 | `clear` | The day's end: "That's all for today" |
 | `settings` | Settings |
 
