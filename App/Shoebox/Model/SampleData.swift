@@ -58,7 +58,7 @@ enum SampleData {
     /// "Sam, 7th grade, band", the day first, "from Maple Grove newsletter" in the byline, no picture, on Today when it arrives.
     static func newsletter(now: Date) -> [Save] {
         let cal = Calendar.current
-        let received = now - 3 * 3_600
+        let received = now - 600
         let dayText = DateFormatter(); dayText.dateFormat = "EEEE, MMM d"
         let timeText = DateFormatter(); timeText.dateFormat = "h:mm a"
         // (days out, title, hour or nil, the rest of the first line, more words)
