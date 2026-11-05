@@ -1,7 +1,8 @@
 name: testflight
 # Uploads a build to TestFlight. Runs only when the `testflight` branch is pushed.
 # The tests run first, on the same commit, and a failing test stops the upload.
-# The build goes into the internal tester group. Does not submit for review. That stays manual.
+# The build goes into the internal tester group and the external "Friends and Family" group, and is submitted for
+# Beta App Review. It never submits for App Store review. That stays manual.
 on:
   push:
     branches: [testflight]
@@ -127,13 +128,14 @@ jobs:
             -authenticationKeyIssuerID "$ISSUER" 2>&1 | tee "$RUNNER_TEMP/upload.log" \
             || { grep -E "error:|Error|failed|certificate|provisioning" "$RUNNER_TEMP/upload.log" | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
           echo "::notice::Uploaded build ${{ env.BUILD_NUMBER }} to App Store Connect"
-      - name: Add the build to the internal tester group
+      - name: Add the build to the tester groups and submit for Beta App Review
         # The build is already uploaded; a problem here is a warning to finish by hand, not a failed upload.
         continue-on-error: true
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           WHAT_TO_TEST_FILE: docs/testflight/what-to-test.md
+          EXTERNAL_GROUP: Friends and Family
         run: |
           pip3 install --quiet --break-system-packages pyjwt cryptography || pip3 install --quiet pyjwt cryptography
           ASC_KEY_PATH="$RUNNER_TEMP/keys/AuthKey.p8" python3 Scripts/asc_testflight.py

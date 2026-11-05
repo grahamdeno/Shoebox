@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """After an upload: wait for App Store Connect to finish processing the build, put it in the internal tester
-group, and set What to Test. It never submits anything for review.
+group, and set What to Test. With EXTERNAL_GROUP set, it also adds the build to that external group and submits it
+for Beta App Review. It never submits for App Store review, and never adds or removes testers.
 
 Environment: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH (the .p8 file), APP_ID, BUILD_NUMBER.
-Optional: TESTER_GROUP (a group name; default is every internal group), WHAT_TO_TEST_FILE, WAIT_MINUTES (default 30).
+Optional: TESTER_GROUP (a group name; default is every internal group), EXTERNAL_GROUP (an external group name),
+WHAT_TO_TEST_FILE, WAIT_MINUTES (default 30).
 Needs: pip install pyjwt cryptography
 """
 import json
@@ -93,7 +95,39 @@ def main():
         print("Added to %s: %s" % (g["attributes"].get("name"), "ok" if status in (200, 204) else "HTTP %s" % status))
         if status not in (200, 204):
             return 1
+
+    # External group and Beta App Review. TestFlight's auto-notify on the group decides who hears; nothing here does.
+    external = os.environ.get("EXTERNAL_GROUP")
+    if not external:
+        return 0
+    if not (path and os.path.exists(path)):
+        print("::warning::No What to Test file; not sending build %s to %s" % (number, external))
+        return 1
+    group = next((g for g in groups.get("data", [])
+                  if not g["attributes"].get("isInternalGroup") and g["attributes"].get("name") == external), None)
+    if not group:
+        print("::warning::No external TestFlight group named %r" % external)
+        return 1
+    status, data = call("POST", "/betaGroups/%s/relationships/builds" % group["id"], {"data": [{"type": "builds", "id": build}]})
+    if status not in (200, 204):
+        print("::warning::Could not add build %s to %s (HTTP %s): %s" % (number, external, status, errors(data)))
+        return 1
+    print("Added to %s: ok" % external)
+    status, data = call("POST", "/betaAppReviewSubmissions",
+                        {"data": {"type": "betaAppReviewSubmissions",
+                                  "relationships": {"build": {"data": {"type": "builds", "id": build}}}}})
+    if status in (200, 201):
+        print("::notice::Build %s submitted for Beta App Review" % number)
+    elif status == 409 or "already" in errors(data).lower():
+        print("::notice::Build %s was already submitted or approved for beta: %s" % (number, errors(data)))
+    else:
+        print("::warning::Beta App Review submission failed (HTTP %s): %s" % (status, errors(data)))
+        return 1
     return 0
+
+
+def errors(data):
+    return "; ".join(e.get("detail") or e.get("title", "") for e in data.get("errors", []))[:300]
 
 
 if __name__ == "__main__":
