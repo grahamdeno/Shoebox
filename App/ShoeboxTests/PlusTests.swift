@@ -25,4 +25,11 @@ final class PlusTests: XCTestCase {
     func testAlwaysWithAnAddress() {
         XCTAssertTrue(Plus.isOffered(now: now, firstOpened: now, hasAddress: true, sandbox: false))
     }
+
+    /// TestFlight and App Review send the install's proof as `beta`; a real purchase goes as `purchase` (decided November 5).
+    func testAccessGoesInItsOwnField() {
+        XCTAssertEqual(Plus.Access.purchase("p").field.key, "purchase")
+        XCTAssertEqual(Plus.Access.beta("b").field.key, "beta")
+        XCTAssertEqual(Plus.Access.beta("b").field.value, "b")
+    }
 }

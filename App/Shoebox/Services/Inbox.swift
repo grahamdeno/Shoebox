@@ -35,16 +35,16 @@ enum Inbox {
     struct Problem: Decodable { var error: Message?; struct Message: Decodable { var message: String? } }
 
     /// Asks the relay for an address from your first name, with this phone's sealing key and StoreKit's signed proof of
-    /// Shoebox Plus. Returns the address or a plain reason it failed.
+    /// Shoebox Plus (or, in TestFlight and review, of the install). Returns the address or a plain reason it failed.
     static func makeAddress(firstName: String) async -> Result<String, Error> {
         let name = firstName.lowercased().filter { $0.isLetter }
         guard !name.isEmpty else { return .failure(Failure("Type your first name first.")) }
-        guard let purchase = await Plus.proof() else { return .failure(Failure("Shoebox Plus is needed to get an address.")) }
+        guard let access = await Plus.access() else { return .failure(Failure("Shoebox Plus is needed to get an address.")) }
         // The private key that ties this phone to its mailbox, and the sealing key, both kept in the Keychain.
         guard let key = MailboxKeys.secretMakingOne(), let pub = MailboxKeys.sealingPublicKey() else {
             return .failure(Failure("Couldn't save this phone's key. Try again in a minute."))
         }
-        let body = try? JSONSerialization.data(withJSONObject: ["name": name, "pub": pub, "purchase": purchase])
+        let body = try? JSONSerialization.data(withJSONObject: ["name": name, "pub": pub, access.field.key: access.field.value])
         let req = Relay.request("inbox/address", method: "POST", body: body, key: key)
         guard let (data, res) = try? await URLSession.shared.data(for: req) else {
             return .failure(Failure("Couldn't reach Shoebox's server. Try again in a minute."))
@@ -290,8 +290,8 @@ enum Inbox {
             // anyone else, so the phone asks either way. A key is made only when the relay holds none, or after the
             // wait (above), so asking without Plus never replaces a key that works.
             guard let sealing = mine ?? MailboxKeys.sealingKey() else { return mine }
-            let purchase = await Plus.proof() ?? ""
-            let body = try? JSONSerialization.data(withJSONObject: ["pub": MailboxKeys.publicText(sealing), "purchase": purchase])
+            let field = await Plus.access()?.field ?? (key: "purchase", value: "")
+            let body = try? JSONSerialization.data(withJSONObject: ["pub": MailboxKeys.publicText(sealing), field.key: field.value])
             let req = Relay.request("inbox/seal", method: "POST", body: body, key: key)
             if let (_, res) = try? await URLSession.shared.data(for: req), (res as? HTTPURLResponse)?.statusCode == 200 {
                 Prefs.sealingRegistered = true

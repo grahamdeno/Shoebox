@@ -141,7 +141,33 @@ export async function verifyPurchase(jws, { roots = [], now = Date.now(), allowS
   }
 }
 
-async function check(jws, roots, now, allowSandbox) {
+/**
+ * Checks a StoreKit 2 app transaction JWS (`AppTransaction.shared`), which every install of the app can get without
+ * buying anything. It opens Shoebox Plus for free only in TestFlight and App Review: the App Store sandbox, never
+ * Production and never Xcode. Returns { betaId } (one per Apple Account and app, used to limit it to five phones) or
+ * throws PurchaseError. Decided November 5: everyone testing Shoebox gets the address without buying.
+ */
+export async function verifyBetaApp(jws, { roots = [], now = Date.now() } = {}) {
+  try {
+    const payload = await signed(String(jws || ""), roots, now);
+    if (payload.bundleId !== BUNDLE_ID) throw new PurchaseError("wrong app");
+    // A purchase (it names a product) is not an app transaction.
+    if ("productId" in payload || "transactionId" in payload) throw new PurchaseError("not an app transaction");
+    // StoreKit's JSON calls it receiptType; accept environment too. Only the sandbox: TestFlight and App Review.
+    if ((payload.receiptType ?? payload.environment) !== "Sandbox") throw new PurchaseError("wrong environment");
+    const id = String(payload.appTransactionId ?? "");
+    const first = Number(payload.originalPurchaseDate);
+    if (/^\d{1,20}$/.test(id)) return { betaId: id };
+    if (Number.isFinite(first) && first > 0) return { betaId: `d${first}` };
+    throw new PurchaseError("no app transaction");
+  } catch (e) {
+    if (e instanceof PurchaseError) throw e;
+    throw new PurchaseError("could not read the app transaction");
+  }
+}
+
+/** Steps 1 to 3 for any JWS Apple's App Store signed: the chain, the markers and the signature. Returns the payload. */
+async function signed(jws, roots, now) {
   const parts = jws.split(".");
   if (parts.length !== 3 || jws.length > 20000) throw new PurchaseError("not a signed purchase");
   const header = parseJSON(b64decode(parts[0])), payload = parseJSON(b64decode(parts[1]));
@@ -155,7 +181,8 @@ async function check(jws, roots, now, allowSandbox) {
   if (!(await signedBy(mid, root))) throw new PurchaseError("intermediate not signed by the root");
   if (!(await signedBy(leaf, mid))) throw new PurchaseError("leaf not signed by the intermediate");
   // Valid on the day Apple signed the purchase (the phone may hold a purchase signed long ago, under an older leaf).
-  const signedAt = Number(payload.signedDate);
+  // An app transaction carries signedDate too; receiptCreationDate stands in if a version of StoreKit leaves it out.
+  const signedAt = Number(payload.signedDate ?? payload.receiptCreationDate);
   if (!Number.isFinite(signedAt) || signedAt > now + FIVE_MINUTES) throw new PurchaseError("bad signing date");
   for (const c of [leaf, mid, root]) if (signedAt < c.notBefore || signedAt > c.notAfter) throw new PurchaseError("certificate out of date");
 
@@ -169,6 +196,11 @@ async function check(jws, roots, now, allowSandbox) {
   const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
   if (sig.length !== 64 || !(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, sig, data))) throw new PurchaseError("bad signature");
 
+  return payload;
+}
+
+async function check(jws, roots, now, allowSandbox) {
+  const payload = await signed(jws, roots, now);
   // 4. What was bought.
   if (payload.bundleId !== BUNDLE_ID) throw new PurchaseError("wrong app");
   if (payload.productId !== PRODUCT_ID) throw new PurchaseError("wrong product");

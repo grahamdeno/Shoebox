@@ -7,7 +7,7 @@ The Cloudflare Worker `shoebox-app-relay` for the Shoebox iPhone app, at `https:
 | `GET /preview?url=&text=1` | A page's title, description, pictures and readable text. Public web links only. 240 a network an hour. |
 | `GET /stock?q=&n=` | Pixabay photos for a few generic words. Cached 24 hours. About 60 searches a network an hour. |
 | `GET /inbox` | Waiting mail (up to 20, sealed), this phone's address and the sealing key held for it. |
-| `POST /inbox/address` | Makes the phone's address from `{name, pub, purchase}`: `name-` plus 8 letters or digits. 402 without Plus, 403 when the purchase is already on five phones. |
+| `POST /inbox/address` | Makes the phone's address from `{name, pub, purchase}` (or `beta` in TestFlight and review): `name-` plus 8 letters or digits. 402 without Plus, 403 when the purchase or tester is already on five phones. |
 | `POST /inbox/seal` | Registers a new sealing key `{pub, purchase}` for an existing address (a new phone). |
 | `GET /inbox/file?id=&n=` | One attachment of a waiting mail. |
 | `POST /inbox/ack` | Forgets mail the phone has saved. |
@@ -48,7 +48,8 @@ No phone becomes the owner by asking first. The one shared address (optional) is
 ## Settings
 
 Secrets: `PIXABAY_API_KEY`, `OWNER_INBOX_KEY` (optional).
-Sandbox purchases (TestFlight, Xcode) are accepted while `ALLOW_SANDBOX` is not `"0"`. Set it to `"0"` once testing is over. `TEST_PURCHASE_ROOT` is for tests only; never set it in production.
+Sandbox purchases (TestFlight, Xcode) are accepted while `ALLOW_SANDBOX` is not `"0"`. Set it to `"0"` once testing is over.
+TestFlight and App Review installs get an address without buying: the phone sends its signed app transaction as `beta` instead of `purchase`. The relay checks Apple's chain, the bundle and `receiptType` Sandbox (never Production or Xcode), and seats it as `buy:beta-<appTransactionId>`, five phones each. `BETA_PLUS` set to `"0"` (or `ALLOW_SANDBOX` `"0"`) stops new free addresses at once; addresses already made keep working. `TEST_PURCHASE_ROOT` is for tests only; never set it in production.
 `PLUS_OWNER_ADDRESS` (optional, a plain variable): the owner's own address, such as `graham-k3t7m2qa`. That one address may register its sealing key without a purchase, so its mail works before Shoebox Plus is on sale. It makes no address and takes no seat. Remove it once Plus can be bought.
 The Apple root certificate is in `apple-root-g3.js`. While it is empty the relay refuses every purchase (fails closed).
 Variables: `EMAIL_DOMAIN` (default `inmyshoebox.com`), `EMAIL_ADDRESS` (optional), `MINT_DAILY_CAP`, `MAILBOX_DAILY_CAP`, `STOCK_HOURLY_LIMIT` (all optional). `PIXABAY_BASE_URL` is for local tests only.

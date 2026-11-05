@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import RELAY, { mailBox, boxOf, newSlug, mintAddress } from "../worker.js";
 import { suite, fromBase64, SEAL_INFO } from "../seal.js";
-import { makeChain, signPurchase, purchasePayload, x25519 } from "./pki.mjs";
+import { makeChain, signPurchase, purchasePayload, appTransactionPayload, x25519 } from "./pki.mjs";
 
 /** A KV namespace in memory. Remembers each key's TTL; lists in pages of `page` keys. */
 function memoryKV(page = 1000) {
@@ -457,6 +457,64 @@ test("Delete everything gives the purchase its seat back; so does a box that exp
   assert.equal(keysWith(alone.SHOEBOX, "buy:").length, 1);
   await call(alone, "/me/delete", { method: "POST", key: KEY_A });
   assert.equal(keysWith(alone.SHOEBOX, "buy:").length, 0);
+});
+
+/* ---- TestFlight and App Review: Plus without buying (decided November 5) ---- */
+
+const betaFor = (id, over = {}) => signPurchase(chain, appTransactionPayload({ appTransactionId: id, ...over }));
+const mintBeta = (env, key, beta, ip = "6.6.6.6", name = "sam") =>
+  call(env, "/inbox/address", { method: "POST", key, body: { name, pub: PUB, beta }, ip });
+
+test("a TestFlight install gets an address with no purchase, in the usual name-plus-8 form", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const res = await mintBeta(env, KEY_A, betaFor("704000000000000001"));
+  assert.equal(res.status, 200);
+  assert.match((await res.json()).address, /^sam-[a-z2-9]{8}@inmyshoebox\.com$/);
+  assert.deepEqual(keysWith(kv, "buy:"), ["buy:beta-704000000000000001"]);
+  // The same proof registers a new sealing key, as a purchase would.
+  assert.equal((await call(env, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB, beta: betaFor("704000000000000001") }, ip: "6.6.6.7" })).status, 200);
+});
+
+test("an App Store install, another app, Xcode or a forged chain never gets a free address", async () => {
+  const env = newEnv();
+  assert.equal((await mintBeta(env, KEY_A, betaFor("704000000000000002", { receiptType: "Production" }))).status, 402);
+  assert.equal((await mintBeta(env, KEY_A, betaFor("704000000000000002", { receiptType: "Xcode" }))).status, 402);
+  assert.equal((await mintBeta(env, KEY_A, betaFor("704000000000000002", { bundleId: "com.example.other" }))).status, 402);
+  assert.equal((await mintBeta(env, KEY_A, signPurchase(makeChain({ name: "Forged" }), appTransactionPayload()))).status, 402);
+  assert.equal((await mintBeta(env, KEY_A, "garbage")).status, 402);
+});
+
+test("BETA_PLUS or ALLOW_SANDBOX off stops free addresses; an address already made keeps working", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  assert.equal((await mintBeta(env, KEY_A, betaFor("704000000000000003"))).status, 200);
+  for (const off of [{ BETA_PLUS: "0" }, { ALLOW_SANDBOX: "0" }]) {
+    const later = { ...env, ...off };
+    assert.equal((await mintBeta(later, KEY_B, betaFor("704000000000000004"), "6.6.7.1")).status, 402);
+    const inbox = await call(later, "/inbox", { key: KEY_A });
+    assert.equal(inbox.status, 200);
+    assert.ok((await inbox.json()).address, "the tester's address still delivers");
+  }
+});
+
+test("one tester's proof opens at most five boxes, and a real purchase wins when both are sent", async () => {
+  const env = newEnv();
+  const keys = [0, 1, 2, 3, 4, 5].map((i) => `sb-${String(i + 1).repeat(40)}`);
+  const statuses = [];
+  for (const [i, key] of keys.entries()) statuses.push((await mintBeta(env, key, betaFor("704000000000000005"), `7.7.7.${i}`)).status);
+  assert.deepEqual(statuses, [200, 200, 200, 200, 200, 403]);
+  const sixth = await mintBeta(env, keys[5], betaFor("704000000000000005"), "7.7.7.9");
+  assert.match((await sixth.json()).error.message, /testing on five phones/);
+  const both = await call(env, "/inbox/address", { method: "POST", key: keys[5], ip: "7.7.7.10", body: { name: "sam", pub: PUB, purchase: jwsFor("1000000000000200"), beta: betaFor("704000000000000005") } });
+  assert.equal(both.status, 200);
+  assert.ok(keysWith(env.SHOEBOX, "buy:").includes("buy:1000000000000200"));
+});
+
+test("Delete everything gives a tester's seat back", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  await mintBeta(env, KEY_A, betaFor("704000000000000006"));
+  assert.equal(keysWith(kv, "buy:beta-").length, 1);
+  await call(env, "/me/delete", { method: "POST", key: KEY_A });
+  assert.equal(keysWith(kv, "buy:beta-").length, 0);
 });
 
 test("collecting mail, files, ack and delete are never gated: a refund stops only new addresses", async () => {
