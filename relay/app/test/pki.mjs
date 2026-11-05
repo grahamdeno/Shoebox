@@ -48,6 +48,25 @@ export function purchasePayload(over = {}) {
   };
 }
 
+/** What StoreKit's app transaction JWS (`AppTransaction.shared`) carries for a TestFlight install, unless `over` changes it. */
+export function appTransactionPayload(over = {}) {
+  return {
+    receiptType: "Sandbox",
+    appAppleId: 0,
+    bundleId: "com.grahamdeno.shoebox",
+    applicationVersion: "1043",
+    originalApplicationVersion: "1000",
+    receiptCreationDate: Date.now() - 60_000,
+    originalPurchaseDate: Date.now() - 86_400_000,
+    appTransactionId: "704000000000000001",
+    originalPlatform: "iOS",
+    deviceVerification: "AAAA",
+    deviceVerificationNonce: "11111111-2222-3333-4444-555555555555",
+    signedDate: Date.now(),
+    ...over,
+  };
+}
+
 /** A signed purchase. `header` and `x5c` replace parts of the header; `tamper` changes the payload after signing. */
 export function signPurchase(chain, payload = purchasePayload(), { header = {}, x5c, tamper } = {}) {
   const h = { alg: "ES256", x5c: x5c || [chain.leaf, chain.mid, chain.root], ...header };

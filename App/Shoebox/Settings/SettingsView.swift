@@ -29,6 +29,8 @@ struct SettingsView: View {
     @State private var restoreNote = ""
     @State private var removing = MailboxKeys.pendingDelete() != nil
     @State private var sandbox = Plus.inSandbox
+    @State private var freeInBeta = Plus.freeInBeta
+    @State private var plusBought = false
     @State private var mailFor = Prefs.mailFor
     @State private var importing = false
     @State private var importNote = ""
@@ -53,7 +55,7 @@ struct SettingsView: View {
         .onDisappear { if Prefs.colorsApplied != Prefs.colors { Prefs.colorsApplied = Prefs.colors } }
         .animation(.easeOut(duration: 0.18), value: page)
         .onAppear { removing = MailboxKeys.pendingDelete() != nil }
-        .task { await Plus.checkStore(); sandbox = Plus.inSandbox }
+        .task { await Plus.checkStore(); sandbox = Plus.inSandbox; freeInBeta = Plus.freeInBeta }
         .font(.system(size: 17))
         .onChange(of: time) { _, t in
             Prefs.dailyMinute = DailyTime.minute(of: t)
@@ -311,7 +313,7 @@ struct SettingsView: View {
                 // The relay holds no key for this phone yet, or another phone's: mail waits unopened until Plus is restored here.
                 if !Prefs.sealingRegistered { line("Mail waits until Shoebox Plus is restored on this phone.") }
             } else if plusOwned {
-                line("Get an address. Forward an email to it to keep it.")
+                line(freeInBeta && !plusBought ? "Free while you test Shoebox. Get an address and forward an email to it to keep it." : "Get an address. Forward an email to it to keep it.")
                 card {
                     row {
                         TextField("Your first name", text: $firstName)
@@ -331,6 +333,21 @@ struct SettingsView: View {
                 }
                 .padding(.top, 22)
                 if !addressNote.isEmpty { line(addressNote) }
+                // App Review runs in the same sandbox as TestFlight and must still find the purchase, so it stays here as
+                // a quiet second row. In TestFlight buying costs nothing.
+                if freeInBeta && !plusBought {
+                    card {
+                        row {
+                            Button("Buy Shoebox Plus") { buyPlus() }
+                                .foregroundStyle(Theme.quiet)
+                                .frame(minHeight: Metrics.touchMin)
+                            Spacer()
+                            if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
+                        }
+                    }
+                    .padding(.top, 12)
+                    if !plusNote.isEmpty { line(plusNote) }
+                }
             } else {
                 line("Forward an email to your own address to keep it.")
                 card {
@@ -357,7 +374,8 @@ struct SettingsView: View {
             if let unopened = Inbox.unopenedLine() { line(unopened) }
         }
         .task {
-            plusOwned = await Plus.proof() != nil
+            plusBought = await Plus.proof() != nil
+            plusOwned = await Plus.access() != nil
             plusPrice = await Plus.price()
         }
     }
@@ -509,7 +527,7 @@ struct SettingsView: View {
     private func buyPlus() {
         Task {
             switch await Plus.buy() {
-            case .bought: plusOwned = true; plusNote = ""
+            case .bought: plusOwned = true; plusBought = true; plusNote = ""
             case .pending: plusNote = "Waiting for approval."
             case .cancelled: plusNote = ""
             case .failed: plusNote = "Couldn't reach the App Store. Try again in a minute."

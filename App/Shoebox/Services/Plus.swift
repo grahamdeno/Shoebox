@@ -16,12 +16,45 @@ enum Plus {
     /// reviewer or a tester can't wait a week. Customers on the App Store still see it after 7 days. False until checked.
     private(set) static var inSandbox = false
 
+    /// TestFlight and App Review: Shoebox Plus is free, no purchase needed (decided November 5). True only when StoreKit
+    /// has verified that this install came from the App Store sandbox; never on the App Store, never from Xcode's local
+    /// StoreKit file. The same build promoted to the App Store reads Production, so this turns itself off at launch.
+    private(set) static var freeInBeta = false
+
     /// Asks StoreKit which store this build came from. Never asks the person to sign in (that is `refresh`, not used).
     static func checkStore() async {
         guard let result = try? await AppTransaction.shared else { return }
         switch result {
-        case .verified(let t), .unverified(let t, _): inSandbox = t.environment != .production
+        case .verified(let t): inSandbox = t.environment != .production; freeInBeta = t.environment == .sandbox
+        case .unverified(let t, _): inSandbox = t.environment != .production; freeInBeta = false
         }
+    }
+
+    /// StoreKit's signed app transaction, sent to the relay as proof of a TestFlight or review install. Nil anywhere
+    /// else. The relay checks it on its own (Apple's chain, the bundle, Sandbox only) and limits one to five phones.
+    static func betaProof() async -> String? {
+        guard let result = try? await AppTransaction.shared, case .verified(let t) = result, t.environment == .sandbox else { return nil }
+        return result.jwsRepresentation
+    }
+
+    /// What the relay is shown to open an address: a real purchase when there is one, else a tester's install.
+    enum Access: Equatable {
+        case purchase(String)
+        case beta(String)
+
+        /// The request field it goes in: `purchase` or `beta`.
+        var field: (key: String, value: String) {
+            switch self {
+            case .purchase(let jws): ("purchase", jws)
+            case .beta(let jws): ("beta", jws)
+            }
+        }
+    }
+
+    static func access() async -> Access? {
+        if let jws = await proof() { return .purchase(jws) }
+        if let jws = await betaProof() { return .beta(jws) }
+        return nil
     }
 
     /// Has this install been open for a week? A phone that already has an address is past it, and so is a review or
@@ -82,10 +115,10 @@ enum Plus {
         }
     }
 
-    /// Settings › Restore purchases: asks the App Store to sync, then looks again.
+    /// Settings › Restore purchases: asks the App Store to sync, then looks again. A tester always has access.
     static func restore() async -> Bool {
         try? await AppStore.sync()
-        return await proof() != nil
+        return await access() != nil
     }
 
     private static var listening = false

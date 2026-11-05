@@ -287,6 +287,7 @@ From the release-readiness audit (`docs/audit/`) and Graham's answers.
 - Settings › Email shows "Get address with Shoebox Plus" until bought; Settings gets **Restore purchases** as a quiet word.
 - The phone sends the signed purchase to the relay when it asks for an address; the relay checks it before minting.
 - Offered after the first week of use, never in the first run.
+- **TestFlight and App Review get it free** (decided November 5). When StoreKit verifies the install came from the App Store sandbox, Settings › Email offers the first name and Get address at once, with no purchase. The phone sends the signed app transaction (`AppTransaction`) as `beta`; the relay accepts it only for this app and only in Sandbox, up to five phones per Apple Account. "Buy Shoebox Plus" stays as a quiet second row so App Review can find the purchase. The same build on the App Store reads Production, so the free path ends at launch with no code change. Testers' addresses keep working after launch; collecting is never gated.
 
 ## 10. How we work
 

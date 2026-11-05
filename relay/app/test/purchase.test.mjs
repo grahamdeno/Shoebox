@@ -1,9 +1,9 @@
 // Run: node --test relay/app/test
 import test from "node:test";
 import assert from "node:assert/strict";
-import { verifyPurchase, PurchaseError, readCert, signedBy, b64decode } from "../purchase.js";
+import { verifyPurchase, verifyBetaApp, PurchaseError, readCert, signedBy, b64decode } from "../purchase.js";
 import { APPLE_ROOT_CA_G3_B64 } from "../apple-root-g3.js";
-import { makeChain, signPurchase, purchasePayload } from "./pki.mjs";
+import { makeChain, signPurchase, purchasePayload, appTransactionPayload } from "./pki.mjs";
 
 const chain = makeChain();
 const roots = [b64decode(chain.root)];
@@ -103,4 +103,50 @@ test("the Apple root embedded in the Worker is Apple Root CA - G3 (skipped until
   assert.ok(Buffer.from(cert.subject).includes("Apple Root CA - G3"), "the subject names Apple Root CA - G3");
   assert.ok(Buffer.from(cert.subject).includes("Apple Inc."));
   assert.ok(cert.notAfter > Date.UTC(2038, 0, 1), "valid until 2039");
+});
+
+/* ---- TestFlight and App Review: the app transaction opens Plus without a purchase (decided November 5) ---- */
+
+const beta = (jws, opts = {}) => verifyBetaApp(jws, { roots, ...opts });
+const betaFails = (jws, why) => assert.rejects(beta(jws), (e) => e instanceof PurchaseError && (!why || why.test(e.message)));
+
+test("a TestFlight app transaction passes, and gives one id per Apple Account", async () => {
+  assert.deepEqual(await beta(signPurchase(chain, appTransactionPayload())), { betaId: "704000000000000001" });
+});
+
+test("StoreKit's environment key is read too, not only receiptType", async () => {
+  const p = appTransactionPayload({ environment: "Sandbox" });
+  delete p.receiptType;
+  assert.equal((await beta(signPurchase(chain, p))).betaId, "704000000000000001");
+});
+
+test("an app transaction without an id falls back to the first download date", async () => {
+  const p = appTransactionPayload({ originalPurchaseDate: 1762300000000 });
+  delete p.appTransactionId;
+  assert.deepEqual(await beta(signPurchase(chain, p)), { betaId: "d1762300000000" });
+});
+
+test("an App Store install never gets Plus free, and Xcode never does", async () => {
+  await betaFails(signPurchase(chain, appTransactionPayload({ receiptType: "Production" })), /environment/);
+  await betaFails(signPurchase(chain, appTransactionPayload({ receiptType: "Xcode" })), /environment/);
+  const p = appTransactionPayload();
+  delete p.receiptType;
+  await betaFails(signPurchase(chain, p), /environment/);
+});
+
+test("another app's app transaction fails", async () => {
+  await betaFails(signPurchase(chain, appTransactionPayload({ bundleId: "com.example.other" })), /wrong app/);
+});
+
+test("a purchase is not an app transaction, and an app transaction is not a purchase", async () => {
+  await betaFails(signPurchase(chain), /not an app transaction/);
+  await fails(signPurchase(chain, appTransactionPayload()), /wrong product/);
+});
+
+test("a beta proof that is tampered with, or signed by anyone but Apple, fails", async () => {
+  await betaFails(signPurchase(chain, appTransactionPayload(), { tamper: (p) => ({ ...p, appTransactionId: "704000000000000002" }) }), /bad signature/);
+  await betaFails(signPurchase(makeChain({ name: "Other" }), appTransactionPayload()), /root/);
+  const noLeaf = makeChain({ leafMarker: false });
+  await assert.rejects(verifyBetaApp(signPurchase(noLeaf, appTransactionPayload()), { roots: [b64decode(noLeaf.root)] }), /App Store signing/);
+  await betaFails("garbage", /not a signed purchase/);
 });
