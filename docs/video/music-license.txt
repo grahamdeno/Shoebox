@@ -1,0 +1,31 @@
+Shoebox promo: music and sound credits
+Retrieved: November 4, 2026
+
+MUSIC (shoebox-promo-60.mp4, shoebox-promo-30-vertical.mp4)
+Title:    Lofi E-Piano Loop 95 BPM
+Artist:   holizna (Freesound user)
+Source:   https://freesound.org/people/holizna/sounds/629167/
+File:     https://cdn.freesound.org/previews/629/629167_12574855-hq.mp3
+          (Freesound's public HQ preview: MP3 180 kbps, 44.1 kHz stereo, 40.4 s.
+          The original WAV needs a Freesound login and was not used.)
+SHA-256:  b4dbca0dd890ad5c0c457751bfd41b05e2adb5ef9cbc9ef0054a081bca1285ac
+License:  Creative Commons CC0 1.0 Universal (Public Domain Dedication)
+          https://creativecommons.org/publicdomain/zero/1.0/
+          On the sound page, the license is listed as "Creative Commons 0". The
+          author's description says: "CC0, you do not need to credit me, but
+          credit is appreciated".
+Use:      16 bars at 95 BPM, looped seamlessly to fill the cut. Fades in over
+          1.5 s and out over 2.5 s. Set about 14 dB under the voice and ducked
+          another 4 dB while the voice speaks. No other changes.
+Credit (optional, appreciated): "Music: Lofi E-Piano Loop 95 BPM by holizna (CC0), freesound.org"
+
+SOUND EFFECT: box tap (shots 2 and 7)
+Made on the build box for this project with build/sfx.py: decaying sines at 168,
+311, 462 and 890 Hz, a soft noise click and small reflections. It is original
+and uses no samples or third-party audio, so no license applies.
+
+VOICE
+Generated with Kokoro-82M v1.0 (ONNX, via kokoro-onnx 0.6.1), Apache-2.0,
+https://huggingface.co/hexgrad/Kokoro-82M. See voice.txt.
+
+The loop videos (shoebox-loop.mp4 / .webm) have no audio track.
