@@ -6,7 +6,7 @@
 ## Rules that can't bend
 
 1. **Sample data only.** Every app screen comes from the screenshots CI makes with sample data: branch `ci-screens` of `grahamdeno/Shoebox`, files `light-<screen>.png` and `dark-<screen>.png`. Footage comes from CI recordings when a sheet asks for them. Never use anything from Graham's own phone: it holds his family's school mail and names.
-2. **Fresh screens only.** Use the screenshots only if the `ci-screens` commit is newer than the last change to `App/Shoebox/Model/SampleData.swift` or `Scripts/demo-photos/`. If not, stop and tell Graham they are stale.
+2. **Fresh screens only.** The `ci-screens` commit message names the commit the screenshots were built from ("Screens for <sha>"). They are fresh when `App/Shoebox/Model/SampleData.swift` and `Scripts/demo-photos/` are the same in that commit as on `main` (`git diff --stat <sha> origin/main -- App/Shoebox/Model/SampleData.swift Scripts/demo-photos` prints nothing). Compare content, not dates: a merge copies the same files to `main` later. If they differ, stop and tell Graham the screenshots are stale.
 3. **Show only what exists.** No Android, Apple Watch, widgets, Lock Screen, Siri or Mac. No prices. Name Shoebox Plus only where a sheet does.
 4. **No one else's interface or marks.** Abstract shapes stand in for other apps (Safari, Messages, Mail). No Apple logos, no App Store badge until the app is in the store, no brand names on screen.
 5. **No people.** No faces, hands or children, real or generated. The thumb dot stands in for a hand.
