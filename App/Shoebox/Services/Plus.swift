@@ -21,19 +21,39 @@ enum Plus {
     /// StoreKit file. The same build promoted to the App Store reads Production, so this turns itself off at launch.
     private(set) static var freeInBeta = false
 
-    /// Asks StoreKit which store this build came from. Never asks the person to sign in (that is `refresh`, not used).
+    /// Asks StoreKit which store this build came from. Never asks the person to sign in (that is `refresh`).
+    /// November 5: on a tester's phone `AppTransaction.shared` gave no answer, so Email never showed. The receipt's file
+    /// name is the fallback: TestFlight and review builds carry `sandboxReceipt`. It only shows the Email screen; what
+    /// the relay accepts still comes from Apple's signed proof.
     static func checkStore() async {
-        guard let result = try? await AppTransaction.shared else { return }
+        if receiptSaysSandbox { inSandbox = true }
+        guard let result = await appTransaction(refresh: false) else { return }
         switch result {
         case .verified(let t): inSandbox = t.environment != .production; freeInBeta = t.environment == .sandbox
-        case .unverified(let t, _): inSandbox = t.environment != .production; freeInBeta = false
+        case .unverified(let t, _): inSandbox = t.environment != .production || receiptSaysSandbox; freeInBeta = false
         }
+    }
+
+    /// TestFlight and App Review installs carry a receipt named `sandboxReceipt`; the App Store's is `receipt`.
+    static var receiptSaysSandbox: Bool {
+        Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+    }
+
+    /// The app transaction, tried twice. With `refresh` (only after the person taps Get address) StoreKit is asked to
+    /// fetch a fresh one from Apple, which may ask them to sign in to their Apple Account.
+    private static func appTransaction(refresh: Bool) async -> VerificationResult<AppTransaction>? {
+        if let r = try? await AppTransaction.shared { return r }
+        try? await Task.sleep(for: .seconds(1))
+        if let r = try? await AppTransaction.shared { return r }
+        guard refresh else { return nil }
+        return try? await AppTransaction.refresh()
     }
 
     /// StoreKit's signed app transaction, sent to the relay as proof of a TestFlight or review install. Nil anywhere
     /// else. The relay checks it on its own (Apple's chain, the bundle, Sandbox only) and limits one to five phones.
-    static func betaProof() async -> String? {
-        guard let result = try? await AppTransaction.shared, case .verified(let t) = result, t.environment == .sandbox else { return nil }
+    static func betaProof(refresh: Bool = false) async -> String? {
+        guard let result = await appTransaction(refresh: refresh && inSandbox), case .verified(let t) = result, t.environment == .sandbox else { return nil }
+        freeInBeta = true
         return result.jwsRepresentation
     }
 
@@ -51,9 +71,9 @@ enum Plus {
         }
     }
 
-    static func access() async -> Access? {
+    static func access(refresh: Bool = false) async -> Access? {
         if let jws = await proof() { return .purchase(jws) }
-        if let jws = await betaProof() { return .beta(jws) }
+        if let jws = await betaProof(refresh: refresh) { return .beta(jws) }
         return nil
     }
 

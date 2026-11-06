@@ -28,7 +28,7 @@ struct SettingsView: View {
     @State private var plusNote = ""
     @State private var restoreNote = ""
     @State private var removing = MailboxKeys.pendingDelete() != nil
-    @State private var sandbox = Plus.inSandbox
+    @State private var sandbox = Plus.inSandbox || Plus.receiptSaysSandbox
     @State private var freeInBeta = Plus.freeInBeta
     @State private var plusBought = false
     @State private var mailFor = Prefs.mailFor
@@ -313,7 +313,7 @@ struct SettingsView: View {
                 // The relay holds no key for this phone yet, or another phone's: mail waits unopened until Plus is restored here.
                 if !Prefs.sealingRegistered { line("Mail waits until Shoebox Plus is restored on this phone.") }
             } else if plusOwned {
-                line(freeInBeta && !plusBought ? "Free while you test Shoebox. Get an address and forward an email to it to keep it." : "Get an address. Forward an email to it to keep it.")
+                line(sandbox && !plusBought ? "Free while you test Shoebox. Get an address and forward an email to it to keep it." : "Get an address. Forward an email to it to keep it.")
                 card {
                     row {
                         TextField("Your first name", text: $firstName)
@@ -335,7 +335,7 @@ struct SettingsView: View {
                 if !addressNote.isEmpty { line(addressNote) }
                 // App Review runs in the same sandbox as TestFlight and must still find the purchase, so it stays here as
                 // a quiet second row. In TestFlight buying costs nothing.
-                if freeInBeta && !plusBought {
+                if sandbox && !plusBought {
                     card {
                         row {
                             Button("Buy Shoebox Plus") { buyPlus() }
@@ -375,7 +375,10 @@ struct SettingsView: View {
         }
         .task {
             plusBought = await Plus.proof() != nil
-            plusOwned = await Plus.access() != nil
+            // In TestFlight the name and Get address show even before StoreKit answers; tapping it asks again.
+            plusOwned = await Plus.access() != nil || Plus.inSandbox
+            freeInBeta = Plus.freeInBeta
+            sandbox = Plus.inSandbox
             plusPrice = await Plus.price()
         }
     }
