@@ -39,7 +39,11 @@ enum Inbox {
     static func makeAddress(firstName: String) async -> Result<String, Error> {
         let name = firstName.lowercased().filter { $0.isLetter }
         guard !name.isEmpty else { return .failure(Failure("Type your first name first.")) }
-        guard let access = await Plus.access() else { return .failure(Failure("Shoebox Plus is needed to get an address.")) }
+        guard let access = await Plus.access(refresh: true) else {
+            return .failure(Failure(Plus.inSandbox
+                ? "Couldn't confirm this is a TestFlight copy. Tap Buy Shoebox Plus below: in TestFlight it costs nothing."
+                : "Shoebox Plus is needed to get an address."))
+        }
         // The private key that ties this phone to its mailbox, and the sealing key, both kept in the Keychain.
         guard let key = MailboxKeys.secretMakingOne(), let pub = MailboxKeys.sealingPublicKey() else {
             return .failure(Failure("Couldn't save this phone's key. Try again in a minute."))
