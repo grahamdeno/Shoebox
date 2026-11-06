@@ -32,4 +32,10 @@ final class PlusTests: XCTestCase {
         XCTAssertEqual(Plus.Access.beta("b").field.key, "beta")
         XCTAssertEqual(Plus.Access.beta("b").field.value, "b")
     }
+
+    /// A tester code goes in its own field (decided November 6).
+    func testCodeGoesInItsOwnField() {
+        XCTAssertEqual(Plus.Access.code("plum-otter-4821").field.key, "code")
+        XCTAssertEqual(Plus.Access.code("plum-otter-4821").field.value, "plum-otter-4821")
+    }
 }

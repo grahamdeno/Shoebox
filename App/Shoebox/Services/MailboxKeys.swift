@@ -85,7 +85,7 @@ enum MailboxKeys {
     /// Swapped in by tests.
     static var store: SecretStore = KeychainSecretStore()
 
-    private enum Account { static let secret = "secret", seal = "seal", pendingDelete = "pendingDelete" }
+    private enum Account { static let secret = "secret", seal = "seal", pendingDelete = "pendingDelete", testerCode = "testerCode" }
 
     private static func text(_ read: SecretRead) -> String? {
         guard case .found(let data) = read, let text = String(data: data, encoding: .utf8), !text.isEmpty else { return nil }
@@ -169,6 +169,17 @@ enum MailboxKeys {
     /// The public half of the sealing key, made on first need (see `sealingKey`).
     static func sealingPublicKey() -> String? { sealingKey().map(publicText) }
 
+    // MARK: The tester code (decided November 6)
+
+    /// The tester code this phone was given, kept so the sealing key can be registered with it later. Typed in
+    /// Settings › Email in TestFlight; the relay decides whether it is a real one.
+    static func testerCode() -> String? { text(store.read(Account.testerCode)) }
+
+    static func setTesterCode(_ code: String) {
+        let clean = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        if clean.isEmpty { store.remove(Account.testerCode) } else { store.write(Data(clean.utf8), account: Account.testerCode) }
+    }
+
     // MARK: Delete everything (D-6)
 
     /// The secret of a mailbox the relay has not yet confirmed deleted.
@@ -187,6 +198,7 @@ enum MailboxKeys {
               pendingDelete() == current else { return false }
         store.remove(Account.secret)
         store.remove(Account.seal)
+        store.remove(Account.testerCode)
         return true
     }
 

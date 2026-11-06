@@ -4,6 +4,6 @@ Thanks for trying Shoebox. Please try these and tell me what felt wrong.
 2. Keep something with the + button: a note, a photo, a PDF.
 3. On Today: flick up for Next, pull down to Put away. Tap to open a post, then Close.
 4. Turn on the daily notification in Settings, then see if it arrives.
-5. Settings > Email: Shoebox Plus is free while you test, nothing to buy. Type your first name, tap Get address, forward one real email to it, then reopen Shoebox.
+5. Settings > Email: Shoebox Plus is free while you test, nothing to buy. Type your first name and the tester code Graham sent you, tap Get address, forward one real email to it, then reopen Shoebox.
 
 If something breaks, use TestFlight's Send Beta Feedback (take a screenshot first) or write support@inmyshoebox.com.

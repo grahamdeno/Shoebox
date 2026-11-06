@@ -61,18 +61,23 @@ enum Plus {
     enum Access: Equatable {
         case purchase(String)
         case beta(String)
+        case code(String)
 
-        /// The request field it goes in: `purchase` or `beta`.
+        /// The request field it goes in: `purchase`, `beta` or `code`.
         var field: (key: String, value: String) {
             switch self {
             case .purchase(let jws): ("purchase", jws)
             case .beta(let jws): ("beta", jws)
+            case .code(let code): ("code", code)
             }
         }
     }
 
+    /// A real purchase first. Then a tester code, when this phone was given one (it needs nothing from Apple and never
+    /// asks the tester to sign in). Then the TestFlight install itself.
     static func access(refresh: Bool = false) async -> Access? {
         if let jws = await proof() { return .purchase(jws) }
+        if let code = MailboxKeys.testerCode() { return .code(code) }
         if let jws = await betaProof(refresh: refresh) { return .beta(jws) }
         return nil
     }
