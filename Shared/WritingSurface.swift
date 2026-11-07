@@ -125,6 +125,9 @@ struct WritingSurface<Ground: View, Panel: View>: View {
         // Posts are the same in light and dark, so is the surface.
         .environment(\.colorScheme, .dark)
         .tint(Theme.sunflower)
+        // The panel rides the keyboard; past the largest standard size it no longer fits above it (UX audit: the Why
+        // field clipped, the words ran under the top words).
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 

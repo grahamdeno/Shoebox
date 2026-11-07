@@ -155,15 +155,14 @@ final class Audit {
     }
 
     func text(containing s: String) -> XCUIElement {
-        app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
+        app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", s)).firstMatch
     }
 
     /// A text field (one line or many) by its label or its placeholder, trying each name in turn.
     func field(_ names: String...) -> XCUIElement {
         for s in names {
             for q in [app.textFields, app.textViews] {
-                if q[s].exists { return q[s] }
-                let p = q.matching(NSPredicate(format: "placeholderValue == %@", s)).firstMatch
+                let p = q.matching(NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", s, s, s)).firstMatch
                 if p.exists { return p }
             }
         }

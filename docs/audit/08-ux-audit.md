@@ -124,3 +124,6 @@ See section 9 for the runs so far.
 
 | Date | Commit | Result |
 |---|---|---|
+| Nov 7 | 134f3e0 | Test build failed on one line (hasKeyboardFocus). No records. |
+| Nov 7 | 7655339 | First full walk. Found UX-1 to UX-8 (backlog.csv): text never grew with Dynamic Type (122 issues), the closed Shoebox list in VoiceOver's reach on Today (it also made Today too slow for UI queries), unlabeled fields, Undo over the panel, a short tap area, quiet text near the contrast line. |
+| Nov 7 | e933477 | Text grows (Dynamic Type issues down to the cap we chose, accessibility2). Large text broke words mid-word in Settings rows and choices, and the writing panel overflowed above the keyboard: fixed with ViewThatFits and a cap of xxxLarge on writing screens. The closed Shoebox list was still in VoiceOver's reach: hidden at the sheet, the list and Today's side. Unit tests pass. |

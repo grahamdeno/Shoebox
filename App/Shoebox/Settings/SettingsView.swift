@@ -574,7 +574,12 @@ struct SettingsView: View {
     }
 
     private func choices<C: View>(@ViewBuilder _ content: () -> C) -> some View {
-        HStack(spacing: 26) { content() }.padding(.horizontal, 6)
+        // Side by side while they fit; at large text sizes one above the other, never broken mid-word (UX audit).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 26) { content() }
+            VStack(alignment: .leading, spacing: 4) { content() }
+        }
+        .padding(.horizontal, 6)
     }
 
     private func choice(_ text: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
@@ -602,12 +607,24 @@ struct SettingsView: View {
 
     /// One row: its name, its answer in quiet words, and an arrow when it opens a screen.
     private func rowLabel(_ name: String, _ answer: String?, arrow: Bool = true) -> some View {
+        // The answer sits beside the name while both fit; at large text sizes it goes under the name, never broken
+        // mid-word (UX audit: "Automat ic", "Backu ps").
         HStack(spacing: 10) {
-            Text(name).foregroundStyle(Theme.ink)
-            Spacer()
-            if let answer { Text(answer).foregroundStyle(Theme.quiet).scaledFont(size: 15) }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    Text(name).foregroundStyle(Theme.ink).fixedSize()
+                    Spacer(minLength: 8)
+                    if let answer { Text(answer).foregroundStyle(Theme.quiet).scaledFont(size: 15).fixedSize() }
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    if let answer { Text(answer).foregroundStyle(Theme.quiet).scaledFont(size: 15).fixedSize(horizontal: false, vertical: true) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
             if arrow { Text("›").foregroundStyle(Theme.quiet).scaledFont(size: 20) }
         }
+        .padding(.vertical, 4)
         .frame(minHeight: 52)
         .contentShape(Rectangle())
     }

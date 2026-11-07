@@ -184,6 +184,8 @@ struct BoxView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+                // The list is a UIKit collection underneath; hide it here too, not only on the sheet around it.
+                .accessibilityHidden(pull.progress <= 0.02 && !pull.dragging)
                 // The last row stops well above the home indicator, not on it.
                 .contentMargins(.bottom, 130, for: .scrollContent)
                 .environment(\.defaultMinListRowHeight, 1)

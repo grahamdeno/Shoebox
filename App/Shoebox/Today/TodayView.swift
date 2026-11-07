@@ -106,11 +106,17 @@ struct TodayView: View {
                         .accessibilityAction(named: "Next one") { goNext(current, height: height) }
                         .accessibilityAction(named: "Put away") { goAway(current, height: height) }
                         .task(id: current.id) { await enrichAhead() }
+                        .accessibilityHidden(pull.progress >= 0.98)
                     hints
                     topBar(onPhoto: true)
+                        .accessibilityHidden(pull.progress >= 0.98)
                 } else {
-                    stopScreen
-                    newLow
+                    // Open, the Shoebox covers Today: Today's words step out of VoiceOver's way.
+                    Group {
+                        stopScreen
+                        newLow
+                    }
+                    .accessibilityHidden(pull.progress >= 0.98)
                 }
 
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
@@ -119,6 +125,8 @@ struct TodayView: View {
                     BoxDim(pull: pull)
                         .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
+                        // Closed, the sheet is unseen and must be unheard (UX audit: VoiceOver could reach every row).
+                        .accessibilityHidden(pull.progress <= 0.02 && !pull.dragging)
                 }
 
                 glass
