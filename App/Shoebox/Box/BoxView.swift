@@ -369,13 +369,17 @@ struct BoxView: View {
                         Text(day.formatted(.dateTime.month(.abbreviated)).uppercased())
                             .scaledFont(size: 11, weight: .semibold)
                             .tracking(0.8)
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(Theme.quiet)
                         Text(day.formatted(.dateTime.day()))
                             .scaledFont(size: 24, weight: .medium)
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(dim ? Theme.quiet : (soon(day) ? Theme.lid : Theme.ink))
                     }
-                    .frame(width: 40)
+                    .frame(minWidth: 40)
                 } else if s.imageData != nil {
                     // A tile only for a real picture: never an empty or colored square.
                     RowThumb(save: s)
