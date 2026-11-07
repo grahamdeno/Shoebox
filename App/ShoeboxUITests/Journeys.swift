@@ -178,7 +178,7 @@ final class Journeys: XCTestCase {
         a.pause(0.6)
         a.shot("new-filled", note: "the return line should read the day from the Why")
         a.labels("new-filled")
-        a.check("the return line reads Friday from the Why", a.any(containing: "Thursday").exists || a.any(containing: "Friday").exists, severity: 3)
+        a.check("the return line reads Friday from the Why", a.any(containing: "Back Thursday").exists || a.button(startingWith: "Back").label.contains("Thursday"), severity: 3)
         a.tap("Photo or file", a.button(startingWith: "Photo"), severity: 2)
         a.pause(0.8)
         a.shot("photo-or-file-menu")
@@ -278,7 +278,6 @@ final class Journeys: XCTestCase {
             }
             a.tap("‹ Settings", a.button(startingWith: "‹ Settings"), severity: 3)
             a.pause(0.6)
-            a.app.swipeDown(); a.pause(0.3)
         }
         a.app.swipeUp(); a.pause(0.5)
         a.shot("settings-bottom")
