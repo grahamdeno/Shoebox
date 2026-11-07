@@ -58,8 +58,13 @@ struct TodayRules {
     /// back tomorrow), then the oldest never seen. The pick is kept for the day so the count only goes down.
     func pick(_ all: [Save], now: Date, previousDay: String?, previousIds: [String], perDay: Int) -> [String] {
         let due = all.filter { isOnToday($0, now: now) }
-        let returning = due.filter { $0.status == .away }.sorted { ($0.returnDate ?? now) < ($1.returnDate ?? now) }
-        let pile = due.filter { $0.status == .today }.sorted { a, b in
+        // Coming back always comes out: put away until now, and a dated post within 5 days of its day that was never
+        // put away (one the daily limit left in the pile, or never flicked). Without the second, an event could miss its
+        // own day behind older posts (UX audit time replay: day 9, Picture day sat behind a passed note).
+        let returning = due.filter { $0.status == .away || datedSoon($0, now: now) }.sorted {
+            ($0.eventDate ?? $0.returnDate ?? now) < ($1.eventDate ?? $1.returnDate ?? now)
+        }
+        let pile = due.filter { $0.status == .today && !datedSoon($0, now: now) }.sorted { a, b in
             switch (a.seenOn, b.seenOn) {
             case let (x?, y?): return x < y
             case (.some, nil): return true
@@ -78,6 +83,13 @@ struct TodayRules {
         }
         let room = max(0, perDay - returning.count)
         return returning.map(\.id.uuidString) + pile.prefix(room).map(\.id.uuidString)
+    }
+
+    /// A post on the pile whose event is today or within the next 5 days: it counts as coming back.
+    func datedSoon(_ s: Save, now: Date) -> Bool {
+        guard s.status == .today, let event = s.eventDate else { return false }
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: event)).day ?? 99
+        return days >= 0 && days <= 5
     }
 
     /// The posts on Today right now, in pick order.

@@ -132,6 +132,19 @@ final class RulesTests: XCTestCase {
         XCTAssertEqual(titles, ["b1", "b2", "p1", "p2", "p3"])
     }
 
+    /// UX audit time replay: an event never flicked (left in the pile) must still come out on its day, first, even
+    /// when the daily limit is full of older posts.
+    func testADatedPostInThePileComesOutBeforeItsDay() {
+        let pile = (1...5).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let picture = Save(title: "Picture day", createdAt: date(2026, 10, 20))
+        picture.eventDate = date(2026, 11, 2)   // Monday, 3 days out
+        let far = Save(title: "Concert", createdAt: date(2026, 10, 20))
+        far.eventDate = date(2026, 11, 20)      // weeks out: stays in the pile
+        let all = pile + [picture, far]
+        let ids = rules.pick(all, now: now, previousDay: nil, previousIds: [], perDay: 3)
+        XCTAssertEqual(rules.today(all, ids: ids, now: now).map(\.title), ["Picture day", "p1", "p2"])
+    }
+
     func testPassedPostsComeBackFirstTomorrow() {
         let a = Save(title: "a", createdAt: date(2026, 10, 1))
         let b = Save(title: "b", createdAt: date(2026, 10, 2))
