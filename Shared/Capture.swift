@@ -6,16 +6,16 @@ import SwiftData
 /// Several links pasted together become several saves.
 enum Capture {
     /// Saves for text: a link, several links, a quote or a note.
-    static func saves(fromText raw: String, note: String, origin: String, now: Date = Date()) -> [Save] {
+    static func saves(fromText raw: String, note: String, origin: String, now: Date = Clock.now) -> [Save] {
         let drafts = Detection.drafts(fromText: raw)
         return drafts.map { make($0, note: note, origin: origin, now: now) }
     }
 
-    static func save(fromURL url: URL, title: String?, note: String, origin: String, now: Date = Date()) -> Save {
+    static func save(fromURL url: URL, title: String?, note: String, origin: String, now: Date = Clock.now) -> Save {
         make(Detection.draft(fromURL: url, title: title), note: note, origin: origin, now: now)
     }
 
-    static func save(photo data: Data, note: String, origin: String, now: Date = Date()) -> Save {
+    static func save(photo data: Data, note: String, origin: String, now: Date = Clock.now) -> Save {
         let s = Save(title: "A photo", note: String(note.prefix(140)), origin: origin, kind: .photo, createdAt: now)
         s.imageData = Relay.thumbnail(data, maxWidth: 1600) ?? data
         s.enrichedAt = now

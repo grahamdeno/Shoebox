@@ -90,6 +90,20 @@ enum SampleData {
         return made
     }
 
+    /// Where the time replay keeps its store: in Documents, never the real store. `-replayReset YES` (day 0) starts it
+    /// again from nothing, with the day's pick and the put-away log cleared.
+    static func replayStore() -> URL {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appending(path: "AuditReplay")
+        if UserDefaults.standard.bool(forKey: "replayReset") {
+            try? FileManager.default.removeItem(at: dir)
+            Prefs.pickIds = []
+            Prefs.pickDay = nil
+            AppGroup.defaults.removeObject(forKey: "putAwayAt")
+        }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appending(path: "replay.store")
+    }
+
     /// Puts everything on Today away, for the "Today's clear" screen.
     static func clearToday(_ context: ModelContext) {
         let all = (try? context.fetch(FetchDescriptor<Save>())) ?? []

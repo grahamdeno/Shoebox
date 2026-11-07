@@ -10,7 +10,7 @@ enum EmailPost {
     struct Written: Equatable { var title: String; var text: String }
 
     /// `reader` is the first name of the person the mail is for (from their address), so the post can say "you".
-    static func write(subject: String, lines: [String], received: Date = Date(), reader: String = "") async -> Written {
+    static func write(subject: String, lines: [String], received: Date = Clock.now, reader: String = "") async -> Written {
         let fallback = plain(subject: subject, lines: lines)
         #if canImport(FoundationModels)
         guard OnDeviceAI.isAvailable else { return fallback }

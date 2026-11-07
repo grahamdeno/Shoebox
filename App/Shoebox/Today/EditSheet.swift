@@ -42,7 +42,7 @@ struct EditSheet: View {
         self.save = save
         self.onSaved = onSaved
         self.onDelete = onDelete
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
         _title = State(initialValue: save.title)
         _note = State(initialValue: save.note)
         _words = State(initialValue: save.body)
@@ -56,7 +56,7 @@ struct EditSheet: View {
         _startHasTime = State(initialValue: save.eventHasTime)
         _startDate = State(initialValue: save.eventDate ?? tomorrow)
         hadDate = save.eventDate != nil
-        dateFloor = Calendar.current.startOfDay(for: min(save.eventDate ?? Date(), Date()))
+        dateFloor = Calendar.current.startOfDay(for: min(save.eventDate ?? Clock.now, Clock.now))
     }
 
     /// Your own writing can be edited in full. A page's text is the page's, so it is left alone.
@@ -178,7 +178,7 @@ struct EditSheet: View {
             startHasDate = hasDate; startHasTime = hasTime; startDate = date
             comeBackBeforeTheDate()
             wrote = true
-        } else if textChanged, !hadDate, !hasDate, save.eventDate == nil, DateReader.apply(to: save, asOf: Date()) {
+        } else if textChanged, !hadDate, !hasDate, save.eventDate == nil, DateReader.apply(to: save, asOf: Clock.now) {
             // New words that name a date still ahead, and you did not clear one: read it, as when a post is kept.
             let e = save.eventDate ?? date
             startHasDate = true; startHasTime = save.eventHasTime; startDate = e
@@ -187,7 +187,7 @@ struct EditSheet: View {
         }
 
         guard wrote else { return false }
-        save.updatedAt = Date()
+        save.updatedAt = Clock.now
         try? context.save()
         anySaved = true
         status = "Saved"
@@ -197,7 +197,7 @@ struct EditSheet: View {
     /// A post that is waiting comes back before its date.
     private func comeBackBeforeTheDate() {
         guard let event = save.eventDate, save.status == .away, let due = save.returnDate else { return }
-        let now = Date()
+        let now = Clock.now
         if let first = SaveActions().reminders(for: event).first(where: { $0 > now }), first < due {
             save.returnDate = first
         }

@@ -37,7 +37,7 @@ struct BoxView: View {
 
     private let rules = TodayRules()
     private let actions = SaveActions()
-    private var now: Date { Date() }
+    private var now: Date { Clock.now }
 
     private func matches(_ s: Save) -> Bool {
         search.isEmpty || s.title.localizedCaseInsensitiveContains(search)

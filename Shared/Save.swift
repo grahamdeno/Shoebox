@@ -88,7 +88,7 @@ final class Save {
         status: SaveStatus = .today,
         returnDate: Date? = nil,
         eventDate: Date? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Clock.now
     ) {
         self.title = title
         self.snippet = snippet
@@ -143,7 +143,7 @@ final class Save {
     var listTitle: String { Tidy.title(tidyItem, useNote: true) }
 
     /// "You, 2 weeks ago, from Safari"
-    func byline(now: Date = Date()) -> String {
+    func byline(now: Date = Clock.now) -> String {
         if !source.isEmpty && origin.isEmpty { return source }
         let when = Self.relative(createdAt, now: now)
         var parts = ["You", when]

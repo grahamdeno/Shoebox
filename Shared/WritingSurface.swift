@@ -206,7 +206,7 @@ enum ReturnChoice: Equatable {
 
 /// The line at the bottom right of the panel: when it comes back.
 enum ReturnLine {
-    static func text(_ choice: ReturnChoice, event: Date?, why: String, now: Date = Date()) -> String {
+    static func text(_ choice: ReturnChoice, event: Date?, why: String, now: Date = Clock.now) -> String {
         if let start = choice.start(now: now) { return back(start, now: now) }
         let planner = LaterPlanner()
         if let m = planner.match(words: why, now: now) { return back(m.date, now: now) }
@@ -229,7 +229,7 @@ struct ReturnSheet: View {
     var autoLine: String
     @Environment(\.dismiss) private var dismiss
     @State private var picking = false
-    @State private var day = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+    @State private var day = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -275,7 +275,7 @@ struct ReturnSheet: View {
     }
 
     private var tomorrowOn: Date {
-        Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
     }
 
     private func row(_ text: String, picked: Bool, action: @escaping () -> Void) -> some View {

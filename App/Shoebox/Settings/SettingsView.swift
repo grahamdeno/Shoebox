@@ -490,7 +490,7 @@ struct SettingsView: View {
     private func prepareExport() {
         // Once, when you open Backups. This copy carries your files too.
         guard exportURL == nil, let data = Backups.export(context, files: true) else { return }
-        let url = FileManager.default.temporaryDirectory.appending(path: "shoebox-native-backup-\(TodayRules().dayKey(Date())).json")
+        let url = FileManager.default.temporaryDirectory.appending(path: "shoebox-native-backup-\(TodayRules().dayKey(Clock.now)).json")
         if (try? data.write(to: url, options: .atomic)) != nil { exportURL = url }
     }
 
@@ -500,7 +500,7 @@ struct SettingsView: View {
     private func deleteEverything() {
         // 1. One last copy first, so this can be undone from Files. No copy, no delete. The copy never carries the mailbox key.
         guard let data = Backups.export(context, files: true),
-              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
+              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Clock.now.timeIntervalSince1970)).json") else {
             importNote = "Couldn't save a copy first, so nothing was deleted."
             return
         }
@@ -677,7 +677,7 @@ struct GlassCard: View {
 
 enum DailyTime {
     static func date(fromMinute m: Int) -> Date {
-        Calendar.current.date(byAdding: .minute, value: m, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        Calendar.current.date(byAdding: .minute, value: m, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
     }
 
     static func minute(of date: Date) -> Int {

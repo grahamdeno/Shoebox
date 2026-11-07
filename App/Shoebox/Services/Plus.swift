@@ -79,7 +79,7 @@ enum Plus {
 
     /// Has this install been open for a week? A phone that already has an address is past it, and so is a review or
     /// TestFlight build.
-    static func isOffered(now: Date = Date(), firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil, sandbox: Bool? = nil) -> Bool {
+    static func isOffered(now: Date = Clock.now, firstOpened: Date? = Prefs.firstOpened, hasAddress: Bool = Prefs.inboxAddress != nil, sandbox: Bool? = nil) -> Bool {
         // `sandbox` nil means this build's own answer (a default argument can't read a main-actor value).
         if hasAddress || (sandbox ?? inSandbox) { return true }
         guard let firstOpened else { return false }
@@ -88,7 +88,7 @@ enum Plus {
 
     /// Records the first run. An install already in use before this was recorded counts as old.
     static func noteFirstOpen() {
-        if Prefs.firstOpened == nil { Prefs.firstOpened = Prefs.onboarded ? .distantPast : Date() }
+        if Prefs.firstOpened == nil { Prefs.firstOpened = Prefs.onboarded ? .distantPast : Clock.now }
     }
 
     static func product() async -> Product? {

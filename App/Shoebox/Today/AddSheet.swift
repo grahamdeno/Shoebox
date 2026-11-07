@@ -142,7 +142,7 @@ struct AddSheet: View {
     private var event: Date? {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return nil }
-        return DateReader.read(t, created: Date())?.event
+        return DateReader.read(t, created: Clock.now)?.event
     }
 
     // MARK: Suggestions from a photo
@@ -213,7 +213,7 @@ struct AddSheet: View {
 
     private func keep() {
         let note = why.trimmingCharacters(in: .whitespacesAndNewlines)
-        let now = Date()
+        let now = Clock.now
         var saves: [Save] = []
         if let photoData {
             let s = Capture.save(photo: photoData, note: note, origin: "your photos", now: now)

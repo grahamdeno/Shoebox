@@ -79,8 +79,8 @@ enum Relay {
                 save.imageCreditURL = nil
             }
         }
-        Capture.adoptDates(save, now: Date())
-        save.enrichedAt = Date()
-        save.updatedAt = Date()
+        Capture.adoptDates(save, now: Clock.now)
+        save.enrichedAt = Clock.now
+        save.updatedAt = Clock.now
     }
 }

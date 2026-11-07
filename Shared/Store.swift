@@ -55,7 +55,7 @@ enum Store {
     /// Files, and only then removes them from `directory`, so a new empty store can start. Nothing is deleted unless
     /// the copy worked. Returns the folder.
     @discardableResult
-    static func setAside(from directory: URL = AppGroup.container, into documents: URL? = nil, now: Date = Date()) throws -> URL {
+    static func setAside(from directory: URL = AppGroup.container, into documents: URL? = nil, now: Date = Clock.now) throws -> URL {
         let fm = FileManager.default
         let docs = documents ?? fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let stamp = DateFormatter()

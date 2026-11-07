@@ -15,7 +15,12 @@ struct ShoeboxApp: App {
         self.demo = demo
         if !demo { Diagnostics.shared.start() }
         // A store that will not open shows a recovery screen, never a crash.
-        let opened = try? Store.make(inMemory: demo)
+        var opened: ModelContainer?
+        #if DEBUG
+        // The UX audit's time replay keeps its store on disk between launches (`-replay YES`), apart from the real one.
+        if demo && UserDefaults.standard.bool(forKey: "replay") { opened = try? Store.make(at: SampleData.replayStore()) }
+        #endif
+        if opened == nil { opened = try? Store.make(inMemory: demo) }
         _container = State(initialValue: opened)
         #if DEBUG
         if demo, let opened {
@@ -24,6 +29,12 @@ struct ShoeboxApp: App {
             Prefs.onboarded = !["welcome", "share", "time", "learn"].contains(screen)
             Prefs.pickDay = nil
             if Prefs.mailFor.isEmpty { Prefs.mailFor = "Sam, 7th grade, band" }
+            // Colors and light or dark start the same every demo launch (`-colors stone` for Stone), so one run's
+            // Settings taps never carry into the next.
+            let colors = UserDefaults.standard.string(forKey: "colors") ?? "pistachio"
+            AppGroup.defaults.set(colors, forKey: "colors")
+            AppGroup.defaults.set(colors, forKey: "colorsApplied")
+            AppGroup.defaults.set(0, forKey: "appearance")
             if screen == "clear" { SampleData.clearToday(opened.mainContext) }
         }
         #endif

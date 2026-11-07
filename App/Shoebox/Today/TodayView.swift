@@ -39,7 +39,7 @@ struct TodayView: View {
 
     // The gesture
     @State private var drag: CGFloat = 0
-    @State private var dragStart = Date()
+    @State private var dragStart = Clock.now
     @State private var dragging = false
     @State private var crossed = 0          // 1 past Next, -1 past Put away
     @State private var fly: CGFloat = 0
@@ -63,7 +63,7 @@ struct TodayView: View {
     static let lidTop: CGFloat = 8
     static let sheetLidRise: CGFloat = 34
 
-    private var now: Date { Date() }
+    private var now: Date { Clock.now }
     private var queue: [Save] {
         let today = rules.today(all, ids: pickIds, now: now)
         guard !browseIds.isEmpty else { return today }
@@ -536,7 +536,7 @@ struct TodayView: View {
             .onChanged { v in
                 // The Shoebox is out over the post: the post takes no moves until it is closed.
                 guard !busy, pull.progress < 0.02 else { return }
-                if !dragging { dragging = true; dragStart = Date() }
+                if !dragging { dragging = true; dragStart = Clock.now }
                 let dy = v.translation.height
                 if abs(dy) < 6 && abs(v.translation.width) < 6 { return }
                 drag = dy
@@ -553,7 +553,7 @@ struct TodayView: View {
                 crossed = 0
                 let dy = v.translation.height
                 let moved = abs(dy) >= 6 || abs(v.translation.width) >= 6
-                if !moved && Date().timeIntervalSince(dragStart) < 0.35 {
+                if !moved && Clock.now.timeIntervalSince(dragStart) < 0.35 {
                     drag = 0
                     if opened == nil { opened = OpenedPost(save: current) }
                     return

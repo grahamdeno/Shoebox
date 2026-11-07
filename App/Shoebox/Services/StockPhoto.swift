@@ -44,7 +44,7 @@ enum StockPhoto {
         guard Prefs.stockPictures, s.imageData == nil, s.deletedAt == nil, s.kind != .photo else { return .skipped }
         if recentlyTried(s) { return .skipped }
         let previous = s.stockTriedAt
-        s.stockTriedAt = Date()
+        s.stockTriedAt = Clock.now
         func gone() -> Bool { s.modelContext == nil || s.isDeleted || s.deletedAt != nil }
         func release() { if !gone() { s.stockTriedAt = previous } }
 
@@ -88,7 +88,7 @@ enum StockPhoto {
         s.imageSource = "stock"
         s.imageCredit = choice.by.map { "Photo by \($0) on Pixabay" } ?? "Photo from Pixabay"
         s.imageCreditURL = choice.page
-        s.updatedAt = Date()
+        s.updatedAt = Clock.now
         return .found
     }
 
@@ -100,7 +100,7 @@ enum StockPhoto {
     }
 
     /// Tried within the last day.
-    static func recentlyTried(_ s: Save, now: Date = Date()) -> Bool {
+    static func recentlyTried(_ s: Save, now: Date = Clock.now) -> Bool {
         guard let tried = s.stockTriedAt else { return false }
         return now.timeIntervalSince(tried) < 86_400
     }
@@ -261,9 +261,9 @@ enum StockPhoto {
 
     /// The server's photos for the words, and its status (0 when there was no answer at all; 429 when Pixabay was busy).
     private static func search(_ phrase: String) async -> ([Candidate]?, Int) {
-        let wait = searchGap - Date().timeIntervalSince(lastSearch)
+        let wait = searchGap - Clock.now.timeIntervalSince(lastSearch)
         if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
-        lastSearch = Date()
+        lastSearch = Clock.now
         if Task.isCancelled { return (nil, 0) }
         let req = Relay.request("stock", query: [.init(name: "q", value: phrase), .init(name: "n", value: "6")])
         guard let (data, res) = try? await URLSession.shared.data(for: req) else { return (nil, 0) }

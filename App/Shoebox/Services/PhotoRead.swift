@@ -31,7 +31,7 @@ enum PhotoRead {
     }
 
     /// The suggestion for what was read, or nil when there is nothing worth keeping words for.
-    static func gist(from text: String, now: Date = Date()) async -> Gist? {
+    static func gist(from text: String, now: Date = Clock.now) async -> Gist? {
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard clean.filter({ $0.isLetter || $0.isNumber }).count >= 8 else { return nil }
         let fallback = plain(clean)

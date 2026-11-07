@@ -108,7 +108,7 @@ enum Backups {
     // MARK: Shoebox 1
 
     static func apply(_ r: BackupImporter.Result, _ context: ModelContext) {
-        let now = Date()
+        let now = Clock.now
         var pictures: [UUID: Data] = [:]
         for a in r.attachments {
             guard a.mime.hasPrefix("image/"), let data = r.fileData[a.id] else { continue }
@@ -198,7 +198,7 @@ enum Backups {
     struct Export: Codable {
         var app = "shoebox-native"
         var format = 1
-        var exported = Date()
+        var exported = Clock.now
         var saves: [Item]
         /// Never written any more (D-5): the mailbox secret lives in the Keychain, not in backup files. Still read, so an
         /// older backup restores its key into an empty Keychain.
@@ -256,7 +256,7 @@ enum Backups {
             s.imageCreditURL = i.imageCreditURL
             s.fileData = i.file ?? (i.fileName != nil ? keptFile(i.id) : nil)
             s.fileName = i.fileName; s.fileType = i.fileType
-            s.enrichedAt = Date()
+            s.enrichedAt = Clock.now
             context.insert(s)
             added += 1
         }
@@ -269,7 +269,7 @@ enum Backups {
 
     /// Once a day: a copy in Documents/Backups and in iCloud Drive, keeping the last 7.
     static func dailyBackup(_ context: ModelContext) {
-        let key = TodayRules().dayKey(Date())
+        let key = TodayRules().dayKey(Clock.now)
         guard AppGroup.defaults.string(forKey: "lastBackup") != key else { return }
         let count = (try? context.fetchCount(FetchDescriptor<Save>())) ?? 0
         guard count > 0, let data = export(context) else { return }
@@ -290,7 +290,7 @@ enum Backups {
         }
         if wrote {
             AppGroup.defaults.set(key, forKey: "lastBackup")
-            AppGroup.defaults.set(Date(), forKey: "lastBackupAt")
+            AppGroup.defaults.set(Clock.now, forKey: "lastBackupAt")
         }
     }
 
