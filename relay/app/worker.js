@@ -7,8 +7,8 @@
  *   GET  /preview?url=[&text=1]   a page's title, description, pictures and, with text=1, its readable text
  *   GET  /stock?q=&n=             Pixabay stock photos for a few generic words (24 hour cache)
  *   GET  /inbox                   waiting mail for this phone (sealed), its address and the sealing key held for it
- *   POST /inbox/address           make this phone's address { name, pub, purchase | beta }   needs Shoebox Plus
- *   POST /inbox/seal              register this phone's sealing key { pub, purchase | beta }  needs Shoebox Plus
+ *   POST /inbox/address           make this phone's address { name, pub, purchase | beta | code }   needs Shoebox Plus
+ *   POST /inbox/seal              register this phone's sealing key { pub, purchase | beta | code }  needs Shoebox Plus
  *   GET  /inbox/file?id=&n=       one attachment of a waiting mail (sealed)
  *   POST /inbox/ack               forget mail the phone has saved { ids }
  *   POST /me/delete               forget everything kept for this phone
@@ -43,6 +43,7 @@ const MINT_DAILY_CAP = 300;          // new addresses for everyone per day (MINT
 const MAILBOX_DAILY_CAP = 40;        // mails a single box accepts per day (MAILBOX_DAILY_CAP overrides)
 const PREVIEW_HOURLY = 240;          // previews per network per hour
 const PURCHASE_CHECKS_HOURLY = 30;   // purchase checks per network per hour (they cost CPU)
+const BOXES_PER_CODE = 25;            // one tester code opens at most this many boxes (a code is shared among testers)
 const BOXES_PER_PURCHASE = 5;        // one purchase opens at most this many boxes
 const SUFFIX_LENGTH = 8;
 const ALIAS_RE = new RegExp(`^([a-z][a-z0-9]{0,15}-[a-z2-9]{${SUFFIX_LENGTH}})@`);
@@ -472,7 +473,9 @@ export async function mintAddress(env, request, box, name, { pub, buy } = {}) {
 const PURCHASE_REFUSED = "Shoebox Plus is needed to get an address.";
 const FIVE_PHONES = "This purchase is already on five phones. Write to support@inmyshoebox.com.";
 const FIVE_PHONES_BETA = "This Apple Account is already testing on five phones. Write to support@inmyshoebox.com.";
-const fivePhones = (seat) => (String(seat).startsWith("beta-") ? FIVE_PHONES_BETA : FIVE_PHONES);
+const CODE_FULL = "This tester code is full. Write to support@inmyshoebox.com.";
+const BAD_CODE = "That tester code didn't work. Check it and try again.";
+const fivePhones = (seat) => (String(seat).startsWith("code-") ? CODE_FULL : String(seat).startsWith("beta-") ? FIVE_PHONES_BETA : FIVE_PHONES);
 
 /** The owner's own address may register its sealing key without a purchase, until Shoebox Plus can be bought.
  *  `PLUS_OWNER_ADDRESS` names it ("graham-k3t7m2qa", the part before the @). Only the phone holding that
@@ -555,22 +558,51 @@ function purchaseRoots(env) {
   return [APPLE_ROOT_CA_G3_B64, env.TEST_PURCHASE_ROOT].filter(Boolean).map((b) => b64decode(b));
 }
 
-/** Checks the signed purchase in a request, or in TestFlight and App Review the signed app transaction (`beta`).
+/** A tester code as typed: lower case, no spaces, so "Plum-Otter 4821 " and "plum-otter-4821" are one code. */
+const normalCode = (text) => String(text || "").toLowerCase().replace(/\s+/g, "");
+
+/** The seat a tester code takes, or null when it is not one of `TESTER_CODES` (a secret: comma-separated codes).
+ *  Codes shorter than 8 characters are ignored so a weak one can't be set by mistake. Each side is hashed first so the
+ *  comparison takes the same time however many characters match. Unset `TESTER_CODES` turns codes off. */
+async function codeSeat(env, typed) {
+  const code = normalCode(typed);
+  if (code.length < 8 || code.length > 64) return null;
+  const mine = await sha256(`code:${code}`);
+  let found = null;
+  for (const one of String(env.TESTER_CODES || "").split(",")) {
+    const real = normalCode(one);
+    if (real.length < 8) continue;
+    const h = await sha256(`code:${real}`);
+    let diff = 0;
+    for (let i = 0; i < h.length; i++) diff |= h.charCodeAt(i) ^ mine.charCodeAt(i);
+    if (diff === 0) found = `code-${h.slice(0, 16)}`;
+  }
+  return found;
+}
+
+/** Checks the signed purchase in a request, or in TestFlight and App Review the signed app transaction (`beta`), or a
+ *  tester code (`code`, decided November 6: Apple's side of Plus was not ready, and testers still needed addresses).
  *  Returns { originalTransactionId } (the seat this box takes) or { status, message }.
- *  Beta seats are `beta-<appTransactionId>`, so they sit beside purchases in `buy:` and get the same five-phone limit and
- *  the same seat back on Delete everything. A real purchase always wins when the phone sends both.
- *  `BETA_PLUS` "0" stops free addresses for testers at once, without a deploy; so does `ALLOW_SANDBOX` "0". Addresses
- *  already made keep working either way (collecting is never gated). */
-async function checkPurchase(env, request, jws, beta) {
+ *  Beta seats are `beta-<appTransactionId>` and code seats `code-<hash>`; both sit beside purchases in `buy:`, with the
+ *  five-phone limit for a beta seat and 25 for a code, and the seat comes back on Delete everything. A real purchase
+ *  always wins when the phone sends more than one.
+ *  `BETA_PLUS` "0" stops free addresses for testers at once, without a deploy; so does `ALLOW_SANDBOX` "0". Taking
+ *  `TESTER_CODES` away stops codes. Addresses already made keep working either way (collecting is never gated). */
+async function checkPurchase(env, request, jws, beta, code) {
   const hasPurchase = typeof jws === "string" && !!jws;
+  const hasCode = typeof code === "string" && !!code && !!env.TESTER_CODES;
   const hasBeta = typeof beta === "string" && !!beta && env.BETA_PLUS !== "0" && env.ALLOW_SANDBOX !== "0";
-  if (!hasPurchase && !hasBeta) return { status: 402, message: PURCHASE_REFUSED };
-  // Checking costs CPU: a network gets a few dozen an hour.
+  if (!hasPurchase && !hasBeta && !hasCode) return { status: 402, message: PURCHASE_REFUSED };
+  // Checking costs CPU, and a code can be guessed: a network gets a few dozen an hour.
   if (!(await underLimit(env, request, "purchase", PURCHASE_CHECKS_HOURLY, 3600))) return { status: 429, message: "Too many tries from this network. Try again in an hour." };
   try {
     if (hasPurchase) {
       const bought = await verifyPurchase(jws, { roots: purchaseRoots(env), allowSandbox: env.ALLOW_SANDBOX !== "0" });
       return { originalTransactionId: bought.originalTransactionId };
+    }
+    if (hasCode) {
+      const seat = await codeSeat(env, code);
+      return seat ? { originalTransactionId: seat } : { status: 402, message: BAD_CODE };
     }
     const tester = await verifyBetaApp(beta, { roots: purchaseRoots(env) });
     return { originalTransactionId: `beta-${tester.betaId}` };
@@ -591,7 +623,7 @@ async function seatsOf(kv, otid) {
 /** Is there a seat for this box on this purchase? (A box that already holds one always has.) */
 async function seatFree(kv, otid, box) {
   const live = await seatsOf(kv, otid);
-  return live.includes(box) || live.length < BOXES_PER_PURCHASE;
+  return live.includes(box) || live.length < (String(otid).startsWith("code-") ? BOXES_PER_CODE : BOXES_PER_PURCHASE);
 }
 
 /** Records the box on the purchase, and takes it off the purchase it was on before, if that was another one. */
@@ -656,9 +688,9 @@ async function inboxRoute(request, env, pathname, cors) {
     return send({ mails, address, pub: (held && held.pub) || null });
   }
   if (request.method === "POST" && pathname === "/inbox/address") {
-    const { name, pub, purchase, beta } = await request.json().catch(() => ({}));
+    const { name, pub, purchase, beta, code } = await request.json().catch(() => ({}));
     if (!isPublicKey(pub)) return json(400, "Update Shoebox to get an address.", cors);
-    const bought = await checkPurchase(env, request, purchase, beta);
+    const bought = await checkPurchase(env, request, purchase, beta, code);
     if (!bought.originalTransactionId) return json(bought.status, bought.message, cors);
     if (!(await seatFree(kv, bought.originalTransactionId, box))) return json(403, fivePhones(bought.originalTransactionId), cors);
     const before = (await kv.get(`box:${box}`, "json"))?.buy || null;
@@ -668,7 +700,7 @@ async function inboxRoute(request, env, pathname, cors) {
     return send({ address: made.address });
   }
   if (request.method === "POST" && pathname === "/inbox/seal") {
-    const { pub, purchase, beta } = await request.json().catch(() => ({}));
+    const { pub, purchase, beta, code } = await request.json().catch(() => ({}));
     if (!isPublicKey(pub)) return json(400, "Bad key.", cors);
     const cur = await kv.get(`box:${box}`, "json");
     if (!cur) return json(404, "Get an address first.", cors);
@@ -677,7 +709,7 @@ async function inboxRoute(request, env, pathname, cors) {
       await kv.put(`alias:${cur.slug}`, box, { expirationTtl: BOX_TTL });
       return send({ ok: true });
     }
-    const bought = await checkPurchase(env, request, purchase, beta);
+    const bought = await checkPurchase(env, request, purchase, beta, code);
     if (!bought.originalTransactionId) return json(bought.status, bought.message, cors);
     if (!(await seatFree(kv, bought.originalTransactionId, box))) return json(403, fivePhones(bought.originalTransactionId), cors);
     await kv.put(`box:${box}`, JSON.stringify({ ...cur, pub, buy: bought.originalTransactionId, at: Date.now() }), { expirationTtl: BOX_TTL });

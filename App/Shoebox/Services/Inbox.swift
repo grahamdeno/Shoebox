@@ -36,12 +36,15 @@ enum Inbox {
 
     /// Asks the relay for an address from your first name, with this phone's sealing key and StoreKit's signed proof of
     /// Shoebox Plus (or, in TestFlight and review, of the install). Returns the address or a plain reason it failed.
-    static func makeAddress(firstName: String) async -> Result<String, Error> {
+    static func makeAddress(firstName: String, testerCode: String = "") async -> Result<String, Error> {
         let name = firstName.lowercased().filter { $0.isLetter }
         guard !name.isEmpty else { return .failure(Failure("Type your first name first.")) }
+        // A tester code typed now is kept to use; if it fails, it is forgotten again so a wrong one doesn't stay.
+        let typedCode = testerCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !typedCode.isEmpty { MailboxKeys.setTesterCode(typedCode) }
         guard let access = await Plus.access(refresh: true) else {
             return .failure(Failure(Plus.inSandbox
-                ? "Couldn't confirm this is a TestFlight copy. Tap Buy Shoebox Plus below: in TestFlight it costs nothing."
+                ? "Couldn't confirm this is a TestFlight copy. Type the tester code you were given, or tap Buy Shoebox Plus below (free in TestFlight)."
                 : "Shoebox Plus is needed to get an address."))
         }
         // The private key that ties this phone to its mailbox, and the sealing key, both kept in the Keychain.
@@ -59,6 +62,7 @@ enum Inbox {
             Prefs.sealMismatchSince = nil
             return .success(a)
         }
+        if !typedCode.isEmpty, (res as? HTTPURLResponse)?.statusCode != 200 { MailboxKeys.setTesterCode("") }
         let message = (try? JSONDecoder().decode(Problem.self, from: data))?.error?.message
         return .failure(Failure(message ?? "Couldn't make an address right now."))
     }

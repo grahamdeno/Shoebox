@@ -31,6 +31,7 @@ struct SettingsView: View {
     @State private var sandbox = Plus.inSandbox || Plus.receiptSaysSandbox
     @State private var freeInBeta = Plus.freeInBeta
     @State private var plusBought = false
+    @State private var testerCode = ""
     @State private var mailFor = Prefs.mailFor
     @State private var importing = false
     @State private var importNote = ""
@@ -321,7 +322,7 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.ink)
                         Button("Get address") {
                             Task {
-                                switch await Inbox.makeAddress(firstName: firstName) {
+                                switch await Inbox.makeAddress(firstName: firstName, testerCode: testerCode) {
                                 case .success(let a): address = a; addressNote = ""
                                 case .failure(let e): addressNote = e.localizedDescription
                                 }
@@ -332,6 +333,18 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.top, 22)
+                // TestFlight only: a tester gives the code they were sent, so the address needs nothing from Apple.
+                if sandbox && !plusBought {
+                    card {
+                        row {
+                            TextField("Tester code", text: $testerCode)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(Theme.ink)
+                        }
+                    }
+                    .padding(.top, 12)
+                }
                 if !addressNote.isEmpty { line(addressNote) }
                 // App Review runs in the same sandbox as TestFlight and must still find the purchase, so it stays here as
                 // a quiet second row. In TestFlight buying costs nothing.

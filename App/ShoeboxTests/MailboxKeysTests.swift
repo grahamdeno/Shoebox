@@ -322,4 +322,16 @@ final class MailboxKeysTests: XCTestCase {
         XCTAssertEqual(MailboxKeys.boxID(for: key), String(digest.prefix(20)))
         XCTAssertEqual(MailboxKeys.boxID(for: key).count, 20)
     }
+
+    func testTheTesterCodeIsKeptTrimmedAndForgottenByDeleteEverything() {
+        XCTAssertNil(MailboxKeys.testerCode())
+        MailboxKeys.setTesterCode("  plum-otter-4821 \n")
+        XCTAssertEqual(MailboxKeys.testerCode(), "plum-otter-4821")
+        _ = MailboxKeys.secretMakingOne()
+        XCTAssertTrue(MailboxKeys.beginDelete())
+        XCTAssertNil(MailboxKeys.testerCode())
+        MailboxKeys.setTesterCode("plum-otter-4821")
+        MailboxKeys.setTesterCode("")
+        XCTAssertNil(MailboxKeys.testerCode())
+    }
 }

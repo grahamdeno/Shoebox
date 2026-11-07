@@ -517,6 +517,56 @@ test("Delete everything gives a tester's seat back", async () => {
   assert.equal(keysWith(kv, "buy:beta-").length, 0);
 });
 
+/* ---- Tester codes: an address without Apple (decided November 6) ---- */
+
+const CODES = "Plum-Otter-4821, second-code-9150";
+const mintCode = (env, key, code, ip = "8.8.8.8", name = "sam") =>
+  call(env, "/inbox/address", { method: "POST", key, body: { name, pub: PUB, code }, ip });
+
+test("a tester code gets an address in the usual form, however it is typed", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, TESTER_CODES: CODES });
+  const res = await mintCode(env, KEY_A, "  plum-OTTER-4821 ");
+  assert.equal(res.status, 200);
+  assert.match((await res.json()).address, /^sam-[a-z2-9]{8}@inmyshoebox\.com$/);
+  assert.equal(keysWith(kv, "buy:code-").length, 1);
+  // The second code is its own seat, and the same code registers a sealing key.
+  assert.equal((await mintCode(env, KEY_B, "second-code-9150", "8.8.8.9")).status, 200);
+  assert.equal(keysWith(kv, "buy:code-").length, 2);
+  assert.equal((await call(env, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB, code: "plum-otter-4821" }, ip: "8.8.8.7" })).status, 200);
+});
+
+test("a wrong code, a short code, or no codes set never gets an address", async () => {
+  const env = newEnv({ TESTER_CODES: CODES });
+  const wrong = await mintCode(env, KEY_A, "plum-otter-4822");
+  assert.equal(wrong.status, 402);
+  assert.match((await wrong.json()).error.message, /tester code didn't work/);
+  assert.equal((await mintCode(env, KEY_A, "plum", "8.8.1.1")).status, 402);
+  assert.equal((await mintCode(newEnv(), KEY_A, "plum-otter-4821", "8.8.1.2")).status, 402);
+  // A configured code shorter than 8 characters is ignored, even typed exactly.
+  assert.equal((await mintCode(newEnv({ TESTER_CODES: "abc" }), KEY_A, "abc", "8.8.1.3")).status, 402);
+});
+
+test("a tester code opens at most 25 boxes, and Delete everything gives the seat back", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, TESTER_CODES: CODES });
+  const key = (i) => `sb-${String(i).padStart(2, "0").repeat(20)}`;
+  for (let i = 0; i < 25; i++) assert.equal((await mintCode(env, key(i), "plum-otter-4821", `9.9.${i}.1`)).status, 200);
+  const full = await mintCode(env, key(25), "plum-otter-4821", "9.9.99.1");
+  assert.equal(full.status, 403);
+  assert.match((await full.json()).error.message, /code is full/);
+  await call(env, "/me/delete", { method: "POST", key: key(0) });
+  assert.equal((await mintCode(env, key(25), "plum-otter-4821", "9.9.99.2")).status, 200);
+});
+
+test("a real purchase wins over a code, and a code is guess-limited per network", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv, TESTER_CODES: CODES });
+  const both = await call(env, "/inbox/address", { method: "POST", key: KEY_A, ip: "5.5.5.5", body: { name: "sam", pub: PUB, purchase: jwsFor("1000000000000300"), code: "plum-otter-4821" } });
+  assert.equal(both.status, 200);
+  assert.deepEqual(keysWith(kv, "buy:"), ["buy:1000000000000300"]);
+  let last;
+  for (let i = 0; i < 31; i++) last = await mintCode(env, KEY_B, `wrong-guess-${i}`, "4.4.4.4");
+  assert.equal(last.status, 429);
+});
+
 test("collecting mail, files, ack and delete are never gated: a refund stops only new addresses", async () => {
   const kv = memoryKV(), live = newEnv({ SHOEBOX: kv });
   const addr = await address(live, KEY_A);
