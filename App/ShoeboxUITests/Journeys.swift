@@ -166,7 +166,7 @@ final class Journeys: XCTestCase {
         a.check("Keep waits until there is something to keep", !(a.app.buttons["Keep"].isEnabled), severity: 2)
         let words = a.field("Paste a link or write a note")
         if a.expect("the words field is there and ready", words) {
-            if !words.hasKeyboardFocus { words.tap() }
+            words.tap()
             a.app.typeText("Call the dentist about Sam's cleaning")
         }
         let why = a.field("Optional. Before the trip")

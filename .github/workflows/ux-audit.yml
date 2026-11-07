@@ -6,15 +6,15 @@ on:
   push:
     branches-ignore: [main, testflight, ci-screens, ci-audit]
 
-concurrency:
-  group: ux-audit-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   walk:
     if: contains(github.event.head_commit.message, '[audit]')
     runs-on: macos-26
     timeout-minutes: 75
+    # Only a newer [audit] commit replaces a running audit; ordinary commits never cancel one.
+    concurrency:
+      group: ux-audit-${{ github.ref }}-${{ matrix.config }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -71,7 +71,7 @@ jobs:
             -derivedDataPath build -resultBundlePath audit.xcresult CODE_SIGNING_ALLOWED=NO \
             ${{ matrix.only }} > test.log 2>&1 || {
               grep -E "error:|Test Case .* failed|Failing tests|crash" test.log | sort -u | head -40 | while IFS= read -r l; do echo "::warning::$l"; done
-              grep -q "BUILD FAILED\|TEST BUILD FAILED\|Testing cancelled" test.log && { tail -60 test.log; exit 1; } || true
+              grep -q "BUILD FAILED\|TEST BUILD FAILED\|Testing cancelled\|swift:[0-9]*:[0-9]*: error:" test.log && { tail -60 test.log; exit 1; } || true
             }
           tail -30 test.log
           find audit-out -name record.json | wc -l
