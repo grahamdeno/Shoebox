@@ -281,7 +281,7 @@ struct TodayView: View {
                     Text("\(max(1, pickIds.count - queue.count + 1)) of \(pickIds.count)")
                         .scaledFont(size: 15)
                         .monospacedDigit()
-                        .opacity(0.8)
+                        .opacity(0.92)
                 }
             }
             .foregroundStyle(onPhoto ? Theme.onPhoto : Theme.ink)
@@ -346,7 +346,7 @@ struct TodayView: View {
                     Text("\(boxCount)")
                         .scaledFont(size: 17)
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxText.opacity(0.7))
+                        .foregroundStyle(Theme.boxText.opacity(0.85))
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, Self.lidTop + BoxLid.height + 14)

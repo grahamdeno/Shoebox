@@ -161,6 +161,8 @@ final class Audit {
     /// A text field (one line or many) by its label or its placeholder, trying each name in turn.
     func field(_ names: String...) -> XCUIElement {
         for s in names {
+            let byID = app.descendants(matching: .any).matching(identifier: s).firstMatch
+            if byID.exists { return byID }
             for q in [app.textFields, app.textViews] {
                 let p = q.matching(NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", s, s, s)).firstMatch
                 if p.exists { return p }

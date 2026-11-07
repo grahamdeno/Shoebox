@@ -102,7 +102,30 @@ Shoebox's own rules (CLAUDE.md), checked on the pictures:
 | Icons | One icon: the magnifying glass in search, beside its field. Allowed: it is not a button. |
 | Em-dashes, black | None in copy or colors. |
 
+## 6a. What the simulator cannot settle
+
+- **VoiceOver and the closed Shoebox.** XCUITest and Apple's audit still list the closed sheet's words on Today after
+  they were hidden at three levels. Both read the testing tree, which SwiftUI keeps fuller than what VoiceOver reads, so
+  this cannot be confirmed here. The contrast "failures" on Today's hidden Today and Settings words come from the same
+  place and are not real. Check on a phone (section 7, first list).
+- **Glass.** The audit's contrast check samples through Liquid Glass and flags words that read well (Stone dark Settings
+  rows, Cancel on the writing screens). Checked by eye in the pictures; not changed.
+- **Query timeouts.** Today and the Shoebox are large trees; some runs time out on a query mid-journey. Each journey ran
+  to the end in at least one config; the pictures cover every step.
+
 ## 7. People: five testers, five tasks
+
+**First, on Graham's phone (ten minutes, before the testers):**
+
+1. VoiceOver on, Today: swipe through. Only the post, + New, the count and the box should be read, never the Shoebox
+   list behind the box. Open the Shoebox: Today's post should not be read under it.
+2. Settings › Accessibility › Display & Text Size › Reduce Transparency on: the post's panel, the writing panel and the
+   opened post's words should be solid and readable.
+3. Reduce Motion on: flick up and pull down; the next post should fade, not rise.
+4. Larger Text at the largest accessibility size: Today, the Shoebox, Settings and Keep something new should read
+   without words broken mid-word.
+
+**Then the testers:**
 
 Send to five TestFlight testers who have not used Shoebox. No help, no onboarding video first. After each task, one
 question: "How easy was that?" 1 (very hard) to 7 (very easy). At the end, the ten SUS questions.
@@ -126,4 +149,6 @@ See section 9 for the runs so far.
 |---|---|---|
 | Nov 7 | 134f3e0 | Test build failed on one line (hasKeyboardFocus). No records. |
 | Nov 7 | 7655339 | First full walk. Found UX-1 to UX-8 (backlog.csv): text never grew with Dynamic Type (122 issues), the closed Shoebox list in VoiceOver's reach on Today (it also made Today too slow for UI queries), unlabeled fields, Undo over the panel, a short tap area, quiet text near the contrast line. |
+| Nov 7 | 89c9efe | Did not build (BoxView's pull is optional). |
+| Nov 7 | 7c7a133 | All five configs and unit tests green, including the new rule that a dated post in the pile comes out before its day. Large text now stacks in Settings. Remaining: the Edit title field had no handle for the test (given one), small opacity raises on Today's count and the box count. |
 | Nov 7 | e933477 | Text grows (Dynamic Type issues down to the cap we chose, accessibility2). Large text broke words mid-word in Settings rows and choices, and the writing panel overflowed above the keyboard: fixed with ViewThatFits and a cap of xxxLarge on writing screens. The closed Shoebox list was still in VoiceOver's reach: hidden at the sheet, the list and Today's side. Unit tests pass. |

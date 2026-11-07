@@ -129,7 +129,7 @@ final class Journeys: XCTestCase {
         a.shot("edit")
         a.accessibility("edit")
         a.labels("edit")
-        let title = a.field("Title")
+        let title = a.field("edit.title", "Title")
         if a.expect("Edit shows the title", title) {
             title.tap()
             a.app.typeText(" (audit)")

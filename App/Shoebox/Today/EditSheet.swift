@@ -68,13 +68,14 @@ struct EditSheet: View {
         } panel: {
             Text(status)
                 .scaledFont(size: 13, weight: status == "Saved" ? .semibold : .regular)
-                .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.6))
+                .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.75))
 
             TextField("Title", text: $title,
                       prompt: Text("Title").foregroundStyle(Theme.onPhoto.opacity(0.45)), axis: .vertical)
                 .scaledFont(size: 24, weight: .semibold)
                 .foregroundStyle(Theme.onPhoto)
                 .lineLimit(1...3)
+                .accessibilityIdentifier("edit.title")
 
             if editsWords {
                 SurfaceLine(label: "Words", tint: Theme.onPhoto) {
@@ -101,7 +102,7 @@ struct EditSheet: View {
                 if hasDate {
                     Text("Back 5 days before, stays until put away")
                         .scaledFont(size: 13)
-                        .foregroundStyle(Theme.onPhoto.opacity(0.6))
+                        .foregroundStyle(Theme.onPhoto.opacity(0.75))
                 }
             }
         }
