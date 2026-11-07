@@ -50,6 +50,7 @@ struct BoxView: View {
     private var searching: Bool { !search.trimmingCharacters(in: .whitespaces).isEmpty }
     private var putAwayAll: [Save] { rules.kept(all) }
     private var putAway: [Save] { putAwayAll.filter(matches) }
+    private let putAwayLog = PutAwayLog.shared
 
     /// How far ahead Coming up looks. Anything dated later waits in Everything else until it's close.
     private var horizon: Date { Calendar.current.date(byAdding: .month, value: 2, to: now) ?? now }
@@ -124,6 +125,13 @@ struct BoxView: View {
                         if searching {
                             ForEach(putAway, id: \.id) { listRow($0, dim: true) }
                         } else {
+                            // What you put away in the last 3 days, newest first, always open, above the topics (SPEC 2.4).
+                            let recent = putAwayLog.recent(putAway, now: now)
+                            if !recent.isEmpty {
+                                plain(sectionTitle("Just put away"))
+                                ForEach(recent, id: \.id) { listRow($0, dim: true, quietLine: putAwayLog.line($0, now: now)) }
+                                plain(sectionTitle("By topic"))
+                            }
                             // Put away by topic, each one closed until tapped, like Scales' Insights (SPEC 2.4).
                             let byID = Dictionary(putAway.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { a, _ in a })
                             ForEach(Tidy.topics(putAway.map(\.tidyItem)), id: \.topic) { group in
@@ -277,8 +285,8 @@ struct BoxView: View {
     }
 
     /// A post row. Swipe left to delete it: it leaves every list at once, stays in backups, and Undo shows for 5 seconds.
-    private func listRow(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
-        plain(row(s, dim: dim, dated: dated))
+    private func listRow(_ s: Save, dim: Bool, dated: Bool = false, quietLine: String? = nil) -> some View {
+        plain(row(s, dim: dim, dated: dated, quietLine: quietLine))
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 Button(role: .destructive) {
                     perform(on: s) { actions.letGo($0, now: now); return "Deleted" }
@@ -346,11 +354,12 @@ struct BoxView: View {
 
     /// One shape for every row: a date, or a picture only when the post has one; the words on up to two lines; one quiet
     /// line of where it came from. When you wrote a reason, the reason leads and the title moves to the quiet line.
-    private func row(_ s: Save, dim: Bool, dated: Bool = false) -> some View {
+    private func row(_ s: Save, dim: Bool, dated: Bool = false, quietLine: String? = nil) -> some View {
         let reason = s.note.trimmingCharacters(in: .whitespacesAndNewlines)
         let title = s.listTitle
         let leads = reason.isEmpty ? title : reason
-        let quiet = (reason.isEmpty || reason == title) ? meta(s) : "\(title), \(meta(s))"
+        let second = quietLine ?? meta(s)
+        let quiet = (reason.isEmpty || reason == title) ? second : "\(title), \(second)"
         return Button { if opened == nil, !otherPostOpen { opened = OpenedPost(save: s) } } label: {
             HStack(spacing: 16) {
                 if dated, let day = s.eventDate {

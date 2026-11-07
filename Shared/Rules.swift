@@ -146,10 +146,12 @@ struct SaveActions {
         s.updatedAt = now
     }
 
-    func done(_ s: Save, now: Date) {
+    /// Put away by you: kept, and noted for "Just put away" (`PutAwayLog`).
+    func done(_ s: Save, now: Date, log: PutAwayLog = .shared) {
         s.status = .kept
         s.returnDate = nil
         s.updatedAt = now
+        log.set(s.id, now)
     }
 
     func later(_ s: Save, until date: Date, now: Date) {
@@ -165,7 +167,8 @@ struct SaveActions {
     }
 
     /// Pulled out of the Box by hand.
-    func bringBack(_ s: Save, now: Date) {
+    func bringBack(_ s: Save, now: Date, log: PutAwayLog = .shared) {
+        log.set(s.id, nil)
         // A post whose day has gone by would go straight back to Kept; you asked for it, so it stays.
         if let event = s.eventDate, Calendar.current.startOfDay(for: event) < Calendar.current.startOfDay(for: now) {
             s.eventDate = nil
@@ -200,13 +203,18 @@ struct SaveSnapshot {
     let seenOn: Date?
     let deletedAt: Date?
     let updatedAt: Date
+    /// When it was put away, if it was, so Undo puts "Just put away" back as it was.
+    let putAwayAt: Date?
+    let log: PutAwayLog
 
-    init(_ s: Save) {
+    init(_ s: Save, log: PutAwayLog = .shared) {
         status = s.status
         returnDate = s.returnDate
         seenOn = s.seenOn
         deletedAt = s.deletedAt
         updatedAt = s.updatedAt
+        putAwayAt = log.at(s.id)
+        self.log = log
     }
 
     func restore(_ s: Save) {
@@ -215,5 +223,6 @@ struct SaveSnapshot {
         s.seenOn = seenOn
         s.deletedAt = deletedAt
         s.updatedAt = updatedAt
+        log.set(s.id, putAwayAt)
     }
 }
