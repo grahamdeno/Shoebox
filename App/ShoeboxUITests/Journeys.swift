@@ -138,7 +138,7 @@ final class Journeys: XCTestCase {
         a.tap("Keep", a.app.buttons["Keep"])
         a.pause(1)
         a.shot("after-keep")
-        a.check("the edit shows on the post", a.text(containing: "(audit)").exists, severity: 3)
+        a.check("the edit shows on the post", a.any(containing: "(audit)").exists, severity: 3)
 
         // Delete: the last word of Edit, soft, with Undo.
         a.tap("Edit again", a.app.buttons["Edit"])
@@ -148,7 +148,8 @@ final class Journeys: XCTestCase {
         a.tap("Delete", a.app.buttons["Delete"])
         a.pause(1)
         a.shot("after-delete")
-        a.check("Delete asks nothing and offers Undo", a.app.buttons["Undo"].waitForExistence(timeout: 2), severity: 3)
+        a.check("Delete closes the post and offers Undo", a.app.buttons["Undo"].waitForExistence(timeout: 2) && !a.app.buttons["Edit"].exists, severity: 3)
+        a.check("Undo says what it undoes (Deleted)", a.any(containing: "Deleted").exists, severity: 2)
         a.labels("after-delete")
     }
 
@@ -164,12 +165,12 @@ final class Journeys: XCTestCase {
         a.accessibility("new-empty")
         a.labels("new-empty")
         a.check("Keep waits until there is something to keep", !(a.app.buttons["Keep"].isEnabled), severity: 2)
-        let words = a.field("Paste a link or write a note")
+        let words = a.field("What to keep", "Paste a link or write a note")
         if a.expect("the words field is there and ready", words) {
             words.tap()
             a.app.typeText("Call the dentist about Sam's cleaning")
         }
-        let why = a.field("Optional. Before the trip")
+        let why = a.field("Why", "Optional. Before the trip")
         if a.expect("the Why field is there", why) {
             why.tap()
             a.app.typeText("Before Friday")
@@ -177,7 +178,7 @@ final class Journeys: XCTestCase {
         a.pause(0.6)
         a.shot("new-filled", note: "the return line should read the day from the Why")
         a.labels("new-filled")
-        a.check("the return line reads Friday from the Why", a.text(containing: "Thursday").exists || a.text(containing: "Friday").exists, severity: 3)
+        a.check("the return line reads Friday from the Why", a.any(containing: "Thursday").exists || a.any(containing: "Friday").exists, severity: 3)
         a.tap("Photo or file", a.button(startingWith: "Photo"), severity: 2)
         a.pause(0.8)
         a.shot("photo-or-file-menu")

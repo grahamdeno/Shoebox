@@ -100,10 +100,26 @@ final class Audit {
     }
 
     /// What is on screen, as a person using VoiceOver would meet it: the labels of the buttons and words, top to bottom.
+    /// Read from one snapshot of the tree: element-by-element queries go stale while the screen moves.
     func labels(_ name: String) {
-        let buttons = app.buttons.allElementsBoundByIndex.prefix(40).filter { $0.exists && $0.isHittable }.map(\.label)
-        let texts = app.staticTexts.allElementsBoundByIndex.prefix(60).filter(\.exists).map(\.label)
-        steps.append(["n": n, "kind": "labels", "name": name, "buttons": Array(buttons), "texts": Array(texts)])
+        guard let snap = try? app.snapshot() else {
+            steps.append(["n": n, "kind": "labels", "name": name, "buttons": [String](), "texts": ["(no snapshot)"]])
+            return
+        }
+        var buttons: [String] = []
+        var texts: [String] = []
+        func walk(_ s: XCUIElementSnapshot) {
+            if s.elementType == .button, !s.label.isEmpty { buttons.append(s.label) }
+            if s.elementType == .staticText, !s.label.isEmpty { texts.append(s.label) }
+            for c in s.children { walk(c) }
+        }
+        walk(snap)
+        steps.append(["n": n, "kind": "labels", "name": name, "buttons": Array(buttons.prefix(40)), "texts": Array(texts.prefix(60))])
+    }
+
+    /// Anything on screen (a word, a button, a field) whose label holds the words.
+    func any(containing s: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
     }
 
     /// Writes the record. Call at the end of every journey.
@@ -142,13 +158,16 @@ final class Audit {
         app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
     }
 
-    /// A text field by its placeholder or its label.
-    func field(_ s: String) -> XCUIElement {
-        let byPlaceholder = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", s)).firstMatch
-        if byPlaceholder.exists { return byPlaceholder }
-        let views = app.textViews.matching(NSPredicate(format: "placeholderValue == %@", s)).firstMatch
-        if views.exists { return views }
-        return app.textFields[s]
+    /// A text field (one line or many) by its label or its placeholder, trying each name in turn.
+    func field(_ names: String...) -> XCUIElement {
+        for s in names {
+            for q in [app.textFields, app.textViews] {
+                if q[s].exists { return q[s] }
+                let p = q.matching(NSPredicate(format: "placeholderValue == %@", s)).firstMatch
+                if p.exists { return p }
+            }
+        }
+        return app.textFields[names.first ?? ""]
     }
 
     /// Taps a word if it is there; written down as a finding if not.

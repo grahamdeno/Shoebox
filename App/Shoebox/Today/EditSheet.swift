@@ -67,25 +67,25 @@ struct EditSheet: View {
             PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: 330)
         } panel: {
             Text(status)
-                .font(.system(size: 13, weight: status == "Saved" ? .semibold : .regular))
+                .scaledFont(size: 13, weight: status == "Saved" ? .semibold : .regular)
                 .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.6))
 
-            TextField("", text: $title,
+            TextField("Title", text: $title,
                       prompt: Text("Title").foregroundStyle(Theme.onPhoto.opacity(0.45)), axis: .vertical)
-                .font(.system(size: 24, weight: .semibold))
+                .scaledFont(size: 24, weight: .semibold)
                 .foregroundStyle(Theme.onPhoto)
                 .lineLimit(1...3)
 
             if editsWords {
                 SurfaceLine(label: "Words", tint: Theme.onPhoto) {
-                    TextField("", text: $words,
+                    TextField("Words", text: $words,
                               prompt: Text("What you wrote").foregroundStyle(Theme.onPhoto.opacity(0.4)), axis: .vertical)
                         .lineLimit(1...6)
                 }
             }
 
             SurfaceLine(label: "Why") {
-                TextField("", text: $note,
+                TextField("Why", text: $note,
                           prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)))
             }
 
@@ -100,7 +100,7 @@ struct EditSheet: View {
                 Spacer()
                 if hasDate {
                     Text("Back 5 days before, stays until put away")
-                        .font(.system(size: 13))
+                        .scaledFont(size: 13)
                         .foregroundStyle(Theme.onPhoto.opacity(0.6))
                 }
             }

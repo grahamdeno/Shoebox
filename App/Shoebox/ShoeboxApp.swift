@@ -121,6 +121,9 @@ private struct AppearanceModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .id(colors)
+            // Text grows with the person's text size up to the second accessibility size; past that a full-screen post
+            // and its panel no longer fit a phone.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .preferredColorScheme(appearance == 1 ? .light : appearance == 2 ? .dark : nil)
     }
 }

@@ -56,7 +56,7 @@ struct Onboarding: View {
             para("Save the things you mean to come back to. Each morning they come back out of the box, with your reason on top. Swipe past, put away, or deal with it.")
             if let report {
                 Text(report)
-                    .font(.system(size: 16))
+                    .scaledFont(size: 16)
                     .foregroundStyle(Theme.noteInk)
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
@@ -71,23 +71,23 @@ struct Onboarding: View {
             numbered(2, "Tap Shoebox", "Not in the row? Swipe to the end, tap More, then add Shoebox.")
             numbered(3, "Say why, tap Keep", "\"Before Saturday\" brings it back Friday evening.")
             VStack(alignment: .leading, spacing: 8) {
-                Text("Or forward email").font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)
+                Text("Or forward email").scaledFont(size: 19, weight: .semibold).foregroundStyle(Theme.ink)
                 if let address {
                     Text(address)
-                        .font(.system(size: 16, weight: .semibold))
+                        .scaledFont(size: 16, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                         .textSelection(.enabled)
                     Text("Write a line above the forward to say why. Ads are skipped.")
-                        .font(.system(size: 15)).foregroundStyle(Theme.quiet)
+                        .scaledFont(size: 15).foregroundStyle(Theme.quiet)
                 } else {
                     HStack(spacing: 12) {
                         TextField("Your first name", text: $firstName)
                             .textContentType(.givenName)
-                            .font(.system(size: 17))
+                            .scaledFont(size: 17)
                             .padding(12)
                             .background(Theme.sheet, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
-                        Button(working ? "Wait" : "Get my address") {
+                        Button {
                             working = true
                             Task {
                                 switch await Inbox.makeAddress(firstName: firstName) {
@@ -96,13 +96,17 @@ struct Onboarding: View {
                                 }
                                 working = false
                             }
+                        } label: {
+                            // The tap area is the label's, so the label carries the full height (the audit found it short).
+                            Text(working ? "Wait" : "Get my address")
+                                .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin)
+                                .contentShape(Rectangle())
                         }
-                        .font(.system(size: 16, weight: .semibold))
+                        .scaledFont(size: 16, weight: .semibold)
                         .foregroundStyle(Theme.ink)
-                        .frame(minHeight: Metrics.touchMin)
                     }
                     Text(addressNote.isEmpty ? "Your own address. Anything you forward to it becomes a post." : addressNote)
-                        .font(.system(size: 15)).foregroundStyle(Theme.quiet)
+                        .scaledFont(size: 15).foregroundStyle(Theme.quiet)
                 }
             }
             .padding(.top, 6)
@@ -143,7 +147,7 @@ struct Onboarding: View {
 
     private func title(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 34, weight: .semibold))
+            .scaledFont(size: 34, weight: .semibold)
             .tracking(-0.8)
             .foregroundStyle(Theme.ink)
             .fixedSize(horizontal: false, vertical: true)
@@ -151,7 +155,7 @@ struct Onboarding: View {
 
     private func para(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 18))
+            .scaledFont(size: 18)
             .lineSpacing(3)
             .foregroundStyle(Theme.quiet)
             .fixedSize(horizontal: false, vertical: true)
@@ -170,14 +174,14 @@ struct NumberedStep: View {
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             Text("\(n)")
-                .font(.system(size: 17, weight: .semibold))
+                .scaledFont(size: 17, weight: .semibold)
                 .frame(width: 36, height: 36)
                 .foregroundStyle(Theme.ink)
                 .background(Theme.card, in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text(head).font(.system(size: 19, weight: .semibold)).foregroundStyle(Theme.ink)
-                Text(text).font(.system(size: 16)).lineSpacing(2).foregroundStyle(Theme.quiet)
+                Text(head).scaledFont(size: 19, weight: .semibold).foregroundStyle(Theme.ink)
+                Text(text).scaledFont(size: 16).lineSpacing(2).foregroundStyle(Theme.quiet)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -192,7 +196,7 @@ struct ThreeMoves: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 34) {
             Text("Three moves.\nThat's the whole app.")
-                .font(.system(size: 34, weight: .semibold))
+                .scaledFont(size: 34, weight: .semibold)
                 .tracking(-0.8)
                 .foregroundStyle(Theme.ink)
             NumberedStep(n: 1, head: "Swipe up", text: "Next one. It comes back when your why says, or tomorrow.")

@@ -58,7 +58,7 @@ enum Theme {
     static let ground = adaptive(light: 0xF6F3E8, dark: 0x3B2240, stoneLight: 0xC9C6BD, stoneDark: 0x23262B)
     static let sheet = adaptive(light: 0xFBF9F1, dark: 0x442B4B, stoneLight: 0xD3D0C8, stoneDark: 0x2C3036)
     static let ink = adaptive(light: 0x2A1E2E, dark: 0xF1E9D8, stoneLight: 0x1F2124, stoneDark: 0xEEEAE2)
-    static let quiet = adaptive(light: 0x6A6070, dark: 0xBBA7BE, stoneLight: 0x55524B, stoneDark: 0xA5A39D)
+    static let quiet = adaptive(light: 0x5E5468, dark: 0xC4B2C7, stoneLight: 0x48463F, stoneDark: 0xB3B1AB)
     static let line = adaptive(light: 0xDEDAC9, dark: 0x54405A, stoneLight: 0xB3B0A7, stoneDark: 0x3A3D43)
     /// A group's card: one step off the ground. A deeper Pistachio in light, a lighter Plum in dark. No outline.
     static let card = adaptive(light: 0xE8ECDA, dark: 0x4A3352, stoneLight: 0xBDBAB0, stoneDark: 0x2E3238)

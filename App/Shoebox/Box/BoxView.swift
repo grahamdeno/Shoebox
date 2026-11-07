@@ -83,13 +83,13 @@ struct BoxView: View {
                 VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Button("Today") { onClose() }
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .leading)
                         .contentShape(Rectangle())
                     Spacer()
                     Button("Settings") { onSettings() }
-                        .font(.system(size: 17))
+                        .scaledFont(size: 17)
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: 110, minHeight: 56, alignment: .trailing)
                         .contentShape(Rectangle())
@@ -99,7 +99,7 @@ struct BoxView: View {
 
                 HStack(alignment: .firstTextBaseline) {
                     Text(showPutAway ? "Put away" : "Shoebox")
-                        .font(.system(size: 34, weight: .semibold))
+                        .scaledFont(size: 34, weight: .semibold)
                         .tracking(-0.8)
                         .foregroundStyle(Theme.ink)
                     Spacer()
@@ -107,7 +107,7 @@ struct BoxView: View {
                         Button(word) {
                             withAnimation(.snappy) { showPutAway.toggle() }
                         }
-                        .font(.system(size: 16, weight: .semibold))
+                        .scaledFont(size: 16, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                         .frame(minHeight: Metrics.touchMin)
                         .contentShape(Rectangle())
@@ -167,10 +167,10 @@ struct BoxView: View {
                                 Button(action: onBrowse) {
                                     HStack {
                                         Text("Go through them one at a time")
-                                            .font(.system(size: 16, weight: .semibold))
+                                            .scaledFont(size: 16, weight: .semibold)
                                             .foregroundStyle(Theme.ink)
                                         Spacer()
-                                        Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+                                        Text("\u{203A}").scaledFont(size: 22).foregroundStyle(Theme.quiet)
                                     }
                                     .frame(minHeight: 52)
                                     .contentShape(Rectangle())
@@ -236,11 +236,11 @@ struct BoxView: View {
                     .allowsHitTesting(false)
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 16, weight: .medium))
+                        .scaledFont(size: 16, weight: .medium)
                         .foregroundStyle(Theme.quiet)
                         .accessibilityHidden(true)
                     TextField("Search everything", text: $search)
-                        .font(.system(size: 17))
+                        .scaledFont(size: 17)
                         .foregroundStyle(Theme.ink)
                         .tint(Theme.accent)
                         .submitLabel(.search)
@@ -307,23 +307,23 @@ struct BoxView: View {
         } label: {
             HStack(alignment: .center, spacing: 18) {
                 Text("\(group.count)")
-                    .font(.system(size: 34, weight: .semibold))
+                    .scaledFont(size: 34, weight: .semibold)
                     .monospacedDigit()
                     .foregroundStyle(Theme.accent)
                     .frame(width: 64, alignment: .leading)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(key)
-                        .font(.system(size: 18, weight: .semibold))
+                        .scaledFont(size: 18, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                     if let newest {
                         Text(newest.listTitle)
-                            .font(.system(size: 14))
+                            .scaledFont(size: 14)
                             .foregroundStyle(Theme.quiet)
                             .lineLimit(1)
                     }
                 }
                 Spacer(minLength: 0)
-                Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+                Text("\u{203A}").scaledFont(size: 22).foregroundStyle(Theme.quiet)
                     .rotationEffect(.degrees(open ? 90 : 0))
             }
             .padding(.vertical, 16)
@@ -337,14 +337,14 @@ struct BoxView: View {
 
     private func empty(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 17))
+            .scaledFont(size: 17)
             .foregroundStyle(Theme.quiet)
             .padding(.top, 24)
     }
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: .semibold))
+            .scaledFont(size: 12, weight: .semibold)
             .textCase(.uppercase)
             .tracking(0.9)
             .foregroundStyle(Theme.quiet)
@@ -365,11 +365,11 @@ struct BoxView: View {
                 if dated, let day = s.eventDate {
                     VStack(spacing: 0) {
                         Text(day.formatted(.dateTime.month(.abbreviated)).uppercased())
-                            .font(.system(size: 11, weight: .semibold))
+                            .scaledFont(size: 11, weight: .semibold)
                             .tracking(0.8)
                             .foregroundStyle(Theme.quiet)
                         Text(day.formatted(.dateTime.day()))
-                            .font(.system(size: 24, weight: .medium))
+                            .scaledFont(size: 24, weight: .medium)
                             .monospacedDigit()
                             .foregroundStyle(dim ? Theme.quiet : (soon(day) ? Theme.lid : Theme.ink))
                     }
@@ -380,12 +380,12 @@ struct BoxView: View {
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(leads)
-                        .font(.system(size: 17))
+                        .scaledFont(size: 17)
                         .foregroundStyle(dim ? Theme.quiet : Theme.ink)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(quiet)
-                        .font(.system(size: 14))
+                        .scaledFont(size: 14)
                         .foregroundStyle(Theme.quiet)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)

@@ -68,7 +68,7 @@ struct SurfaceBar: View {
 
     private func word(_ text: String, color: Color, weight: Font.Weight) -> some View {
         Text(text)
-            .font(.system(size: 17, weight: weight))
+            .scaledFont(size: 17, weight: weight)
             .foregroundStyle(color)
             .padding(.horizontal, 16)
             .frame(minHeight: Metrics.touchMin)
@@ -138,10 +138,10 @@ struct SurfaceLine<Field: View>: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(label)
-                .font(.system(size: 15))
+                .scaledFont(size: 15)
                 .foregroundStyle(Theme.onPhoto.opacity(0.6))
             field
-                .font(.system(size: 17))
+                .scaledFont(size: 17)
                 .foregroundStyle(tint)
                 .tint(Theme.sunflower)
         }
@@ -157,7 +157,7 @@ struct SurfaceWord: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 17, weight: .medium))
+            .scaledFont(size: 17, weight: .medium)
             .underline()
             .foregroundStyle(quiet ? Theme.onPhoto.opacity(0.6) : Theme.onPhoto)
             .frame(minHeight: Metrics.touchMin)
@@ -234,11 +234,11 @@ struct ReturnSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("When should it come back?")
-                .font(.system(size: 22, weight: .bold))
+                .scaledFont(size: 22, weight: .bold)
                 .foregroundStyle(Theme.ink)
                 .padding(.top, 28)
             Text(autoLine)
-                .font(.system(size: 15))
+                .scaledFont(size: 15)
                 .foregroundStyle(Theme.quiet)
                 .padding(.top, 4)
 
@@ -258,7 +258,7 @@ struct ReturnSheet: View {
                             .tint(Theme.accent)
                         Spacer()
                         Button("Use this day") { choice = .day(day); dismiss() }
-                            .font(.system(size: 17, weight: .semibold))
+                            .scaledFont(size: 17, weight: .semibold)
                             .foregroundStyle(Theme.accent)
                             .frame(minHeight: Metrics.touchMin)
                     }
@@ -281,7 +281,7 @@ struct ReturnSheet: View {
     private func row(_ text: String, picked: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 19, weight: picked ? .bold : .regular))
+                .scaledFont(size: 19, weight: picked ? .bold : .regular)
                 .foregroundStyle(picked ? Theme.accent : Theme.ink)
                 .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                 .contentShape(Rectangle())

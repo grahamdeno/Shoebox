@@ -214,7 +214,7 @@ struct ShareSheet: View {
         ZStack {
             SurfaceGround(picture: model.picture).ignoresSafeArea()
             Text(model.keptLabel)
-                .font(.system(size: 34, weight: .bold))
+                .scaledFont(size: 34, weight: .bold)
                 .foregroundStyle(Theme.onPhoto)
                 .multilineTextAlignment(.center)
                 .padding(24)
@@ -231,18 +231,18 @@ struct ShareSheet: View {
         } panel: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.title)
-                    .font(.system(size: 24, weight: .semibold))
+                    .scaledFont(size: 24, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto)
                     .lineLimit(4)
                 if !model.site.isEmpty {
                     Text(model.site)
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.onPhoto.opacity(0.6))
                         .lineLimit(1)
                 }
             }
             SurfaceLine(label: "Why") {
-                TextField("", text: $model.why,
+                TextField("Why", text: $model.why,
                           prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)),
                           axis: .vertical)
                     .lineLimit(1...3)
@@ -252,7 +252,7 @@ struct ShareSheet: View {
             }
             if let problem = model.problem {
                 Text(problem)
-                    .font(.system(size: 15, weight: .semibold))
+                    .scaledFont(size: 15, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -260,7 +260,7 @@ struct ShareSheet: View {
                 Spacer()
                 Button { focused = false; showReturn = true } label: {
                     Text(ReturnLine.text(model.choice, event: event, why: model.why))
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.onPhoto.opacity(0.85))
                         .frame(minHeight: Metrics.touchMin)
                         .contentShape(Rectangle())

@@ -35,20 +35,20 @@ struct AddSheet: View {
         } panel: {
             if let note = readNote {
                 Text(note)
-                    .font(.system(size: 13))
+                    .scaledFont(size: 13)
                     .foregroundStyle(Theme.sunflower)
             }
 
             if let pickedFile {
                 Text(pickedFile.name)
-                    .font(.system(size: 24, weight: .semibold))
+                    .scaledFont(size: 24, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto)
                     .lineLimit(2)
             } else {
-                TextField("", text: $text,
+                TextField("What to keep", text: $text,
                           prompt: Text("Paste a link or write a note").foregroundStyle(Theme.onPhoto.opacity(0.45)),
                           axis: .vertical)
-                    .font(.system(size: 24, weight: .semibold))
+                    .scaledFont(size: 24, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto.opacity(wordsDim ? 0.68 : 1))
                     .lineLimit(1...6)
                     .focused($focused)
@@ -57,7 +57,7 @@ struct AddSheet: View {
 
             if hasSomething {
                 SurfaceLine(label: "Why") {
-                    TextField("", text: $why,
+                    TextField("Why", text: $why,
                               prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)))
                         .opacity(whyDim ? 0.72 : 1)
                         .submitLabel(.done)
@@ -67,7 +67,7 @@ struct AddSheet: View {
 
             if !error.isEmpty {
                 Text(error)
-                    .font(.system(size: 14))
+                    .scaledFont(size: 14)
                     .foregroundStyle(Theme.noteInk)
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: 4))
@@ -78,7 +78,7 @@ struct AddSheet: View {
                 Spacer()
                 Button { focused = false; showReturn = true } label: {
                     Text(returnText)
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.onPhoto.opacity(0.85))
                         .frame(minHeight: Metrics.touchMin)
                         .contentShape(Rectangle())

@@ -55,12 +55,12 @@ struct OpenedView: View {
 
                     VStack(spacing: 8) {
                         Text(save.headline)
-                            .font(.system(size: 34, weight: .bold))
+                            .scaledFont(size: 34, weight: .bold)
                             .tracking(-0.6)
                             .multilineTextAlignment(.center)
                             .textSelection(.enabled)
                         Text(save.byline())
-                            .font(.system(size: 15))
+                            .scaledFont(size: 15)
                             .opacity(0.8)
                     }
                     .foregroundStyle(Theme.onPhoto)
@@ -69,7 +69,7 @@ struct OpenedView: View {
 
                     if !save.note.isEmpty {
                         Text(save.note)
-                            .font(.system(size: 17, weight: .semibold))
+                            .scaledFont(size: 17, weight: .semibold)
                             .foregroundStyle(Theme.lidInk)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 18).padding(.vertical, 10)
@@ -79,7 +79,7 @@ struct OpenedView: View {
                     if save.fileData != nil {
                         Button { previewFile = FileKeeper.tempURL(for: save) } label: {
                             Text("Open \(save.fileName ?? "the file")")
-                                .font(.system(size: 16, weight: .semibold))
+                                .scaledFont(size: 16, weight: .semibold)
                                 .foregroundStyle(Theme.onPhoto)
                                 .lineLimit(1)
                                 .padding(.horizontal, 18)
@@ -95,7 +95,7 @@ struct OpenedView: View {
                     if let url = save.url {
                         Link(destination: url) {
                             Text("Open the page on \(save.host ?? "the web")")
-                                .font(.system(size: 16, weight: .semibold))
+                                .scaledFont(size: 16, weight: .semibold)
                                 .foregroundStyle(Theme.onPhoto)
                                 .padding(.horizontal, 18)
                                 .frame(minHeight: Metrics.touchMin)
@@ -107,7 +107,7 @@ struct OpenedView: View {
 
                     if !reading.characters.isEmpty {
                         Text(reading)
-                            .font(.system(size: 18))
+                            .scaledFont(size: 18)
                             .lineSpacing(6)
                             .foregroundStyle(Theme.onPhoto)
                             .tint(Theme.onPhoto)
@@ -183,7 +183,7 @@ struct OpenedView: View {
     @ViewBuilder
     private func creditLine(_ credit: String) -> some View {
         let text = Text(credit)
-            .font(.system(size: 13))
+            .scaledFont(size: 13)
             .foregroundStyle(Theme.onPhoto.opacity(0.75))
             .shadow(color: Theme.shade.opacity(0.4), radius: 2, y: 1)
         if let s = save.imageCreditURL, let url = URL(string: s) {
@@ -222,7 +222,7 @@ struct OpenedView: View {
     private func glassWord(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 16, weight: .semibold))
+                .scaledFont(size: 16, weight: .semibold)
                 .foregroundStyle(Theme.onPhoto)
                 .padding(.horizontal, 16)
                 .frame(minHeight: Metrics.touchMin)
@@ -252,7 +252,7 @@ struct OpenedView: View {
                 }
             }
         }
-        .font(.system(size: 18, weight: .semibold))
+        .scaledFont(size: 18, weight: .semibold)
         .foregroundStyle(Theme.onPhoto)
         .buttonStyle(.plain)
         .padding(.horizontal, 22)
