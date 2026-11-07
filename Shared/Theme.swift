@@ -101,7 +101,8 @@ enum Theme {
     // The logo. The box is Plum on the light tile and the lighter Plum on the Plum tile, like the box on Today.
     static let logoBox = adaptive(light: 0x3B2240, dark: plumLight)
     static let logoLid = sunflower
-    static let logoTile = adaptive(light: 0xF1E9D8, dark: 0x3B2240)
+    // In Plum dark the tile is one step lighter than the ground (0x3B2240), or it vanishes into it. Shadow stays the plum shade.
+    static let logoTile = adaptive(light: 0xF1E9D8, dark: 0x4A3050)
     static let logoCards = adaptive(light: 0xA798AD, dark: 0xB7A6BA)
 
     // Writing screens (Keep something, the share sheet): full screen on the app's own ground,
