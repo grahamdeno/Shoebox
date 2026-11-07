@@ -7,5 +7,6 @@ New here? Watch the one-minute setup video: https://inmyshoebox.com/site/shoebox
 3. On Today: flick up for Next, pull down to Put away. Tap to open a post, then Close.
 4. Turn on the daily notification in Settings, then see if it arrives.
 5. Settings > Email: Shoebox Plus is free while you test, nothing to buy. Type your first name, tap Get address, forward one real email to it, then reopen Shoebox.
+6. New: open your Shoebox, tap Put away. What you put away in the last 3 days is at the top, under Just put away.
 
 If something breaks, use TestFlight's Send Beta Feedback (take a screenshot first) or write support@inmyshoebox.com.
