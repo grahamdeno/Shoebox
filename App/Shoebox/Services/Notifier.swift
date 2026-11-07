@@ -22,7 +22,7 @@ enum Notifier {
         let all = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         let rules = TodayRules()
         let cal = Calendar.current
-        let now = Date()
+        let now = Clock.now
         for offset in 0..<7 {
             guard let day = cal.date(byAdding: .day, value: offset, to: cal.startOfDay(for: now)),
                   let at = cal.date(byAdding: .minute, value: Prefs.dailyMinute, to: day), at > now else { continue }
@@ -43,7 +43,7 @@ enum Notifier {
 
     static func timeLabel(_ minute: Int) -> String {
         let cal = Calendar.current
-        let d = cal.date(byAdding: .minute, value: minute, to: cal.startOfDay(for: Date())) ?? Date()
+        let d = cal.date(byAdding: .minute, value: minute, to: cal.startOfDay(for: Clock.now)) ?? Clock.now
         return d.formatted(date: .omitted, time: .shortened)
     }
 }

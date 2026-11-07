@@ -42,7 +42,7 @@ struct EditSheet: View {
         self.save = save
         self.onSaved = onSaved
         self.onDelete = onDelete
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
         _title = State(initialValue: save.title)
         _note = State(initialValue: save.note)
         _words = State(initialValue: save.body)
@@ -56,7 +56,7 @@ struct EditSheet: View {
         _startHasTime = State(initialValue: save.eventHasTime)
         _startDate = State(initialValue: save.eventDate ?? tomorrow)
         hadDate = save.eventDate != nil
-        dateFloor = Calendar.current.startOfDay(for: min(save.eventDate ?? Date(), Date()))
+        dateFloor = Calendar.current.startOfDay(for: min(save.eventDate ?? Clock.now, Clock.now))
     }
 
     /// Your own writing can be edited in full. A page's text is the page's, so it is left alone.
@@ -67,25 +67,26 @@ struct EditSheet: View {
             PostPhoto(id: save.id, data: save.imageData, topClear: 100, bottomClear: 330)
         } panel: {
             Text(status)
-                .font(.system(size: 13, weight: status == "Saved" ? .semibold : .regular))
-                .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.6))
+                .scaledFont(size: 13, weight: status == "Saved" ? .semibold : .regular)
+                .foregroundStyle(status == "Saved" ? Theme.sunflower : Theme.onPhoto.opacity(0.75))
 
-            TextField("", text: $title,
+            TextField("Title", text: $title,
                       prompt: Text("Title").foregroundStyle(Theme.onPhoto.opacity(0.45)), axis: .vertical)
-                .font(.system(size: 24, weight: .semibold))
+                .scaledFont(size: 24, weight: .semibold)
                 .foregroundStyle(Theme.onPhoto)
                 .lineLimit(1...3)
+                .accessibilityIdentifier("edit.title")
 
             if editsWords {
                 SurfaceLine(label: "Words", tint: Theme.onPhoto) {
-                    TextField("", text: $words,
+                    TextField("Words", text: $words,
                               prompt: Text("What you wrote").foregroundStyle(Theme.onPhoto.opacity(0.4)), axis: .vertical)
                         .lineLimit(1...6)
                 }
             }
 
             SurfaceLine(label: "Why") {
-                TextField("", text: $note,
+                TextField("Why", text: $note,
                           prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)))
             }
 
@@ -100,8 +101,8 @@ struct EditSheet: View {
                 Spacer()
                 if hasDate {
                     Text("Back 5 days before, stays until put away")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.onPhoto.opacity(0.6))
+                        .scaledFont(size: 13)
+                        .foregroundStyle(Theme.onPhoto.opacity(0.75))
                 }
             }
         }
@@ -178,7 +179,7 @@ struct EditSheet: View {
             startHasDate = hasDate; startHasTime = hasTime; startDate = date
             comeBackBeforeTheDate()
             wrote = true
-        } else if textChanged, !hadDate, !hasDate, save.eventDate == nil, DateReader.apply(to: save, asOf: Date()) {
+        } else if textChanged, !hadDate, !hasDate, save.eventDate == nil, DateReader.apply(to: save, asOf: Clock.now) {
             // New words that name a date still ahead, and you did not clear one: read it, as when a post is kept.
             let e = save.eventDate ?? date
             startHasDate = true; startHasTime = save.eventHasTime; startDate = e
@@ -187,7 +188,7 @@ struct EditSheet: View {
         }
 
         guard wrote else { return false }
-        save.updatedAt = Date()
+        save.updatedAt = Clock.now
         try? context.save()
         anySaved = true
         status = "Saved"
@@ -197,7 +198,7 @@ struct EditSheet: View {
     /// A post that is waiting comes back before its date.
     private func comeBackBeforeTheDate() {
         guard let event = save.eventDate, save.status == .away, let due = save.returnDate else { return }
-        let now = Date()
+        let now = Clock.now
         if let first = SaveActions().reminders(for: event).first(where: { $0 > now }), first < due {
             save.returnDate = first
         }

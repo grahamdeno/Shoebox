@@ -56,7 +56,7 @@ struct SettingsView: View {
         .animation(.easeOut(duration: 0.18), value: page)
         .onAppear { removing = MailboxKeys.pendingDelete() != nil }
         .task { await Plus.checkStore(); sandbox = Plus.inSandbox; freeInBeta = Plus.freeInBeta }
-        .font(.system(size: 17))
+        .scaledFont(size: 17)
         .onChange(of: time) { _, t in
             Prefs.dailyMinute = DailyTime.minute(of: t)
             Task { await Notifier.schedule(context) }
@@ -83,7 +83,7 @@ struct SettingsView: View {
                     title("Settings")
                     Spacer()
                     Button("Close") { dismiss() }
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
                 }
@@ -137,7 +137,7 @@ struct SettingsView: View {
                 HStack(spacing: 10) {
                     AppLogo(size: 30)
                     Text("Your posts stay on your phone.")
-                        .font(.system(size: 14))
+                        .scaledFont(size: 14)
                         .foregroundStyle(Theme.quiet)
                 }
                 .frame(maxWidth: .infinity)
@@ -177,7 +177,7 @@ struct SettingsView: View {
                 HStack {
                     Button { page = nil } label: {
                         Text("‹ Settings")
-                            .font(.system(size: 17, weight: .medium))
+                            .scaledFont(size: 17, weight: .medium)
                             .foregroundStyle(Theme.quiet)
                             .frame(minHeight: Metrics.touchMin, alignment: .leading)
                             .contentShape(Rectangle())
@@ -342,7 +342,7 @@ struct SettingsView: View {
                                 .foregroundStyle(Theme.quiet)
                                 .frame(minHeight: Metrics.touchMin)
                             Spacer()
-                            if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
+                            if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).scaledFont(size: 15) }
                         }
                     }
                     .padding(.top, 12)
@@ -356,7 +356,7 @@ struct SettingsView: View {
                             .fontWeight(.semibold).foregroundStyle(Theme.ink)
                             .frame(minHeight: Metrics.touchMin)
                         Spacer()
-                        if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
+                        if let plusPrice { Text(plusPrice).foregroundStyle(Theme.quiet).scaledFont(size: 15) }
                     }
                 }
                 .padding(.top, 22)
@@ -392,7 +392,7 @@ struct SettingsView: View {
         return VStack(alignment: .leading, spacing: 0) {
             title("Backups")
             Text("Nothing to do here: Shoebox saves a copy once a day and keeps the last 7. Back up now adds a copy of your own that is never replaced." + (last.map { " Last saved \($0) to \(place), Shoebox." } ?? ""))
-                .font(.system(size: 16))
+                .scaledFont(size: 16)
                 .foregroundStyle(Theme.quiet)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 14).padding(.horizontal, 6)
@@ -427,7 +427,7 @@ struct SettingsView: View {
                 .padding(.top, 14)
 
             Text("Your reason decides when it comes back.")
-                .font(.system(size: 22, weight: .semibold))
+                .scaledFont(size: 22, weight: .semibold)
                 .foregroundStyle(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 34).padding(.horizontal, 6)
@@ -445,15 +445,15 @@ struct SettingsView: View {
 
     private func howLine(_ head: LocalizedStringKey, _ more: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(head).font(.system(size: 18)).foregroundStyle(Theme.ink)
-            Text(more).font(.system(size: 16)).foregroundStyle(Theme.quiet)
+            Text(head).scaledFont(size: 18).foregroundStyle(Theme.ink)
+            Text(more).scaledFont(size: 16).foregroundStyle(Theme.quiet)
         }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.top, 12).padding(.horizontal, 6)
     }
 
     private func rule(_ text: LocalizedStringKey) -> some View {
-        Text(text).font(.system(size: 17)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+        Text(text).scaledFont(size: 17).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
     }
 
     private var privacyScreen: some View {
@@ -490,7 +490,7 @@ struct SettingsView: View {
     private func prepareExport() {
         // Once, when you open Backups. This copy carries your files too.
         guard exportURL == nil, let data = Backups.export(context, files: true) else { return }
-        let url = FileManager.default.temporaryDirectory.appending(path: "shoebox-native-backup-\(TodayRules().dayKey(Date())).json")
+        let url = FileManager.default.temporaryDirectory.appending(path: "shoebox-native-backup-\(TodayRules().dayKey(Clock.now)).json")
         if (try? data.write(to: url, options: .atomic)) != nil { exportURL = url }
     }
 
@@ -500,7 +500,7 @@ struct SettingsView: View {
     private func deleteEverything() {
         // 1. One last copy first, so this can be undone from Files. No copy, no delete. The copy never carries the mailbox key.
         guard let data = Backups.export(context, files: true),
-              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Date().timeIntervalSince1970)).json") else {
+              Backups.writeCopy(data, named: "shoebox-before-delete-\(Int(Clock.now.timeIntervalSince1970)).json") else {
             importNote = "Couldn't save a copy first, so nothing was deleted."
             return
         }
@@ -552,7 +552,7 @@ struct SettingsView: View {
 
     private func title(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 34, weight: .semibold))
+            .scaledFont(size: 34, weight: .semibold)
             .tracking(-0.8)
             .foregroundStyle(Theme.ink)
             .fixedSize(horizontal: false, vertical: true)
@@ -560,27 +560,32 @@ struct SettingsView: View {
 
     private func question(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 17, weight: .semibold))
+            .scaledFont(size: 17, weight: .semibold)
             .foregroundStyle(Theme.ink)
             .padding(.top, 28).padding(.bottom, 10).padding(.horizontal, 6)
     }
 
     private func line(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 15))
+            .scaledFont(size: 15)
             .foregroundStyle(Theme.quiet)
             .padding(.top, 14).padding(.horizontal, 6)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     private func choices<C: View>(@ViewBuilder _ content: () -> C) -> some View {
-        HStack(spacing: 26) { content() }.padding(.horizontal, 6)
+        // Side by side while they fit; at large text sizes one above the other, never broken mid-word (UX audit).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 26) { content() }
+            VStack(alignment: .leading, spacing: 4) { content() }
+        }
+        .padding(.horizontal, 6)
     }
 
     private func choice(_ text: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 22, weight: on ? .bold : .regular))
+                .scaledFont(size: 22, weight: on ? .bold : .regular)
                 .foregroundStyle(on ? Theme.ink : Theme.quiet)
                 .underline(on, color: Theme.ink)
                 .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin)
@@ -602,12 +607,24 @@ struct SettingsView: View {
 
     /// One row: its name, its answer in quiet words, and an arrow when it opens a screen.
     private func rowLabel(_ name: String, _ answer: String?, arrow: Bool = true) -> some View {
+        // The answer sits beside the name while both fit; at large text sizes it goes under the name, never broken
+        // mid-word (UX audit: "Automat ic", "Backu ps").
         HStack(spacing: 10) {
-            Text(name).foregroundStyle(Theme.ink)
-            Spacer()
-            if let answer { Text(answer).foregroundStyle(Theme.quiet).font(.system(size: 15)) }
-            if arrow { Text("›").foregroundStyle(Theme.quiet).font(.system(size: 20)) }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    Text(name).foregroundStyle(Theme.ink).fixedSize()
+                    Spacer(minLength: 8)
+                    if let answer { Text(answer).foregroundStyle(Theme.quiet).scaledFont(size: 15).fixedSize() }
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    if let answer { Text(answer).foregroundStyle(Theme.quiet).scaledFont(size: 15).fixedSize(horizontal: false, vertical: true) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if arrow { Text("›").foregroundStyle(Theme.quiet).scaledFont(size: 20) }
         }
+        .padding(.vertical, 4)
         .frame(minHeight: 52)
         .contentShape(Rectangle())
     }
@@ -615,7 +632,7 @@ struct SettingsView: View {
     /// A group's small title, above its card.
     private func group(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 15))
+            .scaledFont(size: 15)
             .foregroundStyle(Theme.quiet)
             .padding(.top, 26).padding(.bottom, 8).padding(.horizontal, 6)
     }
@@ -623,7 +640,7 @@ struct SettingsView: View {
     /// One quiet line under a card.
     private func note(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 14))
+            .scaledFont(size: 14)
             .foregroundStyle(Theme.quiet)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 8).padding(.horizontal, 6)
@@ -634,7 +651,7 @@ struct SettingsView: View {
     private func quietWord(_ text: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 15))
+                .scaledFont(size: 15)
                 .foregroundStyle(Theme.quiet)
                 .frame(minHeight: Metrics.touchMin)
                 .contentShape(Rectangle())
@@ -677,7 +694,7 @@ struct GlassCard: View {
 
 enum DailyTime {
     static func date(fromMinute m: Int) -> Date {
-        Calendar.current.date(byAdding: .minute, value: m, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        Calendar.current.date(byAdding: .minute, value: m, to: Calendar.current.startOfDay(for: Clock.now)) ?? Clock.now
     }
 
     static func minute(of date: Date) -> Int {

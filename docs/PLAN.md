@@ -53,7 +53,7 @@ From the storyboard (`docs/design/storyboard.html`, Midnight Gold). Each is a v1
 | Repo | New repo, `Shoebox` | Clean structure around "a save is a moment". The old repo becomes the archive. |
 | App Store | Same record and bundle ID (`com.grahamdeno.shoebox`); ships as version 1.0 (changed November 2: the record's only version is 1.0 and nothing was ever released) | Keeps the name and listing. Never create a new app record or remove this one. |
 | Old 1.0 | Don't submit it | Recommended; Graham to confirm. TestFlight build 36 stays for his own use until 2.0. |
-| Relay | Carry over the Cloudflare Worker | Link previews, email in, AI with App Attest and cost limits all work and are tested. |
+| Relay | A new, smaller Worker (`relay/app/`, `api.inmyshoebox.com`) | Link previews, stock photo search and sealed email in. No AI on the relay (decided November 2). |
 | Data | On the phone, ready to sync later | Privacy promise stays. Sync becomes a feature, not a rewrite. |
 | Palette | Onyx, Wheat, Oceanic and Nectarine: Wheat light, Onyx dark. Neumorphic depth, Liquid Glass on opened posts | October 30 evening, replacing Peach and slate. Replaced November 1 (next row). |
 | Palette | Wheat, Plum Night, Plum Ink, Plum and Nectarine. Plum box in both modes and the logo; no black; Onyx and Oceanic retired | November 1. Replaced November 2 (next row). |
@@ -85,7 +85,7 @@ The design changed on October 31, 2026 to the stack: Scales' moves, full-screen 
 **The return planner** (the heart of the app):
 - Input: the save, its reason, its kind, and context (calendar events, Focus, time of day, how long it takes).
 - Output: one `nextMoment` (a time window, a place or Focus condition, and the surface to use), or "quiet".
-- First pass is on device: Foundation Models with structured output turns the reason into a when (date words, weekday words, "before X", "at dinner", "this weekend", "next fall"). Plain rules cover common phrases without AI. The relay's AI is the fallback.
+- The reason is read on the phone by plain rules (date words, weekday words, "before X", "this weekend", "tonight"). No AI reads dates, and there is no relay AI.
 - Delivery is local. Local notifications and Live Activities are scheduled on the phone. The relay is not needed for reminders, so the old web-push routes go away.
 - Each save is offered once at its moment. Ignoring it counts as a pass. There is no quiet rule: a passed save keeps coming back (decided October 30).
 
@@ -97,7 +97,6 @@ The design changed on October 31, 2026 to the stack: Scales' moves, full-screen 
 |---|---|
 | `/preview`, `/image`, `/file` | Link pages, pictures and files for saves |
 | `/inbox`, `/inbox/ack`, `/inbox/address`, `/inbox/file` | Your Shoebox email address |
-| `/ai/register`, `/ai/challenge`, `/ai/attest`, `/ai/usage` and the AI proxy | AI with App Attest and cost limits |
 | `/me/delete`, `/version`, `/stats`, `/stats/report` | Delete my data; health; anonymous counts |
 
 | Drop | Why |
@@ -105,7 +104,7 @@ The design changed on October 31, 2026 to the stack: Scales' moves, full-screen 
 | `/push/*`, `/remind` | Reminders become local notifications |
 | `/ical` | Calendar is read on the phone with EventKit |
 | `/song`, `/apple/*` | Song of the day isn't in v1 |
-| `/ai/quotes`, `/ai/stories` | Quote of the day and top stories aren't in v1 |
+| `/ai/*` | No relay AI in v1.0: writing is on the phone with Apple Intelligence (decided November 2) |
 | `/beta` | Decide at launch (open decision 6) |
 
 New relay work: a lookup route for task saves (moment 8), returning facts with their sources, never acting.
@@ -117,8 +116,7 @@ Extract these into `docs/SPEC.md` in phase 0, reading the old code, not from mem
 - **Saves and kinds:** link, note, quote, photo, PDF, file, video. `detectText` in the old `src/capture.js` decides which. Several links pasted together become several saves.
 - **The reason line:** `why`, up to 140 characters, always shown at the top.
 - **Old fading rules,** which the new quiet rule replaces: an item faded after 21 days untouched (`FADE_DAYS`) or 8 deferrals (`MAX_SKIPS`), and nothing was ever deleted automatically. The new rule (two passes, then quiet) keeps that promise.
-- **School newsletters by email:** the AI turns a newsletter into short posts with dates. The child's name is masked as `{child}` before anything is sent to AI and put back on the phone. Flyers and PDFs are read too. Keep the prompt from `edition/src/ai.js` (`schoolPosts`).
-- **AI cost limits:** per device per month (default $1), whole relay per day ($20), per network per day. App Attest is required, with an owner allow-list.
+- **School newsletters by email:** a newsletter becomes one post per date that matters, read on the phone (SPEC section 4, Email row). Nothing is sent to an AI service. Flyers and PDFs are read too. `edition/src/ai.js` (`schoolPosts`) is a reference for the rules only.
 - **Privacy promises:** no account, no ads, no tracking, data on the phone, one-button delete. `edition/privacy.html` is the starting text.
 - **Identifiers:** Team `7MHDTK68M2`; bundle `com.grahamdeno.shoebox`, `.share` and `.widget`; App Group `group.com.grahamdeno.shoebox`; Apple key ID `79QU7DSTN9`; site `inmyshoebox.com`; support `support@inmyshoebox.com`.
 - **CI:** the old `.github/workflows/ios.yml` builds with XcodeGen on a cloud Mac and uploads to TestFlight with the App Store Connect key in secrets. Reuse that pattern.
@@ -135,8 +133,8 @@ Not carried over: the web app, the PWA, the feed of six, Shoebox Me's extra modu
 
 | # | Decision | Recommendation |
 |---|---|---|
-| 1 | Minimum iOS 26 (on-device AI) or 17 (wider reach)? | iOS 26. By launch most active iPhones will run it; the relay covers devices without Apple Intelligence. |
-| 2 | AI for the return planner: on device first, or relay first? | On device first, relay fallback. More private and free per call. |
+| 1 | Minimum iOS 26 (on-device AI) or 17 (wider reach)? | Decided: iOS 26. Phones without Apple Intelligence use plain rules on the phone; there is no relay AI. |
+| 2 | AI for the return planner: on device first, or relay first? | Decided November 2: no AI for dates. Plain rules on the phone; Apple Intelligence only writes email summaries, photo suggestions and stock-photo words. |
 | 3 | "At home": Focus only, or location too? | Focus only in v1. No location permission. |
 | 4 | Reading new screenshots: Photos access, or a Shortcut automation? | Ask for Photos access limited to screenshots; offer the Shortcut as the no-permission path. |
 | 5 | ~~Shoebox Me~~ | Decided October 30: dropped. One app, Shoebox: Your Own Feed. |

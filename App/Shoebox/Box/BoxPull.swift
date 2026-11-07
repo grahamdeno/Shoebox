@@ -36,6 +36,7 @@ struct BoxStripFade: ViewModifier {
         content
             .opacity(1 - Double(min(1, max(0, (pull.progress - 0.55) / 0.45))))
             .allowsHitTesting(pull.progress < 0.98 || pull.dragging)
+            .accessibilityHidden(pull.progress >= 0.98)
     }
 }
 
@@ -47,6 +48,8 @@ struct BoxSheetFade: ViewModifier {
         content
             .opacity(Double(min(1, pull.progress * 6)))
             .allowsHitTesting(pull.progress > 0.02)
+            // Unseen is unheard: closed, the whole Shoebox list was in VoiceOver's reach on Today (UX audit).
+            .accessibilityHidden(pull.progress <= 0.02)
     }
 }
 

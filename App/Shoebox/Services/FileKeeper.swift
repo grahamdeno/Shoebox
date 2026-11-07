@@ -74,7 +74,7 @@ enum FileKeeper {
         return (text, picture)
     }
 
-    static func save(_ file: PickedFile, note: String, now: Date = Date()) -> Save {
+    static func save(_ file: PickedFile, note: String, now: Date = Clock.now) -> Save {
         let title = (file.name as NSString).deletingPathExtension
         let s = Save(title: title.isEmpty ? file.name : title, note: String(note.prefix(140)), origin: "a file", kind: .file, createdAt: now)
         s.fileData = file.data

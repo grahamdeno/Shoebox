@@ -166,15 +166,15 @@ final class ShareModel {
                 if let i = p.image { s.imageURL = i }
                 if let site = p.site, !site.isEmpty { s.origin = site }
             }
-            if let pictureData { s.imageData = pictureData; s.enrichedAt = Date() }
-            if pictureData != nil || preview != nil { s.enrichedAt = Date() }
+            if let pictureData { s.imageData = pictureData; s.enrichedAt = Clock.now }
+            if pictureData != nil || preview != nil { s.enrichedAt = Clock.now }
             saves.append(s)
         } else if !photos.isEmpty {
             saves = photos.map { Capture.save(photo: $0, note: note, origin: "your photos") }
         } else if !texts.isEmpty {
             saves = Capture.saves(fromText: texts.joined(separator: "\n"), note: note, origin: "a share")
         }
-        choice.apply(to: saves, now: Date())
+        choice.apply(to: saves, now: Clock.now)
         var added = 0
         for s in saves where !Capture.isDuplicate(s, in: context) {
             context.insert(s)
@@ -186,7 +186,7 @@ final class ShareModel {
             return
         }
         problem = nil
-        let back = saves.first?.returnDate.map { LaterPlanner().label(for: $0, now: Date()).lowercased() } ?? "tomorrow"
+        let back = saves.first?.returnDate.map { LaterPlanner().label(for: $0, now: Clock.now).lowercased() } ?? "tomorrow"
         keptLabel = added == 0 ? "Already in your Shoebox." : "Kept. It comes back \(back)."
         withAnimation(.snappy) { kept = true }
         Task {
@@ -214,7 +214,7 @@ struct ShareSheet: View {
         ZStack {
             SurfaceGround(picture: model.picture).ignoresSafeArea()
             Text(model.keptLabel)
-                .font(.system(size: 34, weight: .bold))
+                .scaledFont(size: 34, weight: .bold)
                 .foregroundStyle(Theme.onPhoto)
                 .multilineTextAlignment(.center)
                 .padding(24)
@@ -222,7 +222,7 @@ struct ShareSheet: View {
         .environment(\.colorScheme, .dark)
     }
 
-    private var event: Date? { DateReader.read(model.title, created: Date())?.event }
+    private var event: Date? { DateReader.read(model.title, created: Clock.now)?.event }
 
     /// The same surface as Keep something: what was found is the post, your reason goes under it.
     private var surface: some View {
@@ -231,18 +231,18 @@ struct ShareSheet: View {
         } panel: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.title)
-                    .font(.system(size: 24, weight: .semibold))
+                    .scaledFont(size: 24, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto)
                     .lineLimit(4)
                 if !model.site.isEmpty {
                     Text(model.site)
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.onPhoto.opacity(0.6))
                         .lineLimit(1)
                 }
             }
             SurfaceLine(label: "Why") {
-                TextField("", text: $model.why,
+                TextField("Why", text: $model.why,
                           prompt: Text("Optional. Before the trip").foregroundStyle(Theme.onPhoto.opacity(0.4)),
                           axis: .vertical)
                     .lineLimit(1...3)
@@ -252,7 +252,7 @@ struct ShareSheet: View {
             }
             if let problem = model.problem {
                 Text(problem)
-                    .font(.system(size: 15, weight: .semibold))
+                    .scaledFont(size: 15, weight: .semibold)
                     .foregroundStyle(Theme.onPhoto)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -260,7 +260,7 @@ struct ShareSheet: View {
                 Spacer()
                 Button { focused = false; showReturn = true } label: {
                     Text(ReturnLine.text(model.choice, event: event, why: model.why))
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.onPhoto.opacity(0.85))
                         .frame(minHeight: Metrics.touchMin)
                         .contentShape(Rectangle())

@@ -23,7 +23,7 @@ final class Diagnostics: NSObject, MXMetricManagerSubscriber {
     }
 
     /// File names sort oldest first (they start with the date), so no file dates are read.
-    static func name(kind: String, now: Date = Date()) -> String {
+    static func name(kind: String, now: Date = Clock.now) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone(identifier: "UTC")

@@ -39,7 +39,7 @@ struct TodayView: View {
 
     // The gesture
     @State private var drag: CGFloat = 0
-    @State private var dragStart = Date()
+    @State private var dragStart = Clock.now
     @State private var dragging = false
     @State private var crossed = 0          // 1 past Next, -1 past Put away
     @State private var fly: CGFloat = 0
@@ -63,7 +63,7 @@ struct TodayView: View {
     static let lidTop: CGFloat = 8
     static let sheetLidRise: CGFloat = 34
 
-    private var now: Date { Date() }
+    private var now: Date { Clock.now }
     private var queue: [Save] {
         let today = rules.today(all, ids: pickIds, now: now)
         guard !browseIds.isEmpty else { return today }
@@ -106,11 +106,17 @@ struct TodayView: View {
                         .accessibilityAction(named: "Next one") { goNext(current, height: height) }
                         .accessibilityAction(named: "Put away") { goAway(current, height: height) }
                         .task(id: current.id) { await enrichAhead() }
+                        .accessibilityHidden(pull.progress >= 0.98)
                     hints
                     topBar(onPhoto: true)
+                        .accessibilityHidden(pull.progress >= 0.98)
                 } else {
-                    stopScreen
-                    newLow
+                    // Open, the Shoebox covers Today: Today's words step out of VoiceOver's way.
+                    Group {
+                        stopScreen
+                        newLow
+                    }
+                    .accessibilityHidden(pull.progress >= 0.98)
                 }
 
                 // The Shoebox slides out from behind the box, at the pace of the thumb.
@@ -119,6 +125,8 @@ struct TodayView: View {
                     BoxDim(pull: pull)
                         .gesture(boxPull(height: height, top: geo.safeAreaInsets.top))
                     boxSheet(height: height, top: geo.safeAreaInsets.top)
+                        // Closed, the sheet is unseen and must be unheard (UX audit: VoiceOver could reach every row).
+                        .accessibilityHidden(pull.progress <= 0.02 && !pull.dragging)
                 }
 
                 glass
@@ -262,7 +270,7 @@ struct TodayView: View {
             HStack {
                 Button { showAdd = true } label: {
                     Text("+ New")
-                        .font(.system(size: 16, weight: .medium))
+                        .scaledFont(size: 16, weight: .medium)
                         .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .leading)
                         .contentShape(Rectangle())
                 }
@@ -271,9 +279,9 @@ struct TodayView: View {
                 Spacer()
                 if !queue.isEmpty && browseIds.isEmpty {
                     Text("\(max(1, pickIds.count - queue.count + 1)) of \(pickIds.count)")
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .monospacedDigit()
-                        .opacity(0.8)
+                        .opacity(0.92)
                 }
             }
             .foregroundStyle(onPhoto ? Theme.onPhoto : Theme.ink)
@@ -299,7 +307,7 @@ struct TodayView: View {
 
     private func hint(_ text: String, progress p: CGFloat) -> some View {
         Text(text)
-            .font(.system(size: 15, weight: p >= 1 ? .bold : .medium))
+            .scaledFont(size: 15, weight: p >= 1 ? .bold : .medium)
             .foregroundStyle(Theme.onPhoto)
             .shadow(color: Theme.shade.opacity(0.45), radius: 6)
             .opacity(p <= 0 ? 0 : (p >= 1 ? 1 : 0.2 + 0.5 * p))
@@ -332,13 +340,13 @@ struct TodayView: View {
                 HStack(alignment: .center, spacing: 12) {
                     // Bare: the lid says what it is. Only the drop hint speaks, and the count.
                     Text(ready ? "Let go to put it away" : "")
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, weight: .semibold)
                         .foregroundStyle(Theme.lid)
                     Spacer()
                     Text("\(boxCount)")
-                        .font(.system(size: 17))
+                        .scaledFont(size: 17)
                         .monospacedDigit()
-                        .foregroundStyle(Theme.boxText.opacity(0.7))
+                        .foregroundStyle(Theme.boxText.opacity(0.85))
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, Self.lidTop + BoxLid.height + 14)
@@ -432,10 +440,10 @@ struct TodayView: View {
                 AppLogo(size: 52)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Shoebox")
-                        .font(.system(size: 22, weight: .bold))
+                        .scaledFont(size: 22, weight: .bold)
                         .foregroundStyle(Theme.ink)
                     Text("Keep it. It comes back to you.")
-                        .font(.system(size: 15))
+                        .scaledFont(size: 15)
                         .foregroundStyle(Theme.quiet)
                 }
             }
@@ -443,10 +451,10 @@ struct TodayView: View {
             .accessibilityLabel("Shoebox. Keep it. It comes back to you.")
             .padding(.bottom, 88)
             Text(head)
-                .font(.system(size: 22, weight: .semibold))
+                .scaledFont(size: 22, weight: .semibold)
                 .foregroundStyle(Theme.ink)
             Text(sub)
-                .font(.system(size: 16))
+                .scaledFont(size: 16)
                 .foregroundStyle(Theme.quiet)
             if !more.isEmpty {
                 VStack(spacing: 0) {
@@ -471,7 +479,7 @@ struct TodayView: View {
                 Spacer()
                 Button { showAdd = true } label: {
                     Text("+ New")
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, weight: .semibold)
                         .foregroundStyle(Theme.ink)
                         .frame(minWidth: 88, minHeight: Metrics.touchMin, alignment: .trailing)
                         .contentShape(Rectangle())
@@ -487,9 +495,9 @@ struct TodayView: View {
     private func row(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
-                Text(text).font(.system(size: 17, weight: .medium)).foregroundStyle(Theme.ink)
+                Text(text).scaledFont(size: 17, weight: .medium).foregroundStyle(Theme.ink)
                 Spacer()
-                Text("\u{203A}").font(.system(size: 22)).foregroundStyle(Theme.quiet)
+                Text("\u{203A}").scaledFont(size: 22).foregroundStyle(Theme.quiet)
             }
             .frame(minHeight: 52)
             .contentShape(Rectangle())
@@ -504,10 +512,12 @@ struct TodayView: View {
         return label == "Tomorrow" ? "Next one back tomorrow." : "Next one back \(label)."
     }
 
-    /// Undo: small, at the right above the box, clear of the post and of the thumb's swipe path.
+    /// Undo: small, at the right, clear of the post's panel and of the thumb's swipe path. Over a post it sits at the top,
+    /// under the count, where the photo is open (above the box it covered the panel's lower edge: UX audit). On the day's
+    /// end screen, where there is no post, it sits above + New.
     private func toastView(_ toast: Toast, aboveNew: Bool = false) -> some View {
         VStack {
-            Spacer()
+            if aboveNew { Spacer() }
             HStack {
                 Spacer()
                 UndoPill(text: toast.text) {
@@ -517,10 +527,12 @@ struct TodayView: View {
                 }
             }
             .padding(.trailing, 16)
+            .padding(.top, aboveNew ? 0 : 52)
             // On the day's end screen + New sits here, so Undo rises above it.
-            .padding(.bottom, Self.stripHeight + 14 + (aboveNew ? Metrics.touchMin + 8 : 0))
+            .padding(.bottom, aboveNew ? Self.stripHeight + 14 + Metrics.touchMin + 8 : 0)
+            if !aboveNew { Spacer() }
         }
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
+        .transition(.opacity.combined(with: .move(edge: aboveNew ? .bottom : .top)))
     }
 
     // MARK: The gesture
@@ -536,7 +548,7 @@ struct TodayView: View {
             .onChanged { v in
                 // The Shoebox is out over the post: the post takes no moves until it is closed.
                 guard !busy, pull.progress < 0.02 else { return }
-                if !dragging { dragging = true; dragStart = Date() }
+                if !dragging { dragging = true; dragStart = Clock.now }
                 let dy = v.translation.height
                 if abs(dy) < 6 && abs(v.translation.width) < 6 { return }
                 drag = dy
@@ -553,7 +565,7 @@ struct TodayView: View {
                 crossed = 0
                 let dy = v.translation.height
                 let moved = abs(dy) >= 6 || abs(v.translation.width) >= 6
-                if !moved && Date().timeIntervalSince(dragStart) < 0.35 {
+                if !moved && Clock.now.timeIntervalSince(dragStart) < 0.35 {
                     drag = 0
                     if opened == nil { opened = OpenedPost(save: current) }
                     return

@@ -30,12 +30,12 @@ struct PostCard: View {
         VStack(alignment: .leading, spacing: 8) {
             if !save.note.isEmpty {
                 Text(save.note)
-                    .font(.system(size: 17, weight: .semibold))
+                    .scaledFont(size: 17, weight: .semibold)
                     .foregroundStyle(Theme.lid)
                     .shadow(color: Theme.shade.opacity(0.35), radius: 1.5, y: 1)
             }
             Text(save.headline)
-                .font(.system(size: save.imageData == nil ? 34 : 30, weight: .bold))
+                .scaledFont(size: save.imageData == nil ? 34 : 30, weight: .bold)
                 .tracking(-0.6)
                 .foregroundStyle(Theme.onPhoto)
                 .lineLimit(5)
@@ -44,7 +44,7 @@ struct PostCard: View {
                 .shadow(color: Theme.shade.opacity(0.4), radius: 2, y: 1)
             if !save.snippet.isEmpty {
                 Text(save.snippet)
-                    .font(.system(size: 17))
+                    .scaledFont(size: 17)
                     .lineSpacing(3)
                     .foregroundStyle(Theme.onPhoto.opacity(0.95))
                     .lineLimit(3)
@@ -52,11 +52,11 @@ struct PostCard: View {
             }
             if let event = save.eventDate {
                 Text(comesBack(event))
-                    .font(.system(size: 13, weight: .semibold))
+                    .scaledFont(size: 13, weight: .semibold)
                     .foregroundStyle(Theme.lid)
             }
             Text(save.byline(now: now))
-                .font(.system(size: 13))
+                .scaledFont(size: 13)
                 .foregroundStyle(Theme.onPhoto.opacity(0.82))
                 .lineLimit(1)
         }

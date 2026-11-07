@@ -1,0 +1,115 @@
+name: ux-audit
+# The UX audit (docs/audit/08-ux-audit.md): the journeys walked through the real app in the simulator, under several
+# conditions at once, then one report with every picture, check, timing and accessibility issue, pushed to the
+# ci-audit branch. Runs when a commit message on a branch contains [audit].
+on:
+  push:
+    branches-ignore: [main, testflight, ci-screens, ci-audit]
+
+jobs:
+  walk:
+    if: contains(github.event.head_commit.message, '[audit]')
+    runs-on: macos-26
+    timeout-minutes: 75
+    # Only a newer [audit] commit replaces a running audit; ordinary commits never cancel one.
+    concurrency:
+      group: ux-audit-${{ github.ref }}-${{ matrix.config }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - config: pro-light
+            devices: "iPhone 17 Pro"
+            look: light
+            only: ""
+          - config: pro-dark
+            devices: "iPhone 17 Pro"
+            look: dark
+            only: "-skip-testing:ShoeboxUITests/TimeReplay"
+          - config: stone-dark
+            devices: "iPhone 17 Pro"
+            look: dark
+            colors: stone
+            only: "-only-testing:ShoeboxUITests/Journeys/test02_TodayMoves -only-testing:ShoeboxUITests/Journeys/test05_TheShoebox -only-testing:ShoeboxUITests/Journeys/test06_Settings"
+          - config: big-text
+            devices: "iPhone 17 Pro"
+            look: light
+            text: UICTContentSizeCategoryAccessibilityXXXL
+            only: "-skip-testing:ShoeboxUITests/TimeReplay"
+          - config: small-phone
+            devices: "iPhone SE|iPhone 16e|iPhone 17"
+            look: light
+            only: "-skip-testing:ShoeboxUITests/TimeReplay"
+    env:
+      XCODE_APP: /Applications/Xcode_26.6.app
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select the pinned Xcode
+        run: Scripts/ci-select-xcode.sh
+      - name: Project and simulator
+        run: |
+          brew install xcodegen && xcodegen generate
+          IFS='|' read -ra NAMES <<< "${{ matrix.devices }}"
+          SIM=$(Scripts/ci-pick-simulator-named.sh "${NAMES[@]}")
+          echo "SIM=$SIM" >> $GITHUB_ENV
+          xcrun simctl boot "$SIM" || true
+          xcrun simctl bootstatus "$SIM" -b
+          xcrun simctl ui "$SIM" appearance ${{ matrix.look }}
+          xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged --batteryLevel 100 || true
+          xcrun simctl spawn "$SIM" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true || true
+      - name: Walk the journeys
+        env:
+          TEST_RUNNER_AUDIT_OUT: ${{ github.workspace }}/audit-out
+          TEST_RUNNER_AUDIT_CONFIG: ${{ matrix.config }}
+          TEST_RUNNER_AUDIT_COLORS: ${{ matrix.colors }}
+          TEST_RUNNER_AUDIT_TEXT: ${{ matrix.text }}
+        run: |
+          mkdir -p audit-out
+          set -o pipefail
+          xcodebuild test -project Shoebox.xcodeproj -scheme ShoeboxAudit -destination "id=$SIM" \
+            -derivedDataPath build -resultBundlePath audit.xcresult CODE_SIGNING_ALLOWED=NO \
+            ${{ matrix.only }} > test.log 2>&1 || {
+              grep -E "error:|Test Case .* failed|Failing tests|crash" test.log | sort -u | head -40 | while IFS= read -r l; do echo "::warning::$l"; done
+              grep -q "BUILD FAILED\|TEST BUILD FAILED\|Testing cancelled\|swift:[0-9]*:[0-9]*: error:" test.log && { tail -60 test.log; exit 1; } || true
+            }
+          tail -30 test.log
+          find audit-out -name record.json | wc -l
+          test -n "$(find audit-out -name record.json)" || { echo "::error::No records were written"; tail -80 test.log; exit 1; }
+      - name: Crash reports
+        if: always()
+        run: |
+          mkdir -p audit-out/${{ matrix.config }}/crashes
+          find ~/Library/Logs/DiagnosticReports -name "Shoebox*" -newer Shoebox.xcodeproj -exec cp {} audit-out/${{ matrix.config }}/crashes/ \; 2>/dev/null || true
+          cp test.log audit-out/${{ matrix.config }}/test.log 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-${{ matrix.config }}
+          path: audit-out
+          retention-days: 14
+
+  report:
+    needs: walk
+    if: always() && contains(github.event.head_commit.message, '[audit]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Build the report
+        run: |
+          pip install --quiet pillow
+          mkdir -p report
+          for d in artifacts/audit-*; do cp -R "$d"/. report/ 2>/dev/null || true; done
+          python3 Scripts/audit_report.py report "${GITHUB_SHA::7}"
+      - name: Publish to the ci-audit branch
+        run: |
+          cd report
+          git init -q && git checkout -q -b ci-audit
+          git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "Audit for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-audit
+          echo "::notice::Audit for ${GITHUB_SHA::7} on ci-audit"

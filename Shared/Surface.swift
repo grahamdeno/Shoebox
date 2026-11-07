@@ -63,7 +63,7 @@ struct BottomBar: View {
                     .contentShape(Rectangle())
             }
         }
-        .font(.system(size: 19))
+        .scaledFont(size: 19)
         .buttonStyle(.plain)
         .padding(.horizontal, 32)
         .padding(.top, 12)
@@ -100,13 +100,13 @@ struct FormTopBar: View {
     var body: some View {
         HStack {
             Button(leading, action: onLeading)
-                .font(.system(size: 17))
+                .scaledFont(size: 17)
                 .foregroundStyle(Theme.formInk)
                 .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .leading)
                 .contentShape(Rectangle())
             Spacer()
             Button(trailing, action: onTrailing)
-                .font(.system(size: 17, weight: .semibold))
+                .scaledFont(size: 17, weight: .semibold)
                 .foregroundStyle(trailingEnabled ? Theme.formAction : Theme.formQuiet)
                 .frame(minWidth: Metrics.touchMin, minHeight: Metrics.touchMin, alignment: .trailing)
                 .contentShape(Rectangle())
@@ -122,11 +122,11 @@ struct LineField<Field: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(label)
-                .font(.system(size: 14))
+                .scaledFont(size: 14)
                 .foregroundStyle(Theme.formQuiet)
             Rectangle().fill(Theme.formLine).frame(height: 1)
             field
-                .font(.system(size: 19))
+                .scaledFont(size: 19)
                 .foregroundStyle(Theme.formInk)
                 .tint(Theme.formAction)
         }
@@ -156,9 +156,33 @@ struct UndoPill: View {
                     .frame(minHeight: Metrics.touchMin)
             }
         }
-        .font(.system(size: 14))
+        .scaledFont(size: 14)
         .frame(minHeight: action == nil ? 40 : 0)
         .foregroundStyle(Theme.ground)
         .background(Theme.ink, in: Capsule())
+    }
+}
+
+/// SF Pro at the size it has at the default text size, growing with the person's text size (Dynamic Type).
+/// The UX audit found every size fixed (docs/audit/08-ux-audit.md): `.font(.system(size:))` never grows.
+struct ScaledFont: ViewModifier {
+    @ScaledMetric private var size: CGFloat
+    private let weight: Font.Weight
+
+    init(size: CGFloat, weight: Font.Weight) {
+        // Titles grow more slowly than body text, as the system's own styles do.
+        let style: Font.TextStyle = size >= 28 ? .largeTitle : size >= 20 ? .title3 : size <= 13 ? .footnote : .body
+        _size = ScaledMetric(wrappedValue: size, relativeTo: style)
+        self.weight = weight
+    }
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: size, weight: weight))
+    }
+}
+
+extension View {
+    func scaledFont(size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        modifier(ScaledFont(size: size, weight: weight))
     }
 }

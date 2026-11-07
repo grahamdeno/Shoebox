@@ -98,7 +98,28 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.tests
         GENERATE_INFOPLIST_FILE: YES
+  ShoeboxUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - App/ShoeboxUITests
+    dependencies:
+      - target: Shoebox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.grahamdeno.shoebox.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Shoebox
 schemes:
+  # The UX audit (docs/audit/08-ux-audit.md): the journeys through the real app in the simulator. Run by ux-audit.yml only.
+  ShoeboxAudit:
+    build:
+      targets:
+        Shoebox: all
+    test:
+      config: Debug
+      targets:
+        - ShoeboxUITests
   Shoebox:
     build:
       targets:

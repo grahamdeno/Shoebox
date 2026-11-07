@@ -89,7 +89,7 @@ enum Inbox {
         var existing = (try? context.fetch(FetchDescriptor<Save>())) ?? []
         var done: [String] = []
         var added = 0
-        let now = Date()
+        let now = Clock.now
         // Dated posts already made from email (and in this collection), so a newsletter sent again each week
         // does not make the same event twice.
         var known = existing.filter { $0.deletedAt == nil && $0.kind == .email && $0.eventDate != nil }
@@ -236,14 +236,14 @@ enum Inbox {
     }
 
     /// Counts mail that could not be opened. After a week with none, the count starts again.
-    static func noteUnopened(_ n: Int, now: Date = Date()) {
+    static func noteUnopened(_ n: Int, now: Date = Clock.now) {
         let recent = Prefs.unopenedMailAt.map { now.timeIntervalSince($0) < 7 * 86_400 } ?? false
         Prefs.unopenedMail = (recent ? Prefs.unopenedMail : 0) + n
         Prefs.unopenedMailAt = now
     }
 
     /// The one quiet line Settings › Email shows ("1 email couldn't be opened on this phone."), or nil.
-    static func unopenedLine(now: Date = Date()) -> String? {
+    static func unopenedLine(now: Date = Clock.now) -> String? {
         guard let at = Prefs.unopenedMailAt, now.timeIntervalSince(at) < 7 * 86_400, Prefs.unopenedMail > 0 else { return nil }
         let n = Prefs.unopenedMail
         return n == 1 ? "1 email couldn't be opened on this phone." : "\(n) emails couldn't be opened on this phone."
@@ -274,7 +274,7 @@ enum Inbox {
     /// A key is made only when it is about to be registered. The relay decides whether it takes it: with Plus, or for
     /// the owner's own address before Plus is on sale. Otherwise the mail waits and Settings says so. Quiet: it never
     /// asks the person for anything.
-    static func settleSealing(held: String?, hasAddress: Bool, key: String, force: Bool, now: Date = Date()) async -> Curve25519.KeyAgreement.PrivateKey? {
+    static func settleSealing(held: String?, hasAddress: Bool, key: String, force: Bool, now: Date = Clock.now) async -> Curve25519.KeyAgreement.PrivateKey? {
         var mine: Curve25519.KeyAgreement.PrivateKey?
         if case .found(let k) = MailboxKeys.sealingKeyState() { mine = k }
         guard hasAddress else { return mine }
