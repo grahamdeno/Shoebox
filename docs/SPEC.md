@@ -133,7 +133,7 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
 1. **Today is a daily pick.**
    - Everything coming back always comes out: posts put away until now, and dated steps.
    - Anything new since the morning (kept, shared or emailed today) always joins Today, and so does anything dated within 5 days. The daily limit never holds these back.
-   - A newsletter's dates more than a week out go straight to Coming up in the Shoebox, with one line on Today ("6 dates from the school newsletter are in Coming up"), so one email never floods Today.
+   - All of a newsletter's dates show on Today when they arrive, then follow the dated-post rules (rule 5).
    - The rest of the pile follows, up to the daily limit (default 10; All is a setting).
    - Posts you passed before go first, then the oldest never seen.
    - Bringing something back from the Box puts it first.
