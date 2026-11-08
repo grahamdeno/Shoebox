@@ -8,7 +8,7 @@ Follow `docs/video/style.md` for everything not said here.
 
 **Privacy wording** follows style.md rule 6. Use the fixed sentences, whole, as voice or as a small line. Never "nothing leaves your phone". Date reading uses plain rules on the phone, so don't tie Apple Intelligence to dates.
 
-Make them one at a time, each with its own storyboard and yes. Order: 3b (made), then 3d, 3a, 3c.
+Make them one at a time, each with its own storyboard and yes. Order: 3b (made), 3d (made), then 3a, 3c.
 
 ## 3a. It reads the date
 
@@ -48,7 +48,9 @@ Made and approved November 5, 2026. **20 seconds** (not 15), 1080×1920. File: `
 
 ## 3d. Private by design
 
-Up to 20 s.
+Made and approved November 7, 2026. **15.37 seconds**, 1080x1920, 30 fps, -16 LUFS. File: `shoebox-short-private-15.mp4`, with `shoebox-short-private-15.vtt` (copy in this folder). Screens are ci-screens 07cfe97 ("Screens for 55ead22"). Voice and music as 3b. As made, it differs from the table below: shot 2's voice is "No account. A backup every day, in your Files." (the screenshot says Files only); shot 3's caption is split, "Sealed mail." with "Shoebox Plus." under it, then "No ads. No tracking." alone, so Plus never reads as the reason for no ads; spotlights carry a Sunflower outline; the sample conductor, seen from behind, stays (rule 5).
+
+The table as planned:
 
 | # | Picture | Voice | Caption | Small line |
 |---|---|---|---|---|
@@ -59,4 +61,4 @@ Up to 20 s.
 
 ## Files
 
-`shoebox-short-<name>-<seconds>.mp4`, named by the length made: `shoebox-short-date-15.mp4`, `shoebox-short-email-20.mp4` (made), `shoebox-short-moves-15.mp4`, `shoebox-short-private-20.mp4`. Each has its `.vtt` and a poster. A copy of each `.vtt` goes in this folder in the records PR.
+`shoebox-short-<name>-<seconds>.mp4`, named by the length made: `shoebox-short-date-15.mp4`, `shoebox-short-email-20.mp4` (made), `shoebox-short-moves-15.mp4`, `shoebox-short-private-15.mp4` (made). Each has its `.vtt` and a poster. A copy of each `.vtt` goes in this folder in the records PR.
