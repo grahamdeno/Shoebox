@@ -32,6 +32,7 @@ Full screen, one post per screen. No list, no second sort screen, no tab bar.
 |---|---|
 | Flick up past 100 pt | Next. The post comes back when your reason says, or tomorrow. The box rattles lightly. |
 | Pull down past 160 pt | Put away: done, kept and searchable. The lid tips open as you cross; let go and it drops in with a heavy knock and a strong rattle. |
+| Swipe left (clearly sideways) | The post slides aside and a Brick **Delete** shows beside it. Tap Delete: the post slides off, Undo for 5 seconds, still in backups. Never deletes on a swipe alone; a tap on the post or a swipe back closes it. |
 | Quick tap (under 0.35 s) | Opens the post full screen. |
 
 The post follows the finger 1:1 for 40 pt, then at half speed, and springs back if you let go short. A tick at each threshold. Every move has Undo for 5 seconds.
@@ -138,7 +139,7 @@ One a day, at the time you chose, naming the first post and how many more. Tappi
    - Posts you passed before go first, then the oldest never seen.
    - Bringing something back from the Box puts it first.
 2. **Flick up = Next.** If your reason names a time, it comes back then; otherwise it's gone until tomorrow. A post you keep passing keeps coming back.
-3. **Pull down = Put away.** Done, kept, and found by search in the Shoebox.
+3. **Pull down = Put away.** Done, kept, and found by search in the Shoebox. **Swipe left, then tap Delete** for something you never wanted (Put away stays the usual way out).
 4. **Every action is instant, with Undo for 5 seconds.** No confirm dialogs, except Delete everything.
 5. **Dated posts** show once when they arrive, then come back on their own 5 days before at 8 AM and stay on Today every day (Next skips a day) until put away. Every save is read for the date it is about (section 4.2). The nearest event comes first. Once the day has gone by, the post moves to Kept on its own (never deleted) and stays searchable.
 6. **A new save** shows on Today the day it is kept (rule 1). After you flick it up, it comes back when your reason says, or tomorrow.
