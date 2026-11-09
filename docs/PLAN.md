@@ -164,7 +164,7 @@ Each phase ends with something Graham can try on his phone. The model named is t
 - **TestFlight build 36** (web 4.70.0, relay 26) is the current build. It stays installed until 2.0.
 - **Do not submit 1.0** (decision 7). The App Store listing text in `edition/docs/app-store.md` gets rewritten for 2.0.
 - **The relay** keeps running from the old repo until phase 2 moves it here. Don't deploy it from two places at once.
-- **inmyshoebox.com** (the welcome, privacy and support pages) gets rewritten for 2.0 in phase 6.
+- **inmyshoebox.com** moved to `web/` in this repo (Nov 2026), hosted on Cloudflare Pages. `edition` is archived once the cutover is confirmed.
 
 ## 12. How we work
 
