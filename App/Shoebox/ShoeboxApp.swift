@@ -37,6 +37,8 @@ struct ShoeboxApp: App {
             AppGroup.defaults.set(0, forKey: "appearance")
             // The daily limit starts at its default every demo launch, so a journey that changes it never changes the next.
             Prefs.perDay = Prefs.noLimit
+            // Stock pictures on, except in the audit's no-photos run.
+            Prefs.stockPictures = (UserDefaults.standard.string(forKey: "dataset") ?? "") != "nophotos"
             // Plus in the audit (`-plusState store` or `beta`): the store's offer after the first week, or a tester's
             // free address. Never touches StoreKit's real state or the relay.
             switch UserDefaults.standard.string(forKey: "plusState") ?? "" {

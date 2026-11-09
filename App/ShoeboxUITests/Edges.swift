@@ -122,7 +122,12 @@ final class Edges: XCTestCase {
                 a.check("with no App Store the app says so plainly and stays put",
                         a.text(containing: "Couldn't reach the App Store").exists && a.app.state == .runningForeground, severity: 2)
             }
-            a.expect("Restore purchases is offered", a.button(startingWith: "Restore purchases"), timeout: 1, severity: 1)
+            // Restore purchases is on Settings itself, at the end of Help and about.
+            a.tap("‹ Settings", a.button(startingWith: "‹ Settings"), severity: 2)
+            a.pause(0.6)
+            a.app.swipeUp()
+            a.pause(0.5)
+            a.expect("Restore purchases is offered", a.button(startingWith: "Restore purchases"), timeout: 2, severity: 1)
         }
 
         a.launch(["-screen", "settings", "-plusState", "beta"])

@@ -43,10 +43,10 @@ final class Benchmarks: XCTestCase {
         let boxBefore = a.boxCount ?? 0
         a.begin("keep a note with a reason")
         a.tap("+ New", a.app.buttons["Keep something new"], severity: 4)
-        a.respond("+ New to the writing screen") { a.field("What to keep", "Paste a link or write a note").exists }
-        a.tap("the words", a.field("What to keep", "Paste a link or write a note"))
+        a.respond("+ New to the writing screen") { a.field("write.words", "What to keep", "Paste a link or write a note").exists }
+        a.tap("the words", a.field("write.words", "What to keep", "Paste a link or write a note"))
         a.app.typeText("Call the dentist about Sam's cleaning")
-        a.tap("Why", a.field("Why", "Optional. Before the trip"))
+        a.tap("Why", a.field("write.why", "Why", "Optional. Before the trip"))
         a.app.typeText("Before Friday")
         a.tap("Keep", a.app.buttons["Keep"], severity: 4)
         a.respond("Keep to Today") { a.app.buttons["Keep something new"].exists }

@@ -97,20 +97,17 @@ struct BoxView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
 
-                HStack(alignment: .firstTextBaseline) {
-                    Text(showPutAway ? "Put away" : "Shoebox")
-                        .scaledFont(size: 34, weight: .semibold)
-                        .tracking(-0.8)
-                        .foregroundStyle(Theme.ink)
-                    Spacer()
-                    if let word = filterWord {
-                        Button(word) {
-                            withAnimation(.snappy) { showPutAway.toggle() }
-                        }
-                        .scaledFont(size: 16, weight: .semibold)
-                        .foregroundStyle(Theme.ink)
-                        .frame(minHeight: Metrics.touchMin)
-                        .contentShape(Rectangle())
+                // Side by side while they fit; at large text the word goes under the title, and the title never
+                // breaks mid-word (UX audit: "Shoebo / x" at the largest size).
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        boxTitle
+                        Spacer()
+                        filterButton
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        boxTitle
+                        filterButton
                     }
                 }
                 .padding(.horizontal, 24)
@@ -354,11 +351,35 @@ struct BoxView: View {
             .padding(.bottom, 4)
     }
 
+    private var boxTitle: some View {
+        Text(showPutAway ? "Put away" : "Shoebox")
+            .scaledFont(size: 34, weight: .semibold)
+            .tracking(-0.8)
+            .foregroundStyle(Theme.ink)
+            .lineLimit(1)
+            .fixedSize()
+    }
+
+    @ViewBuilder private var filterButton: some View {
+        if let word = filterWord {
+            Button(word) {
+                withAnimation(.snappy) { showPutAway.toggle() }
+            }
+            .scaledFont(size: 16, weight: .semibold)
+            .foregroundStyle(Theme.ink)
+            .lineLimit(1)
+            .fixedSize()
+            .frame(minHeight: Metrics.touchMin)
+            .contentShape(Rectangle())
+        }
+    }
+
     /// One shape for every row: a date, or a picture only when the post has one; the words on up to two lines; one quiet
     /// line of where it came from. When you wrote a reason, the reason leads and the title moves to the quiet line.
     private func row(_ s: Save, dim: Bool, dated: Bool = false, quietLine: String? = nil) -> some View {
         let reason = s.note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let title = s.listTitle
+        // A post with no title still leads with words: what it says, or a plain name for its link (UX audit: blank rows).
+        let title = s.listTitle.isEmpty ? s.headline : s.listTitle
         let leads = reason.isEmpty ? title : reason
         let second = quietLine ?? meta(s)
         let quiet = (reason.isEmpty || reason == title) ? second : "\(title), \(second)"

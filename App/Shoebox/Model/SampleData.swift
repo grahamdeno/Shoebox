@@ -54,7 +54,9 @@ enum SampleData {
         // The UX audit's odd data (`-dataset heavy` or `nophotos`), to find what breaks at the edges.
         switch UserDefaults.standard.string(forKey: "dataset") ?? "" {
         case "heavy": for s in Self.heavy(now: now) { context.insert(s) }
-        case "nophotos": for s in [trail, teams, castIron, concert] { s.imageData = nil; s.imageSource = nil }
+        case "nophotos":
+            // No pictures and no stock pictures: every post is Plum lit warm with Sunflower.
+            for s in [trail, teams, castIron, concert] { s.imageData = nil; s.imageSource = nil }
         default: break
         }
         try? context.save()
