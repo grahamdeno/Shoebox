@@ -18,7 +18,7 @@ The old app lives in `grahamdeno/edition`, archived and private since Nov 9, 202
 
 ## Design rules (short form)
 
-- Today: one full-screen post at a time, Scales' moves. Flick up = Next (back when the why says, or tomorrow). Pull down = Put away (done, archived, never deleted). Tap = open. Undo 5 s.
+- Today: one full-screen post at a time, Scales' moves. Flick up = Next (back when the why says, or tomorrow). Pull down = Put away (done, archived, never deleted). Tap = open. Swipe left = Delete shows beside the post; tap it to delete (never on the swipe alone). Undo 5 s.
 - A post is a full-bleed graded photo with its words on one Liquid Glass panel. No photo: Plum lit warm with Sunflower.
 - The Shoebox is the library of everything not done; Put away posts sit behind one word (Put away (n)), with Just put away (the last 3 days) above the topics, and are found by search. Edit is a word on the opened post; it saves on its own and on Keep. Delete is the last word of Edit, soft, with Undo.
 - Your Shoebox across the bottom: Plum glass (the lower 150 pt, clear of the post's panel) rising into the post from below (a lighter Plum `#6A4F73` in dark), under one Sunflower lid: 44 pt tall, 12 pt in from the edges, 8 pt corners, canted 2° on a left hinge, one smooth shape with no side flaps, casting a shadow down; level once the Shoebox is open. Never a band or a slider. It rattles (shake plus rustling haptic) on every flick up and drop in. The Shoebox and Settings open as glass sheets; the lid opens the Shoebox. SPEC 2.2, 2.4, 2.8.

@@ -18,6 +18,7 @@ struct OpenedPost: Identifiable {
 /// Today: one post at a time, full screen, with the same moves as Scales.
 /// Swipe up past 100 pt: the next one, and this one comes back when your why says, or tomorrow.
 /// Pull down past 160 pt (further, so it is never an accident): Put away, done and kept.
+/// Swipe left (clearly sideways): Delete shows beside it; a tap on Delete deletes, never the swipe alone.
 /// A quick tap opens it. The post follows the finger 1:1 for 40 pt, then at half speed, and springs
 /// back short of a threshold. Crossing a threshold ticks. Both moves can be undone for 5 seconds.
 struct TodayView: View {
@@ -50,6 +51,12 @@ struct TodayView: View {
     @State private var backfilling = false
     /// The next post rises out of the lid after a flick up: 1 while it waits down at the lid, 0 once risen.
     @State private var rise: CGFloat = 0
+    /// Swipe left: the post slides aside and Delete shows beside it. 0 closed, -deleteWidth open.
+    @State private var slide: CGFloat = 0
+    @State private var slideStart: CGFloat = 0
+    /// This drag's direction, settled once it has moved: true sideways (Delete), false up or down, nil not yet.
+    @State private var sideways: Bool?
+    @State private var revealed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let rules = TodayRules()
@@ -58,6 +65,7 @@ struct TodayView: View {
 
     static let upDistance: CGFloat = 100
     static let downDistance: CGFloat = 160
+    static let deleteWidth: CGFloat = 112
     static let stripHeight: CGFloat = 120
     /// How far the lid sits below the top of the strip, and how far above the Shoebox sheet's top edge it rides.
     static let lidTop: CGFloat = 8
@@ -94,17 +102,22 @@ struct TodayView: View {
                             .opacity(0.6)
                             .accessibilityHidden(true)
                     }
+                    if slide < 0 {
+                        deleteWord(current, width: geo.size.width)
+                    }
                     card(current, geo)
                         .scaleEffect(cardScale * (reduceMotion ? 1 : 1 - 0.08 * rise), anchor: .bottom)
-                        .offset(y: resisted(drag) + fly + (reduceMotion ? 0 : 180 * rise))
+                        .offset(x: slide, y: resisted(drag) + fly + (reduceMotion ? 0 : 180 * rise))
                         .opacity(flyOpacity * (1 - Double(rise)))
                         .id(current.id)
-                        .gesture(cardGesture(current, height: height))
+                        .gesture(cardGesture(current, height: height, width: geo.size.width))
                         .accessibilityElement(children: .combine)
                         .accessibilityAddTraits(.isButton)
                         .accessibilityHint("Opens this post")
                         .accessibilityAction(named: "Next one") { goNext(current, height: height) }
                         .accessibilityAction(named: "Put away") { goAway(current, height: height) }
+                        .accessibilityAction(named: "Delete") { swipeDelete(current, width: geo.size.width) }
+                        .onChange(of: current.id) { slide = 0; revealed = false }
                         .task(id: current.id) { await enrichAhead() }
                         .accessibilityHidden(pull.progress >= 0.98)
                     hints
@@ -536,14 +549,29 @@ struct TodayView: View {
         return s * (a <= 40 ? a : 40 + (a - 40) * 0.5)
     }
 
-    private func cardGesture(_ current: Save, height: CGFloat) -> some Gesture {
+    private func cardGesture(_ current: Save, height: CGFloat, width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { v in
                 // The Shoebox is out over the post: the post takes no moves until it is closed.
                 guard !busy, pull.progress < 0.02 else { return }
-                if !dragging { dragging = true; dragStart = Clock.now }
-                let dy = v.translation.height
-                if abs(dy) < 6 && abs(v.translation.width) < 6 { return }
+                if !dragging { dragging = true; dragStart = Clock.now; sideways = nil; slideStart = slide }
+                let dx = v.translation.width, dy = v.translation.height
+                if abs(dy) < 6 && abs(dx) < 6 { return }
+                // Settled once: clearly sideways (wider than tall by half again) is Delete, so a loose flick up or
+                // pull down still does Next or Put away. Leftward opens it; once open, either way moves it.
+                if sideways == nil { sideways = abs(dx) > abs(dy) * 1.5 && (dx < 0 || slideStart < 0) }
+                if sideways == true {
+                    let x = min(0, slideStart + dx)
+                    slide = x >= -Self.deleteWidth ? x : -Self.deleteWidth + (x + Self.deleteWidth) * 0.35
+                    let shown = slide <= -Self.deleteWidth * 0.6
+                    if shown != revealed {
+                        revealed = shown
+                        if shown { UISelectionFeedbackGenerator().selectionChanged() }
+                    }
+                    return
+                }
+                // Open, up and down wait until it is closed again.
+                if slideStart < 0 { return }
                 drag = dy
                 let c = -dy >= Self.upDistance ? 1 : (dy >= Self.downDistance ? -1 : 0)
                 if c != crossed {
@@ -556,6 +584,21 @@ struct TodayView: View {
                 if pull.progress >= 0.02 && !dragging { return }
                 dragging = false
                 crossed = 0
+                let wasSideways = sideways == true
+                sideways = nil
+                if wasSideways {
+                    // Never deletes on its own: it stays open until Delete is tapped.
+                    let open = slideStart + v.predictedEndTranslation.width <= -Self.deleteWidth * 0.5
+                    revealed = open
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { slide = open ? -Self.deleteWidth : 0 }
+                    return
+                }
+                // Open: a tap or any other move closes it.
+                if slideStart < 0 || slide < 0 {
+                    revealed = false
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { slide = 0; drag = 0 }
+                    return
+                }
                 let dy = v.translation.height
                 let moved = abs(dy) >= 6 || abs(v.translation.width) >= 6
                 if !moved && Clock.now.timeIntervalSince(dragStart) < 0.35 {
@@ -567,6 +610,43 @@ struct TodayView: View {
                 else if dy >= Self.downDistance { goAway(current, height: height) }
                 else { withAnimation(.spring(response: 0.4, dampingFraction: 0.72)) { drag = 0 } }
             }
+    }
+
+    /// Delete, beside the post once it is swiped left: the one place Brick is used on Today. It grows with an
+    /// overswipe and as the post leaves, but only a tap deletes.
+    private func deleteWord(_ save: Save, width: CGFloat) -> some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Button { swipeDelete(save, width: width) } label: {
+                Text("Delete")
+                    .scaledFont(size: 17, weight: .semibold)
+                    .foregroundStyle(Theme.bone)
+                    .frame(width: max(Self.deleteWidth, -slide))
+                    .frame(maxHeight: .infinity)
+                    .background(Theme.brick)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            // VoiceOver deletes from the post itself ("Delete" in its actions).
+            .accessibilityHidden(true)
+        }
+        .ignoresSafeArea()
+        .opacity(min(1, Double(-slide / Self.deleteWidth)))
+    }
+
+    /// Deletes the post from Today: it slides off to the left, the next one is there, and Undo shows for 5 seconds.
+    private func swipeDelete(_ save: Save, width: CGFloat) {
+        guard !busy else { return }
+        busy = true
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        withAnimation(.easeIn(duration: 0.25)) { slide = -width * 1.1; flyOpacity = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            deleteSave(save)
+            var still = Transaction()
+            still.disablesAnimations = true
+            withTransaction(still) { slide = 0; drag = 0; flyOpacity = 1; revealed = false }
+            busy = false
+        }
     }
 
     /// Flies the post off, then makes the change and brings the next one in.
