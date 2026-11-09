@@ -28,7 +28,7 @@
 <main class="doc">
 <h1>Privacy</h1>
 <p class="date">Effective November 3, 2026.</p>
-<p class="date">Updated November 4, 2026.</p>
+<p class="date">Updated November 9, 2026.</p>
 <p>Shoebox is made and run by Graham DeNoyer, an individual. Questions: support@inmyshoebox.com.</p>
 <h2>The short version</h2>
 <ul>
@@ -43,8 +43,8 @@
 <p>Shoebox saves a backup of your posts every day to the Shoebox folder in Files on your phone and, if you use iCloud Drive, to your iCloud Drive. Those files belong to you and are covered by Apple's terms for iCloud. A backup does not include the secret key that ties your phone to its email address. That key is kept in your Keychain and, if you use iCloud Keychain, comes to your new phone that way. Keep your backups private.</p>
 <h2>What passes through our server</h2>
 <p>Our server is a small program that runs on Cloudflare. It has three jobs.</p>
-<p><strong>1. Link previews.</strong> When you keep a link, the app sends the link's address to our server, which fetches the page and sends back its title, description, picture and text. The result may be cached for up to 24 hours so the same page is not fetched again. We do not log the addresses you send and we do not connect them to you.</p>
-<p><strong>2. Stock pictures.</strong> For a post with no picture, the phone chooses a few generic words (for example "garden" or "birthday cake") and asks our server for photos. The server asks Pixabay and passes the photos back. Only generic words are sent. Names are never sent, and posts about health, money or legal matters are never looked up. Results are cached for 24 hours. We do not log the words.</p>
+<p><strong>1. Link previews.</strong> When you keep a link, the app sends the link's address to our server, which fetches the page and sends back its title, description, text and the address of its picture. Your phone then downloads that picture straight from the website that holds it, which sees your network address, as any website you visit does. The result may be cached for up to 24 hours so the same page is not fetched again. We do not log the addresses you send and we do not connect them to you.</p>
+<p><strong>2. Stock pictures.</strong> For a post with no picture, the phone chooses a few generic words (for example "garden" or "birthday cake") and asks our server for photos. The server asks Pixabay and passes back the photos' addresses, and your phone downloads the one it picks straight from Pixabay's image server. Only generic words are sent. Names are never sent, and posts about health, money or legal matters are never looked up. Results are cached for 24 hours. We do not log the words.</p>
 <p><strong>3. Your Shoebox email address (Shoebox Plus).</strong> If you turn this on, you give a first name and the app asks our server for an address such as <code>sam-k3t7m2qa@inmyshoebox.com</code>. When you forward an email to it, our server seals that email to a public key your phone gave us, and keeps only the sealed copy until your phone collects it: the sender's address and name, the subject, the text, links, and up to six attachments (PDFs and pictures). Only your phone holds the key that opens it. We keep it for up to 7 days, and delete it as soon as your phone has saved the post made from it. We cannot read it, do not use it for anything else, and do not share it. The address needs Shoebox Plus. To check the purchase, your phone sends Apple's signed receipt for it to our server, which keeps the purchase's transaction number so one purchase works on at most five phones.</p>
 <p>Newsletters and school notices can include children's names and details. Shoebox is not made for children and we do not knowingly collect information from children. A parent or other adult chooses what to forward. Any such email is deleted from our server after 7 days at most. The line you write in Settings about who your mail is about is read on your phone and is never sent to us.</p>
 <p><strong>4. A request from our website.</strong> If you ask for the iPhone beta, or to hear when Shoebox is on Android, our server keeps your email address, your name if you give it, and your answers, for up to 180 days, so we can write to you about it. A copy reaches Graham in his own Shoebox, sealed like any forwarded email. Nothing else is done with it, and it is not shared. Write to support@inmyshoebox.com to have yours deleted sooner.</p>
@@ -79,6 +79,11 @@
 <td>Up to 180 days, or sooner if you ask</td>
 </tr>
 <tr>
+<td>The purchase's transaction number (Shoebox Plus)</td>
+<td>So one purchase works on at most five phones</td>
+<td>Until 90 days after the last of its phones asked for mail, or until you choose Delete everything on the last one</td>
+</tr>
+<tr>
 <td>Rate-limit counters</td>
 <td>Stop abuse</td>
 <td>An hour or a day. They hold only a scrambled form of a network address, never the address itself</td>
@@ -89,7 +94,7 @@
 <h2>Companies that help us run Shoebox</h2>
 <ul>
 <li><strong>Cloudflare</strong> hosts our server and delivers email to it. It sees ordinary network information (such as your network address) when your phone connects, as any web host does.</li>
-<li><strong>Pixabay</strong> supplies stock photos. It receives the generic search words from our server, not from you, and does not learn who you are.</li>
+<li><strong>Pixabay</strong> supplies stock photos. It receives the generic search words from our server, not from you. When your phone downloads a photo, Pixabay's image server sees your network address, as any website does, but not your words or who you are.</li>
 <li><strong>Apple</strong> provides the App Store, TestFlight, iCloud and in-app purchases. Apple handles your payment. We do not see your card or Apple account details.</li>
 </ul>
 <p>We do not sell or rent personal information, and we do not share it for advertising.</p>

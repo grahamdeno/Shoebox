@@ -14,7 +14,7 @@ People save things everywhere (a link, a screenshot, a school flyer, a note) and
 
 You save something once, with your reason ("Drive it next fall", "Show the kids at dinner"). Shoebox reads the reason, decides when the save will be useful, and brings it back at that moment, wherever you already are: the Lock Screen, a notification, the car, the Watch, Siri. You answer with one touch. Most days you never open the app.
 
-The old app (repo `grahamdeno/edition`, a web app in an iPhone wrapper) proved the core idea: saves with reasons, coming back a few at a time, three verdicts. This repo is a native rebuild around the better version of that idea.
+The old app (repo `grahamdeno/edition`, now archived and private, a web app in an iPhone wrapper) proved the core idea: saves with reasons, coming back a few at a time, three verdicts. This repo is a native rebuild around the better version of that idea.
 
 ## 2. The rules
 
@@ -164,7 +164,7 @@ Each phase ends with something Graham can try on his phone. The model named is t
 - **TestFlight build 36** (web 4.70.0, relay 26) is the current build. It stays installed until 2.0.
 - **Do not submit 1.0** (decision 7). The App Store listing text in `edition/docs/app-store.md` gets rewritten for 2.0.
 - **The relay** keeps running from the old repo until phase 2 moves it here. Don't deploy it from two places at once.
-- **inmyshoebox.com** moved to `web/` in this repo (Nov 2026), hosted on Cloudflare Pages. `edition` is archived once the cutover is confirmed.
+- **inmyshoebox.com** moved to `web/` in this repo (Nov 2026), hosted on Cloudflare Pages. `edition` was archived and made private the same day, with its Actions off and its secrets deleted.
 
 ## 12. How we work
 

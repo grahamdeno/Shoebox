@@ -1,3 +1,5 @@
+> **Superseded.** The published privacy policy is `web/privacy.html` (inmyshoebox.com/privacy). Edit that file, not this one.
+
 > **Draft for Graham's review. Not published.** This replaces the text at https://inmyshoebox.com/privacy. It is written from how the app and the relay in this repository actually behave (relay/app/README.md has the numbers). It is not legal advice. Before publishing: read it against the app once, set the effective date, and consider a short lawyer review for the California and EU sections. Remove this box when it goes live.
 
 # Shoebox privacy policy

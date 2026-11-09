@@ -4,7 +4,7 @@ Native iPhone app (SwiftUI). "Keep it. It comes back to you."
 
 **Read `docs/PLAN.md` before any work.** It holds the product rules, the decisions made, the architecture and the build phases. `docs/SPEC.md` holds the detailed design and behavior, with the agreed screens in `docs/design/screens/`. Where PLAN.md and SPEC.md disagree, SPEC.md wins.
 
-The old app lives in `grahamdeno/edition`, frozen and being archived. Read it for rules and edge cases; don't copy its structure. The website (inmyshoebox.com) lives in `web/`; see `web/README.md`.
+The old app lives in `grahamdeno/edition`, archived and private since Nov 9, 2026. A session can read it only after access is granted (add the repo with push access); don't copy its structure. The website (inmyshoebox.com) lives in `web/`; see `web/README.md`.
 
 ## Working with Graham
 

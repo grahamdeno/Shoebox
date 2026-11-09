@@ -4,7 +4,7 @@
 
 Keep a link, a photo, a note or a forwarded email with your reason. Each day Shoebox brings back what's due, one post at a time: flick up for next, pull down to put it away, tap to open.
 
-Native iPhone app (SwiftUI, iOS 26). Version 1.0 on the App Store as "Shoebox: Your Own Feed". Rebuilt from the web-based Shoebox 1 (`grahamdeno/edition`, frozen).
+Native iPhone app (SwiftUI, iOS 26). Version 1.0 on the App Store as "Shoebox: Your Own Feed". Rebuilt from the web-based Shoebox 1 (`grahamdeno/edition`, archived and private).
 
 - `docs/SPEC.md`: the design and behavior; section 8 holds the release decisions. Wins over everything else.
 - `docs/PLAN.md`: the original plan and architecture. Parts describe earlier designs.

@@ -1,3 +1,5 @@
+> **Superseded.** The published terms are `web/terms.html` (inmyshoebox.com/terms). Edit that file, not this one.
+
 > **Draft for Graham's review. Not published.** Intended for https://inmyshoebox.com/terms. Not legal advice. Fill the bracketed items (effective date, governing law) and consider a short lawyer review before publishing. Remove this box when it goes live.
 
 # Shoebox terms of use

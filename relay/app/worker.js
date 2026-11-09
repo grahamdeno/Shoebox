@@ -23,7 +23,7 @@
  * What it keeps, and for how long (the privacy policy says the same):
  *   mail and attachments   7 days, or until the phone acknowledges them (sealed)
  *   address and box        90 days after the phone last asked, then gone
- *   purchase seats         the transaction number and the boxes it opened (up to 5), until they are deleted or expire
+ *   purchase seats         the transaction number and the boxes it opened (up to 5): 90 days from the last time one of them asked
  *   counters               a day or an hour, then gone; addresses appear only as salted hashes
  * Search words, link addresses and mail text are never logged.
  */
@@ -432,6 +432,7 @@ async function currentAddress(env, box) {
   if (Date.now() - (cur.at || 0) > TOUCH_AFTER * 1000) {
     await kv.put(`alias:${cur.slug}`, box, { expirationTtl: BOX_TTL });
     await kv.put(`box:${box}`, JSON.stringify({ ...cur, at: Date.now() }), { expirationTtl: BOX_TTL });
+    if (cur.buy) { const rec = await kv.get(`buy:${cur.buy}`); if (rec) await kv.put(`buy:${cur.buy}`, rec, { expirationTtl: BOX_TTL }); }
   }
   return `${cur.slug}@${mailDomain(env)}`;
 }
@@ -599,12 +600,12 @@ async function takeSeat(kv, otid, box, before) {
   if (before && before !== otid) await freeSeat(kv, before, box);
   const live = await seatsOf(kv, otid);
   if (!live.includes(box)) live.push(box);
-  await kv.put(`buy:${otid}`, JSON.stringify({ boxes: live }));
+  await kv.put(`buy:${otid}`, JSON.stringify({ boxes: live }), { expirationTtl: BOX_TTL });
 }
 
 async function freeSeat(kv, otid, box) {
   const left = (await seatsOf(kv, otid)).filter((id) => id !== box);
-  if (left.length) await kv.put(`buy:${otid}`, JSON.stringify({ boxes: left }));
+  if (left.length) await kv.put(`buy:${otid}`, JSON.stringify({ boxes: left }), { expirationTtl: BOX_TTL });
   else await kv.delete(`buy:${otid}`);
 }
 
