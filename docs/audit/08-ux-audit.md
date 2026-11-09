@@ -116,7 +116,8 @@ Shoebox's own rules (CLAUDE.md), checked on the pictures:
   place and are not real. Check on a phone (section 7, first list).
 - **Glass.** The audit's contrast check samples through Liquid Glass and flags words that read well (Stone dark Settings
   rows, Cancel on the writing screens). Checked by eye in the pictures; not changed.
-- **Query timeouts.** Today and the Shoebox are large trees; some runs time out on a query mid-journey. Each journey ran
+- **Query timeouts.** Today and the Shoebox are large trees; some runs time out on a query mid-journey, worst at
+  the largest text, where a query can outlast the 5 s Undo. Each journey ran
   to the end in at least one config; the pictures cover every step.
 
 ## 7. People: five testers, five tasks
@@ -161,6 +162,7 @@ See section 9 for the runs so far.
 | Nov 7 | 85924f9 | All configs and unit tests green. Every journey check holds except three that are the test's own: Settings closed by the walk's own swipe down (stone-dark), one slow Back word (big-text), and the return line read as a button ("Back Thursday" shows in every picture). Time replay: all 19 checks hold. Fixed in the journeys for the next run. |
 | Nov 8 | 2a0e65b | First run with benchmarks, heavy data, no photos and Plus; its pictures are the first baseline. All five configs and unit tests (now with NotifierTests) green. Time replay: 19 of 19. Found: at the largest text the Shoebox title broke mid-word ("Shoebo / x"), fixed; the no-photos run fetched a stock picture, so stock is off there now; with the default daily limit (All) a heavy pile puts every post on Today ("2 of 286"), while SPEC says the default is 10 (Graham to decide). Test-side: J11 lost its record in every config to UI query timeouts on Today (records now save after every step; counter and box have handles); J4's Why tap landed on the word, so the Why line now focuses its field; Restore purchases was looked for on the wrong screen. Heavy-data responses passed on two configs and ran over on two (flick to Undo 1.8 to 2.3 s, one search 3.8 s): simulator noise until it repeats. |
 | Nov 8 | 7a9234f | All configs and unit tests green; 44 journeys recorded (records now survive query timeouts). Benchmarks: all six jobs at their tap targets in every config; one response over (tap to opened 2.1 s, pro-light, once). The Shoebox title holds at the largest text; no-photos is plain Plum; J4 reads the Why; Restore purchases found. Picture comparison: 47 of 234 changed, the intended ones plus noise from shots taken mid-move, stock pictures fetched live, and the order of Go through your Shoebox. New: the Undo carried into the Shoebox covers its Settings word for 5 s (UX-12). The next run, with the daily limit at 10, becomes the baseline. |
+| Nov 9 | 0cf77d9 | All configs and unit tests green; 49 journeys recorded; this run is the baseline. UX-8 (Undo names the day), UX-12 (Undo clear of the Shoebox's Settings: the new check holds in every config) and UX-13 hold. Benchmarks: every job at target in four configs. Big-text alone missed two Undo jobs: its UI queries take seconds (+ New took 8.9 s to find), so the 5 s Undo had gone before the walk looked for it; J2's Undo checks hold at the same size. Test-side, not the app. |
 
 ## 10. Benchmarks, picture comparison, edges (added November 8)
 
