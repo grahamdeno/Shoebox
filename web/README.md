@@ -27,3 +27,5 @@ Addresses work without `.html` (`/privacy` serves `privacy.html`). The App Store
 | `icons/` | Old favicons, kept for browsers that saved them |
 
 Never put anything private here: the whole folder is public on the web.
+
+Hosted on Cloudflare Pages (project inmyshoebox).
