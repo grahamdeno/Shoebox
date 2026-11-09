@@ -28,6 +28,7 @@ struct AddSheet: View {
     @State private var reading = false
     @State private var readTask: Task<Void, Never>?
     @FocusState private var focused: Bool
+    @FocusState private var whyFocused: Bool
 
     var body: some View {
         WritingSurface(canKeep: canKeep, onLeading: { dismiss() }, onTrailing: keep) {
@@ -52,6 +53,7 @@ struct AddSheet: View {
                     .foregroundStyle(Theme.onPhoto.opacity(wordsDim ? 0.68 : 1))
                     .lineLimit(1...6)
                     .focused($focused)
+                    .accessibilityIdentifier("write.words")
                     .onChange(of: text) { _, _ in error = "" }
             }
 
@@ -62,7 +64,12 @@ struct AddSheet: View {
                         .opacity(whyDim ? 0.72 : 1)
                         .submitLabel(.done)
                         .onSubmit { if canKeep { keep() } }
+                        .focused($whyFocused)
+                        .accessibilityIdentifier("write.why")
                 }
+                // A tap anywhere on the line, the word Why included, goes to the field.
+                .contentShape(Rectangle())
+                .onTapGesture { whyFocused = true }
             }
 
             if !error.isEmpty {

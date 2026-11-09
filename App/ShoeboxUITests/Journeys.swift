@@ -165,12 +165,12 @@ final class Journeys: XCTestCase {
         a.accessibility("new-empty")
         a.labels("new-empty")
         a.check("Keep waits until there is something to keep", !(a.app.buttons["Keep"].isEnabled), severity: 2)
-        let words = a.field("What to keep", "Paste a link or write a note")
+        let words = a.field("write.words", "What to keep", "Paste a link or write a note")
         if a.expect("the words field is there and ready", words) {
             words.tap()
             a.app.typeText("Call the dentist about Sam's cleaning")
         }
-        let why = a.field("Why", "Optional. Before the trip")
+        let why = a.field("write.why", "Why", "Optional. Before the trip")
         if a.expect("the Why field is there", why) {
             why.tap()
             a.app.typeText("Before Friday")

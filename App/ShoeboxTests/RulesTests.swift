@@ -107,7 +107,7 @@ final class RulesTests: XCTestCase {
     func testDatedSaveSeenOnArrivalWaitsForFiveDaysBefore() {
         let s = Save(title: "Band concert", eventDate: date(2026, 12, 10))
         XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 2, 9)))
-        XCTAssertEqual(actions.next(s, planner: LaterPlanner(), now: date(2026, 11, 2, 9)), "Back 5 days before")
+        XCTAssertEqual(actions.next(s, planner: LaterPlanner(calendar: cal), now: date(2026, 11, 2, 9)), "Back Dec 5")
         XCTAssertEqual(s.returnDate, date(2026, 12, 5, 8))
         XCTAssertFalse(rules.isOnToday(s, now: date(2026, 12, 4, 20)))
         XCTAssertTrue(rules.isOnToday(s, now: date(2026, 12, 5, 9)))
@@ -170,6 +170,25 @@ final class RulesTests: XCTestCase {
         let late = Save(title: "late", createdAt: date(2026, 10, 30, 7))
         let again = rules.pick(pile + [late], now: now, previousDay: rules.dayKey(now), previousIds: first, perDay: .max)
         XCTAssertEqual(rules.today(pile + [late], ids: again, now: now).last?.title, "late")
+    }
+
+    /// SPEC section 3, rule 1: anything kept today joins Today even when the daily limit is full (default 10 since
+    /// November 8; before, with All, this never showed).
+    func testSomethingKeptTodayJoinsEvenWhenTheLimitIsFull() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let morning = Save(title: "kept this morning", createdAt: date(2026, 10, 30, 9))
+        let all = pile + [morning]
+        let ids = rules.pick(all, now: now, previousDay: nil, previousIds: [], perDay: 3)
+        XCTAssertEqual(rules.today(all, ids: ids, now: now).map(\.title), ["kept this morning", "p1", "p2"])
+    }
+
+    func testSomethingKeptLaterTheSameDayJoinsUnderALimit() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let first = rules.pick(pile, now: date(2026, 10, 30, 8), previousDay: nil, previousIds: [], perDay: 3)
+        XCTAssertEqual(first.count, 3)
+        let noon = Save(title: "kept at noon", createdAt: date(2026, 10, 30, 12))
+        let again = rules.pick(pile + [noon], now: now, previousDay: rules.dayKey(now), previousIds: first, perDay: 3)
+        XCTAssertEqual(rules.today(pile + [noon], ids: again, now: now).last?.title, "kept at noon")
     }
 
     func testBylineReadsLikeAPerson() {

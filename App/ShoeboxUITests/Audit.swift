@@ -28,14 +28,16 @@ final class Audit {
     }
 
     /// Starts the app with the sample data and this run's text size and colors.
-    func launch(_ args: [String] = [], terminate: Bool = true) {
+    /// `AUDIT_DATE` (yyyy-MM-dd) fixes the app's clock to that day, so pictures can be compared run to run.
+    func launch(_ args: [String] = [], terminate: Bool = true, settle: Double = 2.5) {
         if terminate { app.terminate() }
         var a = ["-demo", "YES"] + args
         if let c = Audit.env["AUDIT_COLORS"], !c.isEmpty { a += ["-colors", c] }
         if let t = Audit.env["AUDIT_TEXT"], !t.isEmpty { a += ["-UIPreferredContentSizeCategoryName", t] }
+        if let d = Audit.env["AUDIT_DATE"], !d.isEmpty, !args.contains("-demoDate") { a += ["-demoDate", d] }
         app.launchArguments = a
         app.launch()
-        pause(2.5)
+        pause(settle)
     }
 
     func pause(_ s: Double) { Thread.sleep(forTimeInterval: s) }
@@ -53,6 +55,7 @@ final class Audit {
         steps.append(["n": n, "kind": "shot", "name": name, "file": file, "note": note,
                       "t": round(now.timeIntervalSince(started) * 10) / 10, "dt": round(now.timeIntervalSince(last) * 100) / 100])
         last = now
+        save()
         return file
     }
 
@@ -60,6 +63,7 @@ final class Audit {
     @discardableResult
     func check(_ name: String, _ ok: Bool, severity: Int = 3, detail: String = "") -> Bool {
         steps.append(["n": n, "kind": "check", "name": name, "ok": ok, "severity": ok ? 0 : severity, "detail": detail])
+        save()
         return ok
     }
 
@@ -72,6 +76,41 @@ final class Audit {
     /// How long a move took to settle, in seconds, for the record.
     func timing(_ name: String, _ seconds: Double) {
         steps.append(["n": n, "kind": "timing", "name": name, "seconds": round(seconds * 100) / 100])
+    }
+
+    // MARK: Benchmarks (docs/audit/benchmarks.json holds the targets; the report compares)
+
+    /// Every tap and move a person makes, counted for the benchmarks.
+    private(set) var taps = 0
+    private var jobs: [String: (taps: Int, at: Date)] = [:]
+
+    /// A job starts: from here its taps are counted.
+    func begin(_ job: String) { jobs[job] = (taps, Date()) }
+
+    /// The job is done (or not): written down with the taps it took. Seconds are the simulator's, waits included, so
+    /// only taps and the move responses below are compared with targets; a person's own time comes from the testers.
+    func done(_ job: String, _ ok: Bool) {
+        guard let start = jobs[job] else { return }
+        steps.append(["n": n, "kind": "benchmark", "name": job, "ok": ok, "taps": taps - start.taps,
+                      "seconds": round(Date().timeIntervalSince(start.at) * 10) / 10])
+        check("job done: \(job)", ok, severity: 4)
+    }
+
+    /// How long the app takes to answer a move: from now until `until` holds, polled every 200 ms (each look is a query of the whole screen). Written down as a
+    /// response time; returns the seconds, or nil if it never held.
+    @discardableResult
+    func respond(_ name: String, timeout: Double = 5, until: () -> Bool) -> Double? {
+        let t0 = Date()
+        while Date().timeIntervalSince(t0) < timeout {
+            if until() {
+                let s = Date().timeIntervalSince(t0)
+                steps.append(["n": n, "kind": "response", "name": name, "seconds": round(s * 100) / 100])
+                return s
+            }
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        steps.append(["n": n, "kind": "response", "name": name, "seconds": -1])
+        return nil
     }
 
     /// Apple's accessibility audit on the screen as it is now: contrast, labels, hit areas, clipped text, Dynamic Type.
@@ -122,6 +161,10 @@ final class Audit {
         app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
     }
 
+    /// Writes the record so far after every picture and check: a UI query that times out raises an exception that
+    /// skips `defer`, and the journey's record was lost with it (CI, November 8).
+    private func save() { finish() }
+
     /// Writes the record. Call at the end of every journey.
     func finish() {
         let doc: [String: Any] = ["journey": journey, "config": Audit.config, "steps": steps, "accessibility": issues,
@@ -138,16 +181,16 @@ final class Audit {
     }
 
     /// A tap on the post, the way a thumb opens it.
-    func tapPost() { point(0.5, 0.4).tap() }
+    func tapPost() { taps += 1; point(0.5, 0.4).tap() }
 
     /// Flick up: past 100 pt, quick.
-    func flickUp() { point(0.5, 0.62).press(forDuration: 0.02, thenDragTo: point(0.5, 0.3), withVelocity: .fast, thenHoldForDuration: 0) }
+    func flickUp() { taps += 1; point(0.5, 0.62).press(forDuration: 0.02, thenDragTo: point(0.5, 0.3), withVelocity: .fast, thenHoldForDuration: 0) }
 
     /// Pull down: past 160 pt, held a moment, let go over the box.
-    func pullDown() { point(0.5, 0.35).press(forDuration: 0.05, thenDragTo: point(0.5, 0.72), withVelocity: .default, thenHoldForDuration: 0.15) }
+    func pullDown() { taps += 1; point(0.5, 0.35).press(forDuration: 0.05, thenDragTo: point(0.5, 0.72), withVelocity: .default, thenHoldForDuration: 0.15) }
 
     /// Pull the Shoebox sheet up from the box.
-    func pullBoxUp() { point(0.5, 0.95).press(forDuration: 0.02, thenDragTo: point(0.5, 0.3)) }
+    func pullBoxUp() { taps += 1; point(0.5, 0.95).press(forDuration: 0.02, thenDragTo: point(0.5, 0.3)) }
 
     /// The first element whose label starts with the words.
     func button(startingWith s: String) -> XCUIElement {
@@ -175,19 +218,22 @@ final class Audit {
     @discardableResult
     func tap(_ name: String, _ e: XCUIElement, severity: Int = 3, timeout: Double = 4) -> Bool {
         guard expect("can tap \(name)", e, timeout: timeout, severity: severity) else { return false }
+        taps += 1
         if e.isHittable { e.tap() } else { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
         return true
     }
 
-    /// The "x of y" counter at the top of Today, or nil.
+    /// The "x of y" counter at the top of Today, or nil. Found by its handle: a label search over Today's large tree
+    /// timed out in CI.
     var counter: String? {
-        let e = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "^[0-9]+ of [0-9]+$")).firstMatch
+        let e = app.staticTexts["today.counter"]
         return e.exists ? e.label : nil
     }
 
     /// The count on the box ("Your Shoebox, 9" reads 9).
     var boxCount: Int? {
-        let e = button(startingWith: "Your Shoebox")
+        var e = app.buttons["today.box"]
+        if !e.exists { e = button(startingWith: "Your Shoebox") }
         guard e.exists else { return nil }
         return Int(e.label.components(separatedBy: ", ").last ?? "")
     }

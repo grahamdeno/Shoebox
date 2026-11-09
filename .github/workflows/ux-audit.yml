@@ -1,16 +1,17 @@
 name: ux-audit
 # The UX audit (docs/audit/08-ux-audit.md): the journeys walked through the real app in the simulator, under several
 # conditions at once, then one report with every picture, check, timing and accessibility issue, pushed to the
-# ci-audit branch. Runs when a commit message on a branch contains [audit].
+# ci-audit branch. Runs when a commit message on a branch contains [audit]. Pictures are compared with the baseline
+# (branch ci-audit-baseline); a commit that also says [baseline] makes this run's pictures the new baseline.
 on:
   push:
-    branches-ignore: [main, testflight, ci-screens, ci-audit]
+    branches-ignore: [main, testflight, ci-screens, ci-audit, ci-audit-baseline]
 
 jobs:
   walk:
     if: contains(github.event.head_commit.message, '[audit]')
     runs-on: macos-26
-    timeout-minutes: 75
+    timeout-minutes: 90
     # Only a newer [audit] commit replaces a running audit; ordinary commits never cancel one.
     concurrency:
       group: ux-audit-${{ github.ref }}-${{ matrix.config }}
@@ -31,7 +32,7 @@ jobs:
             devices: "iPhone 17 Pro"
             look: dark
             colors: stone
-            only: "-only-testing:ShoeboxUITests/Journeys/test02_TodayMoves -only-testing:ShoeboxUITests/Journeys/test05_TheShoebox -only-testing:ShoeboxUITests/Journeys/test06_Settings"
+            only: "-only-testing:ShoeboxUITests/Journeys/test02_TodayMoves -only-testing:ShoeboxUITests/Journeys/test05_TheShoebox -only-testing:ShoeboxUITests/Journeys/test06_Settings -only-testing:ShoeboxUITests/Edges/test09b_NoPhotos"
           - config: big-text
             devices: "iPhone 17 Pro"
             look: light
@@ -64,6 +65,8 @@ jobs:
           TEST_RUNNER_AUDIT_CONFIG: ${{ matrix.config }}
           TEST_RUNNER_AUDIT_COLORS: ${{ matrix.colors }}
           TEST_RUNNER_AUDIT_TEXT: ${{ matrix.text }}
+          # One fixed day for the app's clock, so every run's pictures show the same dates and can be compared.
+          TEST_RUNNER_AUDIT_DATE: "2026-11-07"
         run: |
           mkdir -p audit-out
           set -o pipefail
@@ -105,7 +108,18 @@ jobs:
           pip install --quiet pillow
           mkdir -p report
           for d in artifacts/audit-*; do cp -R "$d"/. report/ 2>/dev/null || true; done
-          python3 Scripts/audit_report.py report "${GITHUB_SHA::7}"
+          git clone -q --depth 1 --branch ci-audit-baseline "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" baseline 2>/dev/null || mkdir -p baseline-none
+          python3 Scripts/audit_report.py report "${GITHUB_SHA::7}" baseline docs/audit/benchmarks.json
+      - name: Publish the baseline (with [baseline], or when there is none yet)
+        if: contains(github.event.head_commit.message, '[baseline]') || hashFiles('baseline/**') == ''
+        run: |
+          mkdir -p newbase
+          (cd report && find . -path ./sheets -prune -o -path ./diffs -prune -o -name '*.png' -print | while read f; do mkdir -p "../newbase/$(dirname "$f")"; cp "$f" "../newbase/$f"; done)
+          cd newbase
+          git init -q && git checkout -q -b ci-audit-baseline
+          git add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "Baseline for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-audit-baseline
+          echo "::notice::Baseline pictures from ${GITHUB_SHA::7}"
       - name: Publish to the ci-audit branch
         run: |
           cd report

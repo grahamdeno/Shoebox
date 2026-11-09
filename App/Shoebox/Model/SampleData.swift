@@ -8,7 +8,7 @@ enum SampleData {
     static func seed(_ context: ModelContext) {
         let count = (try? context.fetchCount(FetchDescriptor<Save>())) ?? 0
         guard count == 0 else { return }
-        let now = Date()
+        let now = Clock.now
         let day: TimeInterval = 86_400
 
         let trail = Save(title: "A trail worth the drive", snippet: "Coastal loop, 4 miles, about 2 hours away. A lookout halfway and a beach at the end.",
@@ -51,7 +51,54 @@ enum SampleData {
                         status: .away, returnDate: now + 2 * day, createdAt: now - 7 * day)
         let kept = Save(title: "Gutter cleaning quotes", origin: "via your Shoebox email", kind: .email, status: .kept, createdAt: now - 20 * day)
         for s in [away, kept] { s.enrichedAt = now; context.insert(s) }
+        // The UX audit's odd data (`-dataset heavy` or `nophotos`), to find what breaks at the edges.
+        switch UserDefaults.standard.string(forKey: "dataset") ?? "" {
+        case "heavy": for s in Self.heavy(now: now) { context.insert(s) }
+        case "nophotos":
+            // No pictures and no stock pictures: every post is Plum lit warm with Sunflower.
+            for s in [trail, teams, castIron, concert] { s.imageData = nil; s.imageSource = nil }
+        default: break
+        }
         try? context.save()
+    }
+
+    /// 500 more posts, the kind a year of keeping makes, and the kind that breaks layouts: very long titles, one long
+    /// word, other languages and scripts, emoji, a bare link, words with no title. A quarter put away, a fifth away for
+    /// later, some dated. No pictures, so the run measures the list and the rules, not image decoding.
+    static func heavy(now: Date) -> [Save] {
+        let day: TimeInterval = 86_400
+        let odd = [
+            "A very long title that keeps going well past where any sensible person would stop writing, because someone pasted the whole first paragraph of an article into the title by mistake and never fixed it",
+            "Donaudampfschifffahrtsgesellschaftskapitänsmützenreinigung",
+            "Receta de pan de masa madre para principiantes, paso a paso",
+            "週末の山歩きの持ち物リスト",
+            "قائمة الكتب التي يجب قراءتها هذا الصيف",
+            "Пирог с капустой, бабушкин рецепт",
+            "🎸🎶 New strings, tune down a half step 🎶🎸",
+            "https://example.com/a/very/long/link/with/many/parts/and?query=string&that=never&ends=true",
+            "",
+            "Q4",
+        ]
+        let topics = ["Recipe", "Trail", "Article", "Gift idea", "School form", "Book", "Podcast", "Fix the", "Call about", "Look into"]
+        var made: [Save] = []
+        for i in 0..<500 {
+            let title = i < odd.count * 3 ? odd[i % odd.count] : "\(topics[i % topics.count]) \(i)"
+            let words = i % 7 == 0 ? String(repeating: "Words that go on for a while. ", count: 40) : "Saved for later, number \(i)."
+            let created = now - Double(i % 400) * day - Double(i) * 60
+            let s = Save(title: title, snippet: String(words.prefix(240)), body: words,
+                         note: i % 5 == 0 ? "Before the weekend" : "", origin: i % 3 == 0 ? "Safari" : "a note",
+                         kind: i % 3 == 0 ? .link : .note, urlString: i % 3 == 0 ? "https://example.com/\(i)" : nil,
+                         createdAt: created)
+            switch i % 20 {
+            case 0..<5: s.status = .kept
+            case 5..<9: s.status = .away; s.returnDate = now + Double(1 + i % 30) * day
+            default: break
+            }
+            if i % 25 == 3 { s.eventDate = now + Double(2 + i % 60) * day }
+            s.enrichedAt = now
+            made.append(s)
+        }
+        return made
     }
 
     /// Six dates from one fictional school newsletter, made the way `Inbox` makes them: one post per date that is about
@@ -107,7 +154,10 @@ enum SampleData {
     /// Puts everything on Today away, for the "Today's clear" screen.
     static func clearToday(_ context: ModelContext) {
         let all = (try? context.fetch(FetchDescriptor<Save>())) ?? []
-        for s in all where s.status != .kept { s.status = .away; s.returnDate = Date() + 3 * 86_400 }
+        // One time for all, read once: set inside the loop, each post got a slightly later time in whatever order the
+        // store returned them, and Go through your Shoebox came out in a different order each run (UX-13).
+        let back = Clock.now + 3 * 86_400
+        for s in all where s.status != .kept { s.status = .away; s.returnDate = back }
         try? context.save()
     }
 

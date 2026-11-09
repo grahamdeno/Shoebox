@@ -143,6 +143,8 @@ struct SurfaceLine<Field: View>: View {
             Text(label)
                 .scaledFont(size: 15)
                 .foregroundStyle(Theme.onPhoto.opacity(0.6))
+                // The field carries the same name, so VoiceOver says it once (UX audit: a tap on the word missed the field).
+                .accessibilityHidden(true)
             field
                 .scaledFont(size: 17)
                 .foregroundStyle(tint)

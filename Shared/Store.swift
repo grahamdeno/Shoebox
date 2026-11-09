@@ -92,10 +92,17 @@ enum Prefs {
         set { d.set(newValue, forKey: "stockPictures") }
     }
 
-    /// How many come out each day. No limit unless one is chosen in Settings.
+    /// How many come out each day: Int.max (noLimit) for All.
     static let noLimit = Int.max
+    /// SPEC section 3: the daily limit is 10 unless you choose 5 or All (decided November 8; it was All). Someone who
+    /// chose All has 0 stored and keeps it; someone who never chose has nothing stored and gets 10.
+    static let defaultPerDay = 10
     static var perDay: Int {
-        get { let n = d.integer(forKey: "dailyLimit"); return n <= 0 ? noLimit : n }
+        get {
+            guard d.object(forKey: "dailyLimit") != nil else { return defaultPerDay }
+            let n = d.integer(forKey: "dailyLimit")
+            return n <= 0 ? noLimit : n
+        }
         set { d.set(newValue == noLimit ? 0 : newValue, forKey: "dailyLimit") }
     }
 
