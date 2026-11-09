@@ -1,12 +1,20 @@
 name: ios
 
+# Saves Mac minutes (the repo is private: about 190 a month on GitHub Free, then jobs stop until the 1st).
+# The Mac build and tests run once when a pull request opens, on a push whose message has [test], or by hand.
+# Later pushes to an open PR don't rebuild unless they say [test]. Docs-only and website-only PRs skip it.
+# The relay tests run on Linux, cost almost nothing, and run on every PR push.
 on:
   pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    paths-ignore: ["docs/**", "web/**", "design/**", "**/*.md"]
   push:
-    branches: [main]
+    branches-ignore: [main, testflight, ci-screens, ci-audit, ci-audit-baseline]
+  workflow_dispatch:
 
 jobs:
   relay:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +33,10 @@ jobs:
           test -z "$(git status --porcelain -- relay/app/test/vectors)"
 
   build-and-test:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.action != 'synchronize') ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[test]'))
     runs-on: macos-26
     env:
       # A released Xcode, pinned. The macos-26 image has 26.6 (default) and 26.5. Change it here, and in testflight.yml.
