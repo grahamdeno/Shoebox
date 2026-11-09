@@ -34,7 +34,7 @@ Shots 2, 4, 5, 6 and 9, with their voice lines, re-timed to fit. Shot 5 keeps at
 
 ## On the home page
 
-Only after Graham's yes on the final cuts. The files replace the ones already in `site/` of `grahamdeno/edition`, same names, so the page needs no change. Under the hero text the page already has:
+Only after Graham's yes on the final cuts. The files replace the ones already in `web/site/` of this repo, same names, so the page needs no change. Under the hero text the page already has:
 
 ```html
 <figure class="promo">
