@@ -130,8 +130,10 @@ enum Inbox {
                 pdf = (data, FileKeeper.safeName(a.name ?? "attachment.pdf"), read?.picture)
                 if let text = read?.text, !text.isEmpty { lines += text.components(separatedBy: .newlines) }
             }
-            // An email that is only a link ("have a look at this"): read the page, so the post is about it.
-            let thin = lines.filter { !$0.hasPrefix("http") }.joined(separator: " ").count < 120
+            // An email that is only a link ("have a look at this", "please see this week's updates"), or one that points to
+            // its newsletter without the dates in it: read the page, so the post (or the date posts) come from it.
+            let datesInEmail = EmailCalendar.items(in: lines.joined(separator: "\n"), received: received, calendar: .current, dayFirst: EmailCalendar.deviceDayFirst).count
+            let thin = EmailRules.readsLink(lines, datesInEmail: datesInEmail)
             if thin, pdf == nil, let link, let url = URL(string: link), let text = await Relay.preview(url)?.text, !text.isEmpty {
                 lines += EmailRules.unwrap(text).components(separatedBy: "\n").prefix(400)
             }

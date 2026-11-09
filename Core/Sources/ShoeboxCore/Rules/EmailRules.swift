@@ -31,8 +31,26 @@ public enum EmailRules {
                        "&ldquo;": "\u{201C}", "&rdquo;": "\u{201D}", "&lt;": "<", "&gt;": ">", "&ndash;": "-", "&mdash;": "-", "&#160;": " "] {
             s = s.replacingOccurrences(of: e, with: v)
         }
+        // Plain-text mail often writes a link twice, "https://x.com/a (https://x.com/a)": keep one.
+        s = s.replacingOccurrences(of: #"(https?://[^\s()]+) \(\1\)"#, with: "$1", options: .regularExpression)
         return s
     }
+
+    /// Should the email's link be read, so the post is about the page? Yes when the words around the links are only a
+    /// line or two ("Please see this week's family updates!"), counting no link as words, and yes when the email points
+    /// to a newsletter page but holds too few dates of its own to be one (SPEC 4, Email row).
+    public static func readsLink(_ lines: [String], datesInEmail: Int) -> Bool {
+        let words = lines.joined(separator: " ")
+            .replacingOccurrences(of: #"[(<\[]?https?://[^\s)>\]]+[)>\]]?"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        if words.count < 120 { return true }
+        guard datesInEmail < EmailCalendar.minimumDates else { return false }
+        let t = words.lowercased()
+        return newsletterWords.contains { t.contains($0) }
+    }
+
+    static let newsletterWords = ["newsletter", "weekly update", "family update", "bulletin", "this week at", "week at a glance"]
 
     /// Sign-in codes and account notices: useful for minutes, never worth a post.
     public static func isAccountNotice(subject: String, text: String) -> Bool {

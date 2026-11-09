@@ -633,3 +633,19 @@ test("a request with no owner key is still kept", async () => {
   assert.equal(keysWith(kv, "req:android:").length, 1);
   assert.equal(keysWith(kv, "m:").length, 0);
 });
+
+test("a purchase's seat record expires 90 days after its phones last asked, and asking renews it", async () => {
+  const kv = memoryKV(), env = newEnv({ SHOEBOX: kv });
+  const box = await boxOf(KEY_A), otid = "1000000000000300";
+  await kv.put("alias:sam-abcd2345", box, { expirationTtl: 90 * 86400 });
+  await kv.put(`box:${box}`, JSON.stringify({ slug: "sam-abcd2345", at: Date.now() }), { expirationTtl: 90 * 86400 });
+  assert.equal((await call(env, "/inbox/seal", { method: "POST", key: KEY_A, body: { pub: PUB, purchase: jwsFor(otid) } })).status, 200);
+  assert.equal(kv.ttl.get(`buy:${otid}`), 90 * 86400, "the seat record is not kept forever");
+  // A day later the phone asks for mail: the box and its seat record both renew.
+  const cur = JSON.parse(kv.m.get(`box:${box}`));
+  await kv.put(`box:${box}`, JSON.stringify({ ...cur, at: Date.now() - 2 * 86400 * 1000 }), { expirationTtl: 5 });
+  kv.ttl.set(`buy:${otid}`, 5);
+  assert.equal((await call(env, "/inbox", { key: KEY_A })).status, 200);
+  assert.equal(kv.ttl.get(`box:${box}`), 90 * 86400);
+  assert.equal(kv.ttl.get(`buy:${otid}`), 90 * 86400, "asking renews the seat record");
+});

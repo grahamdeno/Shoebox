@@ -17,7 +17,7 @@ Don't change `/photo`: Shoebox 1 reads `src`, `credit`, `license` and `link` fro
 
 ## The old copy
 
-`grahamdeno/edition/relay` is the older copy. edition is frozen. Never deploy from it: it would overwrite this version and drop `/stock`. Deploy from here only.
+`grahamdeno/edition/relay` is the older copy. edition is archived (read-only, Actions off, its Cloudflare secrets deleted). Never deploy from it: it would overwrite this version and drop `/stock`. Deploy from here only.
 
 ## Deploy
 

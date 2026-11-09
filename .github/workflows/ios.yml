@@ -13,6 +13,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Linux, about a minute: does this change touch the app at all? Relay, website, docs and workflow changes don't need a Mac.
+  changes:
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[test]')
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "app=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+          echo "$files"
+          if echo "$files" | grep -qvE '^(docs|web|design|relay|\.github)/|\.md$'; then echo "app=true"; else echo "app=false"; fi >> "$GITHUB_OUTPUT"
+
   relay:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
@@ -33,10 +50,12 @@ jobs:
           test -z "$(git status --porcelain -- relay/app/test/vectors)"
 
   build-and-test:
+    needs: changes
     if: >-
+      needs.changes.outputs.app == 'true' && (
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.action != 'synchronize') ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[test]'))
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[test]')))
     runs-on: macos-26
     env:
       # A released Xcode, pinned. The macos-26 image has 26.6 (default) and 26.5. Change it here, and in testflight.yml.

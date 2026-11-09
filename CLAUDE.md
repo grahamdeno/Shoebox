@@ -4,7 +4,7 @@ Native iPhone app (SwiftUI). "Keep it. It comes back to you."
 
 **Read `docs/PLAN.md` before any work.** It holds the product rules, the decisions made, the architecture and the build phases. `docs/SPEC.md` holds the detailed design and behavior, with the agreed screens in `docs/design/screens/`. Where PLAN.md and SPEC.md disagree, SPEC.md wins.
 
-The old app lives in `grahamdeno/edition`, frozen and being archived. Read it for rules and edge cases; don't copy its structure. The website (inmyshoebox.com) lives in `web/`; see `web/README.md`.
+The old app lives in `grahamdeno/edition`, archived and private since Nov 9, 2026. A session can read it only after access is granted (add the repo with push access); don't copy its structure. The website (inmyshoebox.com) lives in `web/`; see `web/README.md`.
 
 ## Working with Graham
 
@@ -29,4 +29,4 @@ The old app lives in `grahamdeno/edition`, frozen and being archived. Read it fo
 - Settings: laid out like Scales. Short groups under small quiet titles (Your day, Email, Back up, Help and about), cards one step off the ground, each row showing its answer, at most one quiet line under a group; a row opens one screen with a title and its choices as words. Backups say Automatic. How Shoebox works shows the moves as small looping pictures. Delete everything is a quiet word below; the logo and "Your posts stay on your phone." close the list.
 - SF Pro throughout. Actions are words, never pills or icon-only buttons. No neumorphism.
 - Iterate fast: batch changes, build once when Graham asks. Don't run screenshots or watch CI for every small change.
-- Mac minutes are limited (private repo, GitHub Free, about 190 a month, then jobs stop). The Mac build runs once when a PR opens; add `[test]` to a commit message to rebuild. `[audit]` (60 to 90 min) and `[screens]` only before a release.
+- Mac minutes: free while the repo is public; if it goes private, GitHub Free gives about 190 a month, then jobs stop. Either way the Mac build runs once when a PR opens (and skips relay, website and docs-only changes); add `[test]` to a commit message to rebuild. `[audit]` (60 to 90 min) and `[screens]` only before a release.
