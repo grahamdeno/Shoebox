@@ -58,4 +58,23 @@ struct EmailRulesTests {
         #expect(t.contains("Tickets & info"))
         #expect(!t.contains("var a"))
     }
+
+    // A school email that only points to its newsletter page: the doubled link made it look long enough to skip the page.
+    @Test func aNewsletterLinkIsReadEvenWhenTheLinkIsWrittenTwice() {
+        let lines = ["Good Evening Families, Please see the Family Weekly Updates! https://news.example.org/n/abc12 (https://news.example.org/n/abc12) Ms. Lee"]
+        #expect(EmailRules.readsLink(lines, datesInEmail: 0))
+    }
+
+    @Test func aLongerEmailPointingToItsNewsletterIsReadWhenItHasFewDates() {
+        let long = String(repeating: "Thank you for a wonderful start to the year at our school. ", count: 4)
+        #expect(EmailRules.readsLink([long, "Here is this week's newsletter: https://example.org/n/1"], datesInEmail: 1))
+        #expect(!EmailRules.readsLink([long, "Here is this week's newsletter: https://example.org/n/1"], datesInEmail: 5))
+        #expect(!EmailRules.readsLink([long, "Details at https://example.org/a"], datesInEmail: 0))
+    }
+
+    @Test func aDoubledLinkIsWrittenOnce() {
+        let t = EmailRules.unwrap("See https://news.example.org/n/abc12 (https://news.example.org/n/abc12) thanks")
+        #expect(t == "See https://news.example.org/n/abc12 thanks")
+        #expect(EmailRules.unwrap("(https://a.com/x)") == "(https://a.com/x)")
+    }
 }
