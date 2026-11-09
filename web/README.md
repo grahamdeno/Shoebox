@@ -7,7 +7,7 @@ The public website: the home page, privacy, terms, support, the beta and Android
 
 Cloudflare Pages, project `inmyshoebox`, built from this repo's `main` branch with `web` as the output folder and no
 build command. A change under `web/` on `main` goes live in about a minute; other branches get a preview address on
-`pages.dev`. Until the cutover is done, the live site is still served by GitHub Pages from `grahamdeno/edition`.
+`pages.dev` (for example `site-move.inmyshoebox.pages.dev`). Only changes under `web/` start a build.
 
 Addresses work without `.html` (`/privacy` serves `privacy.html`). The App Store listing and the app link to `/`,
 `/privacy`, `/terms` and `/support`, so those four must never move or break.
@@ -28,4 +28,16 @@ Addresses work without `.html` (`/privacy` serves `privacy.html`). The App Store
 
 Never put anything private here: the whole folder is public on the web.
 
-Hosted on Cloudflare Pages (project inmyshoebox).
+## Cutover record (Nov 9, 2026)
+
+Moved from GitHub Pages (`grahamdeno/edition`, now off) to Cloudflare Pages. Only the apex and `www` records changed.
+
+Now: `CNAME inmyshoebox.com -> inmyshoebox.pages.dev` and `CNAME www -> inmyshoebox.pages.dev`, both proxied.
+
+To go back to GitHub Pages (also turn Pages back on in `edition` with the custom domain), the old records, none proxied:
+- `A inmyshoebox.com` 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153
+- `AAAA inmyshoebox.com` 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153, 2606:50c0:8003::153
+- `CNAME www -> grahamdeno.github.io`
+
+Leave alone: the three MX records and Email Routing (support@ mail), the SPF, DKIM and DMARC records, the `api` record
+(the relay), and the GitHub verification TXT record (it stops anyone else claiming the domain on GitHub Pages).
