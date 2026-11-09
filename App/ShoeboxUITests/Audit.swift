@@ -55,6 +55,7 @@ final class Audit {
         steps.append(["n": n, "kind": "shot", "name": name, "file": file, "note": note,
                       "t": round(now.timeIntervalSince(started) * 10) / 10, "dt": round(now.timeIntervalSince(last) * 100) / 100])
         last = now
+        save()
         return file
     }
 
@@ -62,6 +63,7 @@ final class Audit {
     @discardableResult
     func check(_ name: String, _ ok: Bool, severity: Int = 3, detail: String = "") -> Bool {
         steps.append(["n": n, "kind": "check", "name": name, "ok": ok, "severity": ok ? 0 : severity, "detail": detail])
+        save()
         return ok
     }
 
@@ -94,7 +96,7 @@ final class Audit {
         check("job done: \(job)", ok, severity: 4)
     }
 
-    /// How long the app takes to answer a move: from now until `until` holds, polled every 50 ms. Written down as a
+    /// How long the app takes to answer a move: from now until `until` holds, polled every 200 ms (each look is a query of the whole screen). Written down as a
     /// response time; returns the seconds, or nil if it never held.
     @discardableResult
     func respond(_ name: String, timeout: Double = 5, until: () -> Bool) -> Double? {
@@ -105,7 +107,7 @@ final class Audit {
                 steps.append(["n": n, "kind": "response", "name": name, "seconds": round(s * 100) / 100])
                 return s
             }
-            Thread.sleep(forTimeInterval: 0.05)
+            Thread.sleep(forTimeInterval: 0.2)
         }
         steps.append(["n": n, "kind": "response", "name": name, "seconds": -1])
         return nil
@@ -158,6 +160,10 @@ final class Audit {
     func any(containing s: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
     }
+
+    /// Writes the record so far after every picture and check: a UI query that times out raises an exception that
+    /// skips `defer`, and the journey's record was lost with it (CI, November 8).
+    private func save() { finish() }
 
     /// Writes the record. Call at the end of every journey.
     func finish() {
@@ -217,15 +223,17 @@ final class Audit {
         return true
     }
 
-    /// The "x of y" counter at the top of Today, or nil.
+    /// The "x of y" counter at the top of Today, or nil. Found by its handle: a label search over Today's large tree
+    /// timed out in CI.
     var counter: String? {
-        let e = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "^[0-9]+ of [0-9]+$")).firstMatch
+        let e = app.staticTexts["today.counter"]
         return e.exists ? e.label : nil
     }
 
     /// The count on the box ("Your Shoebox, 9" reads 9).
     var boxCount: Int? {
-        let e = button(startingWith: "Your Shoebox")
+        var e = app.buttons["today.box"]
+        if !e.exists { e = button(startingWith: "Your Shoebox") }
         guard e.exists else { return nil }
         return Int(e.label.components(separatedBy: ", ").last ?? "")
     }

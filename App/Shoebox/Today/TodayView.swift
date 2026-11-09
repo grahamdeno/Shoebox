@@ -282,6 +282,7 @@ struct TodayView: View {
                         .scaledFont(size: 15)
                         .monospacedDigit()
                         .opacity(0.92)
+                        .accessibilityIdentifier("today.counter")
                 }
             }
             .foregroundStyle(onPhoto ? Theme.onPhoto : Theme.ink)
@@ -369,6 +370,7 @@ struct TodayView: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel("Your Shoebox, \(boxCount)")
+            .accessibilityIdentifier("today.box")
             .accessibilityHint("Opens everything you are not done with")
         }
     }
