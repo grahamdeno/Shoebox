@@ -26,6 +26,9 @@ enum Plus {
     /// name is the fallback: TestFlight and review builds carry `sandboxReceipt`. It only shows the Email screen; what
     /// the relay accepts still comes from Apple's signed proof.
     static func checkStore() async {
+        #if DEBUG
+        if demoState { return }
+        #endif
         if receiptSaysSandbox { inSandbox = true }
         guard let result = await appTransaction(refresh: false) else { return }
         switch result {
@@ -33,6 +36,13 @@ enum Plus {
         case .unverified(let t, _): inSandbox = t.environment != .production || receiptSaysSandbox; freeInBeta = false
         }
     }
+
+    #if DEBUG
+    /// The UX audit's Plus journey: which store this demo pretends to be. `checkStore` keeps it (an unsigned simulator
+    /// build has no app transaction).
+    static func demo(sandbox: Bool) { inSandbox = sandbox; demoState = true }
+    private(set) static var demoState = false
+    #endif
 
     /// TestFlight and App Review installs carry a receipt named `sandboxReceipt`; the App Store's is `receipt`.
     static var receiptSaysSandbox: Bool {

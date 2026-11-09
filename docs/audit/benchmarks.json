@@ -1,0 +1,18 @@
+{
+  "about": "Targets for the UX audit's benchmark jobs (J11) and app responses. Taps are a person's taps and moves, typing not counted. Responses are seconds from a move until the app has answered, on the CI simulator (slower than a phone). A job over its taps, or a response over its seconds, is a finding. Change a target only on purpose.",
+  "jobs": {
+    "open a post and close it": {"taps": 2},
+    "next, then undo": {"taps": 2},
+    "put away, then undo": {"taps": 2},
+    "keep a note with a reason": {"taps": 4},
+    "find what you put away": {"taps": 2},
+    "change how many a day": {"taps": 4}
+  },
+  "responses": {
+    "default": 1.5,
+    "launch to Today, 500 posts": 6.0,
+    "box to the Shoebox, 500 posts": 2.5,
+    "search across 500 posts": 2.0,
+    "the App Store answers, or the app says it couldn't": 8.0
+  }
+}

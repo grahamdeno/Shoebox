@@ -31,9 +31,15 @@ Each journey is one job, walked the way a person does it. A check that fails is 
 | J6 | Settings | Each row opens its screen and comes back: Each day, Look (Stone and back), Pictures, Backups, How Shoebox works, Privacy; Delete everything offers a way out; Close |
 | J7 | Empty states | Today clear, Go through your Shoebox |
 | J8 | Five weeks (time replay) | See section 3 |
+| J9 | Heavy and odd data | 500 more posts (`-dataset heavy`): launch, flick, the Shoebox, eight fast scrolls, search a 57-letter word, Japanese and Arabic, open the longest title |
+| J9b | No pictures | `-dataset nophotos`: Today, opened, next, the Shoebox |
+| J10 | Shoebox Plus | The store's offer after a week and the App Store unreachable; TestFlight's free address (Get address is never tapped: it would use the live relay) |
+| J11 | Benchmark jobs | Six jobs from Today, counted in taps, with every app response timed (section 10) |
 
 Not walked by the simulator: the share sheet from another app (the system's sheet cannot be driven reliably; its
-screen is covered by the `share` still and by testers), the email address purchase (Plus), notifications arriving.
+screen is covered by the `share` still and by tester task 1), a real purchase and a real address (they need a signed
+build and the live relay; testers in TestFlight get Plus free), and a notification arriving on the lock screen. What a
+notification says and when is checked by unit tests (`NotifierTests`).
 
 ## 3. Time replay
 
@@ -134,7 +140,7 @@ question: "How easy was that?" 1 (very hard) to 7 (very easy). At the end, the t
 2. You're done with the post on screen. Make it go away, but keep it.
 3. You did that by mistake. Get it back.
 4. Find the thing you put away yesterday.
-5. Change it so Shoebox shows you three posts a day.
+5. Change it so Shoebox shows you five posts a day. (Nov 8: the first message said three, which Each day does not offer: 5, 10 or All.)
 
 Record: finished or not, taps, time, and anything they say. Five people find most of the problems.
 
@@ -153,3 +159,32 @@ See section 9 for the runs so far.
 | Nov 7 | 89c9efe | Did not build (BoxView's pull is optional). |
 | Nov 7 | 7c7a133 | All five configs and unit tests green, including the new rule that a dated post in the pile comes out before its day. Large text now stacks in Settings. Remaining: the Edit title field had no handle for the test (given one), small opacity raises on Today's count and the box count. |
 | Nov 7 | 85924f9 | All configs and unit tests green. Every journey check holds except three that are the test's own: Settings closed by the walk's own swipe down (stone-dark), one slow Back word (big-text), and the return line read as a button ("Back Thursday" shows in every picture). Time replay: all 19 checks hold. Fixed in the journeys for the next run. |
+
+## 10. Benchmarks, picture comparison, edges (added November 8)
+
+**Benchmarks.** J11 walks six jobs from Today and counts a person's taps and moves (typing is not counted). Every move's
+response, from the move until the app has answered, is timed in J9, J10 and J11. Targets are in
+`docs/audit/benchmarks.json`; the report's Benchmarks table marks anything over. Seconds for a whole job are the
+simulator's and include its waits, so they are written down but not compared; a person's own time comes from testers.
+
+| Job | Target taps |
+|---|---|
+| Open a post and close it | 2 |
+| Next, then Undo | 2 |
+| Put away, then Undo | 2 |
+| Keep a note with a reason | 4 |
+| Find what you put away | 2 |
+| Change how many a day | 4 |
+
+**Picture comparison.** Every run fixes the app's clock to November 7, 2026 (`-demoDate`), so the same step shows the
+same dates every time. The report compares each picture with the baseline (branch `ci-audit-baseline`), matched by
+config, journey and step name, and lists the ones where more than 1% of the picture changed, with before, now and what
+changed side by side. A run whose commit says `[audit] [baseline]` becomes the new baseline; the first run is one on
+its own. Approve a change on purpose by making a new baseline after looking at it.
+
+**Edges.** J9 and J9b (section 2). The heavy set is 500 posts across a year with the layouts that break things: a
+title that is a whole paragraph, one 57-letter German word, Spanish, Japanese, Arabic, Russian, emoji, a bare link, no
+title at all.
+
+**People.** `docs/audit/09-people-tests.md`: a five-second first-impression test of the welcome screen, and a two-week
+diary with 2 or 3 testers, with every message ready to send.
