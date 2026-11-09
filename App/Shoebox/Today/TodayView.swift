@@ -102,10 +102,9 @@ struct TodayView: View {
                             .opacity(0.6)
                             .accessibilityHidden(true)
                     }
-                    if slide < 0 {
-                        deleteWord(current, width: geo.size.width)
-                    }
                     card(current, geo)
+                        // Touches only where the post is seen: its photo can reach past the edge it is clipped to.
+                        .contentShape(Rectangle())
                         .scaleEffect(cardScale * (reduceMotion ? 1 : 1 - 0.08 * rise), anchor: .bottom)
                         .offset(x: slide, y: resisted(drag) + fly + (reduceMotion ? 0 : 180 * rise))
                         .opacity(flyOpacity * (1 - Double(rise)))
@@ -120,6 +119,10 @@ struct TodayView: View {
                         .onChange(of: current.id) { slide = 0; revealed = false }
                         .task(id: current.id) { await enrichAhead() }
                         .accessibilityHidden(pull.progress >= 0.98)
+                    // Above the post, so a tap on Delete is Delete's (beneath it, the post took the tap).
+                    if slide < 0 {
+                        deleteWord(current, width: geo.size.width)
+                    }
                     hints
                     topBar(onPhoto: true)
                         .accessibilityHidden(pull.progress >= 0.98)
@@ -627,8 +630,8 @@ struct TodayView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            // VoiceOver deletes from the post itself ("Delete" in its actions).
-            .accessibilityHidden(true)
+            // VoiceOver deletes from the post itself ("Delete" in its actions). The audit finds it by this handle.
+            .accessibilityIdentifier("today.delete")
         }
         .ignoresSafeArea()
         .opacity(min(1, Double(-slide / Self.deleteWidth)))
