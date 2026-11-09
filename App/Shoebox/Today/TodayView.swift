@@ -518,21 +518,12 @@ struct TodayView: View {
     /// under the count, where the photo is open (above the box it covered the panel's lower edge: UX audit). On the day's
     /// end screen, where there is no post, it sits above + New.
     private func toastView(_ toast: Toast, aboveNew: Bool = false) -> some View {
-        VStack {
-            if aboveNew { Spacer() }
-            HStack {
-                Spacer()
-                UndoPill(text: toast.text) {
-                    toast.undo()
-                    withAnimation(.snappy) { self.toast = nil }
-                    refreshPick()
-                }
+        UndoSpot(pull: pull, aboveNew: aboveNew, endPadding: Self.stripHeight + 14 + Metrics.touchMin + 8) {
+            UndoPill(text: toast.text) {
+                toast.undo()
+                withAnimation(.snappy) { self.toast = nil }
+                refreshPick()
             }
-            .padding(.trailing, 16)
-            .padding(.top, aboveNew ? 0 : 52)
-            // On the day's end screen + New sits here, so Undo rises above it.
-            .padding(.bottom, aboveNew ? Self.stripHeight + 14 + Metrics.touchMin + 8 : 0)
-            if !aboveNew { Spacer() }
         }
         .transition(.opacity.combined(with: .move(edge: aboveNew ? .bottom : .top)))
     }
@@ -768,4 +759,31 @@ struct BoxShake {
     var dx: CGFloat = 0
     var angle: Double = 0
     var lift: CGFloat = 0
+}
+
+/// Where Today's Undo sits. Over a post: top right, under the count. On the day's end screen: above + New. With the
+/// Shoebox open: bottom right above its search, where the Shoebox's own Undo sits, so it never covers the Shoebox's
+/// Today and Settings words (UX-12). Its own view, so only it redraws while the sheet moves.
+private struct UndoSpot<Content: View>: View {
+    let pull: BoxPull
+    let aboveNew: Bool
+    let endPadding: CGFloat
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        let inBox = pull.progress > 0.5
+        let low = aboveNew || inBox
+        VStack {
+            if low { Spacer() }
+            HStack {
+                Spacer()
+                content
+            }
+            .padding(.trailing, 16)
+            .padding(.top, low ? 0 : 52)
+            .padding(.bottom, inBox ? 92 : (aboveNew ? endPadding : 0))
+            if !low { Spacer() }
+        }
+        .animation(.snappy, value: inBox)
+    }
 }

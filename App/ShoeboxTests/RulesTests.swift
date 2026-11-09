@@ -107,7 +107,7 @@ final class RulesTests: XCTestCase {
     func testDatedSaveSeenOnArrivalWaitsForFiveDaysBefore() {
         let s = Save(title: "Band concert", eventDate: date(2026, 12, 10))
         XCTAssertTrue(rules.isOnToday(s, now: date(2026, 11, 2, 9)))
-        XCTAssertEqual(actions.next(s, planner: LaterPlanner(), now: date(2026, 11, 2, 9)), "Back 5 days before")
+        XCTAssertEqual(actions.next(s, planner: LaterPlanner(calendar: cal), now: date(2026, 11, 2, 9)), "Back Dec 5")
         XCTAssertEqual(s.returnDate, date(2026, 12, 5, 8))
         XCTAssertFalse(rules.isOnToday(s, now: date(2026, 12, 4, 20)))
         XCTAssertTrue(rules.isOnToday(s, now: date(2026, 12, 5, 9)))

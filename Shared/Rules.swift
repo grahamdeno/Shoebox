@@ -209,7 +209,12 @@ extension SaveActions {
             return "Back " + (when.label == "Tomorrow" ? "tomorrow" : when.label)
         }
         pass(s, now: now)
-        return s.status == .away ? "Back 5 days before" : "Back tomorrow"
+        // Say the day, not the rule: "Back Monday", "Back Nov 9" (UX-8: "Back 5 days before" never said when).
+        if s.status == .away, let back = s.returnDate {
+            let label = LaterPlanner(calendar: calendar).label(for: back, now: now)
+            return "Back " + (["Today", "Tomorrow", "This weekend"].contains(label) ? label.lowercased() : label)
+        }
+        return "Back tomorrow"
     }
 }
 

@@ -27,7 +27,8 @@ final class Edges: XCTestCase {
         a.tap("the box", a.button(startingWith: "Your Shoebox"), severity: 4)
         a.respond("box to the Shoebox, 500 posts", timeout: 8) { a.app.buttons["Settings"].exists }
         a.pause(0.8)
-        a.shot("shoebox")
+        a.shot("shoebox", note: "Undo from the flick sits low, above search, not over Settings (UX-12)")
+        a.check("Undo leaves the Shoebox's Settings free", a.app.buttons["Settings"].isHittable, severity: 2)
         a.accessibility("shoebox-heavy")
         a.labels("shoebox")
         for _ in 0..<8 { a.app.swipeUp(velocity: .fast) }

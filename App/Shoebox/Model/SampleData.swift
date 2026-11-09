@@ -154,7 +154,10 @@ enum SampleData {
     /// Puts everything on Today away, for the "Today's clear" screen.
     static func clearToday(_ context: ModelContext) {
         let all = (try? context.fetch(FetchDescriptor<Save>())) ?? []
-        for s in all where s.status != .kept { s.status = .away; s.returnDate = Clock.now + 3 * 86_400 }
+        // One time for all, read once: set inside the loop, each post got a slightly later time in whatever order the
+        // store returned them, and Go through your Shoebox came out in a different order each run (UX-13).
+        let back = Clock.now + 3 * 86_400
+        for s in all where s.status != .kept { s.status = .away; s.returnDate = back }
         try? context.save()
     }
 

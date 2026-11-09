@@ -52,7 +52,7 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(actions.next(plain, planner: planner, now: now), "Back tomorrow")
         XCTAssertFalse(rules.isOnToday(plain, now: now))
         let dated = Save(title: "B", eventDate: date(2026, 11, 20))
-        XCTAssertEqual(actions.next(dated, planner: planner, now: now), "Back 5 days before")
+        XCTAssertEqual(actions.next(dated, planner: planner, now: now), "Back Nov 15")
         XCTAssertEqual(dated.status, .away)
     }
 
