@@ -93,6 +93,20 @@ final class Journeys: XCTestCase {
         a.pause(0.8)
         a.check("a short drag changes nothing", a.counter == before && !a.app.buttons["Undo"].exists, severity: 3)
 
+        // Swipe left: Delete shows beside the post, and only a tap on it deletes (with Undo).
+        a.app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.45))
+            .press(forDuration: 0.05, thenDragTo: a.app.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.45)))
+        a.pause(0.6)
+        let del = a.app.buttons["today.delete"]
+        a.check("swipe left shows Delete", del.waitForExistence(timeout: 2), severity: 3)
+        a.shot("swiped-left")
+        a.check("the swipe alone deletes nothing", a.counter == before && !undo.exists, severity: 4)
+        if del.exists { del.tap(); a.pause(0.6) }
+        a.check("a tap on Delete deletes, with Undo", a.text(containing: "Deleted").exists && undo.waitForExistence(timeout: 2), severity: 4)
+        a.shot("after-delete")
+        if undo.exists { undo.tap(); a.pause(0.8) }
+        a.check("Undo brings it back after Delete", a.counter == before, severity: 4, detail: "\(before ?? "-") then \(a.counter ?? "-")")
+
         // Undo waits 5 seconds, then goes.
         a.flickUp()
         a.pause(6)
