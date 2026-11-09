@@ -172,6 +172,25 @@ final class RulesTests: XCTestCase {
         XCTAssertEqual(rules.today(pile + [late], ids: again, now: now).last?.title, "late")
     }
 
+    /// SPEC section 3, rule 1: anything kept today joins Today even when the daily limit is full (default 10 since
+    /// November 8; before, with All, this never showed).
+    func testSomethingKeptTodayJoinsEvenWhenTheLimitIsFull() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let morning = Save(title: "kept this morning", createdAt: date(2026, 10, 30, 9))
+        let all = pile + [morning]
+        let ids = rules.pick(all, now: now, previousDay: nil, previousIds: [], perDay: 3)
+        XCTAssertEqual(rules.today(all, ids: ids, now: now).map(\.title), ["kept this morning", "p1", "p2"])
+    }
+
+    func testSomethingKeptLaterTheSameDayJoinsUnderALimit() {
+        let pile = (1...9).map { Save(title: "p\($0)", createdAt: date(2026, 10, $0)) }
+        let first = rules.pick(pile, now: date(2026, 10, 30, 8), previousDay: nil, previousIds: [], perDay: 3)
+        XCTAssertEqual(first.count, 3)
+        let noon = Save(title: "kept at noon", createdAt: date(2026, 10, 30, 12))
+        let again = rules.pick(pile + [noon], now: now, previousDay: rules.dayKey(now), previousIds: first, perDay: 3)
+        XCTAssertEqual(rules.today(pile + [noon], ids: again, now: now).last?.title, "kept at noon")
+    }
+
     func testBylineReadsLikeAPerson() {
         let s = Save(title: "Trail", origin: "Safari", createdAt: date(2026, 10, 16))
         XCTAssertEqual(s.byline(now: date(2026, 10, 30, 12)), "You, 2 weeks ago, from Safari")

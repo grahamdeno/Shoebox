@@ -64,7 +64,12 @@ struct TodayRules {
         let returning = due.filter { $0.status == .away || datedSoon($0, now: now) }.sorted {
             ($0.eventDate ?? $0.returnDate ?? now) < ($1.eventDate ?? $1.returnDate ?? now)
         }
-        let pile = due.filter { $0.status == .today && !datedSoon($0, now: now) }.sorted { a, b in
+        // New since the morning (kept, shared or emailed today, never seen) always joins too: the limit never holds it
+        // back (SPEC section 3, rule 1). Without this, with a limit, a note kept at noon could miss its own day.
+        let fresh = due.filter { $0.status == .today && !datedSoon($0, now: now) && $0.seenOn == nil
+            && calendar.isDate($0.createdAt, inSameDayAs: now) }.sorted { $0.createdAt < $1.createdAt }
+        let freshIds = Set(fresh.map(\.id))
+        let pile = due.filter { $0.status == .today && !datedSoon($0, now: now) && !freshIds.contains($0.id) }.sorted { a, b in
             switch (a.seenOn, b.seenOn) {
             case let (x?, y?): return x < y
             case (.some, nil): return true
@@ -74,15 +79,15 @@ struct TodayRules {
         }
         if previousDay == dayKey(now) {
             var ids = previousIds
-            for s in returning where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
+            for s in returning + fresh where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
             // With no daily limit, anything kept since the morning joins the pile too.
             if perDay == Int.max {
                 for s in pile where !ids.contains(s.id.uuidString) { ids.append(s.id.uuidString) }
             }
             return ids
         }
-        let room = max(0, perDay - returning.count)
-        return returning.map(\.id.uuidString) + pile.prefix(room).map(\.id.uuidString)
+        let room = max(0, perDay - returning.count - fresh.count)
+        return returning.map(\.id.uuidString) + fresh.map(\.id.uuidString) + pile.prefix(room).map(\.id.uuidString)
     }
 
     /// A post on the pile whose event is today or within the next 5 days: it counts as coming back.
